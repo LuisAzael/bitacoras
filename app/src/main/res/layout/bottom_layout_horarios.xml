@@ -1,0 +1,284 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout
+    android:padding="20dp"
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@color/white"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    app:behavior_hideable="false"
+    app:behavior_peekHeight="60dp"
+    app:layout_behavior="com.google.android.material.bottomsheet.BottomSheetBehavior">
+
+    <LinearLayout
+        android:orientation="vertical"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <TextView
+            android:id="@+id/etTitulo"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Registro de Asistencia"
+            android:textColor="@color/textos_principal"
+            android:textSize="24sp"
+            android:textStyle="bold" />
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="3dp"
+            android:orientation="horizontal">
+
+            <TextView
+                android:textColor="@color/textos_general"
+                android:layout_marginBottom="3dp"
+                android:id="@+id/tvDireccionUsuario"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:lineSpacingExtra="3dp"
+                android:text="Selecciona la hora para tu registro de asistencia."
+                android:textSize="13sp" />
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/layoutRegistrosEntradaSalida"
+            android:orientation="vertical"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <TextView
+                android:layout_marginTop="40dp"
+                android:id="@+id/tvMensaje"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Registro del día"
+                android:textColor="@color/textos_principal"
+                android:textSize="20sp"
+                android:textStyle="bold" />
+
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:layout_marginTop="10dp"
+                android:id="@+id/layoutDetalles"
+                android:visibility="visible"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:paddingBottom="5dp">
+
+                <View
+                    android:id="@+id/view"
+                    android:layout_width="15dp"
+                    android:layout_height="15dp"
+                    android:layout_marginStart="15dp"
+                    android:layout_marginTop="10dp"
+                    android:background="@drawable/circulo_view_green"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent" />
+
+                <TextView
+                    android:textColor="@color/textos_principal"
+                    android:id="@+id/tvOrigen"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:layout_marginStart="10dp"
+                    android:layout_marginTop="9dp"
+                    android:layout_weight="8"
+                    android:text="Entrada:   07:00 hrs"
+                    android:textSize="14sp"
+                    android:textStyle="bold"
+                    app:layout_constraintStart_toEndOf="@+id/view"
+                    app:layout_constraintTop_toTopOf="parent" />
+
+
+                <View
+                    android:alpha="1"
+                    android:id="@+id/view2"
+                    android:layout_width="1dp"
+                    android:layout_height="5dp"
+                    android:layout_marginStart="22dp"
+                    android:layout_marginTop="5dp"
+                    android:background="@color/textos_general"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@+id/view" />
+
+
+                <View
+                    android:id="@+id/viwwew"
+                    android:layout_width="15dp"
+                    android:layout_height="15dp"
+                    android:layout_marginStart="15dp"
+                    android:layout_marginTop="4dp"
+                    android:background="@drawable/circulo_view"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@+id/view2" />
+
+                <TextView
+                    android:textColor="@color/textos_principal"
+                    android:id="@+id/tvDestino"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:layout_marginStart="10dp"
+                    android:layout_marginTop="4dp"
+                    android:layout_weight="8"
+                    android:text="Próxima salida:  19:00 hrs"
+                    android:textSize="14sp"
+                    android:textStyle="bold"
+                    app:layout_constraintStart_toEndOf="@+id/viwwew"
+                    app:layout_constraintTop_toBottomOf="@+id/view2" />
+
+            </androidx.constraintlayout.widget.ConstraintLayout>
+
+        </LinearLayout>
+
+
+
+
+
+
+        <LinearLayout
+            android:layout_marginTop="10dp"
+            android:id="@+id/layoutHoraDeEntrada"
+            android:background="@color/white"
+            android:orientation="vertical"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <TextView
+                android:id="@+id/tvTextoHoraEntrada"
+                android:layout_marginLeft="10dp"
+                android:layout_marginRight="10dp"
+                android:layout_marginTop="20dp"
+                android:layout_gravity="center"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Selecciona tu horario:"
+                android:textColor="@color/textos_principal"
+                android:textStyle="bold"
+                android:textSize="14sp" />
+
+            <LinearLayout
+                android:weightSum="12"
+                android:orientation="horizontal"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+               <RadioGroup
+                   android:layout_width="match_parent"
+                   android:layout_height="wrap_content">
+
+                   <RadioButton
+                       android:textColor="@color/textos_principal"
+                       android:id="@+id/bt7am"
+                       android:text="   07:00 - 19:00 hrs"
+                       android:layout_width="match_parent"
+                       android:layout_height="wrap_content"/>
+
+                   <RadioButton
+                       android:textColor="@color/textos_principal"
+                       android:id="@+id/bt8am"
+                       android:text="   08:00 - 19:00 hrs"
+                       android:layout_width="match_parent"
+                       android:layout_height="wrap_content"/>
+
+                   <RadioButton
+                       android:textColor="@color/textos_principal"
+                       android:id="@+id/bt9am"
+                       android:text="   09:00 - 19:00 hrs"
+                       android:layout_width="match_parent"
+                       android:layout_height="wrap_content"/>
+
+                   <RadioButton
+                       android:textColor="@color/textos_principal"
+                       android:id="@+id/bt199"
+                       android:text="   19:00 - 07:00 hrs"
+                       android:layout_width="match_parent"
+                       android:layout_height="wrap_content"/>
+
+                   <RadioButton
+                       android:textColor="@color/textos_principal"
+                       android:id="@+id/bt19a9"
+                       android:text="   19:00 - 09:00 hrs"
+                       android:layout_width="match_parent"
+                       android:layout_height="wrap_content"/>
+
+               </RadioGroup>
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+
+        <!--Hora de salida -->
+        <LinearLayout
+            android:visibility="gone"
+            android:layout_marginTop="10dp"
+            android:id="@+id/layoutHoraDeSalida"
+            android:background="@color/white"
+            android:orientation="vertical"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <TextView
+                android:id="@+id/tvTextoHoraSalida"
+                android:layout_marginLeft="10dp"
+                android:layout_marginRight="10dp"
+                android:layout_marginTop="20dp"
+                android:layout_gravity="center"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Selecciona tu hora de salida:"
+                android:textColor="@color/textos_principal"
+                android:textStyle="bold"
+                android:textSize="14sp" />
+
+            <LinearLayout
+                android:weightSum="12"
+                android:orientation="horizontal"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <RadioGroup
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content">
+
+                    <RadioButton
+                        android:id="@+id/bt19"
+                        android:text="  19:00 PM"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"/>
+
+                    <RadioButton
+                        android:visibility="gone"
+                        android:id="@+id/bt20"
+                        android:text="   20:00 PM"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"/>
+
+                    <RadioButton
+                        android:id="@+id/bt7amm"
+                        android:text="   07:00 AM"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"/>
+
+                </RadioGroup>
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+
+        <androidx.appcompat.widget.AppCompatButton
+            android:id="@+id/btGuardarAsistencia"
+            android:background="@drawable/degradado_dos"
+            android:layout_marginTop="20dp"
+            android:text="Guardar asistencia"
+            android:textColor="@color/white"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"/>
+
+    </LinearLayout>
+
+</FrameLayout>

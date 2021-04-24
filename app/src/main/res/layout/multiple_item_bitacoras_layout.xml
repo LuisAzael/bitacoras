@@ -1,0 +1,353 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    android:id="@+id/layoutGeneral"
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:orientation="vertical"
+    android:background="@color/white"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+
+    <LinearLayout
+        android:visibility="visible"
+        android:weightSum="10"
+        android:orientation="horizontal"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <View
+            android:id="@+id/viewLateral"
+            android:layout_weight="9.9"
+            android:background="@color/purple_200"
+            android:layout_width="match_parent"
+            android:layout_height="fill_parent"/>
+
+        <LinearLayout
+            android:layout_marginTop="10dp"
+            android:layout_weight="0.1"
+            android:orientation="vertical"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                <LinearLayout
+                    android:orientation="vertical"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content">
+
+                    <LinearLayout
+                        android:weightSum="10"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:baselineAligned="false">
+
+                    <LinearLayout
+                        android:layout_weight="2"
+                        android:layout_gravity="center"
+                        android:orientation="vertical"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content">
+
+                        <LinearLayout
+                            android:paddingStart="10dp"
+                            android:paddingTop="10dp"
+                            android:paddingEnd="10dp"
+                            android:weightSum="10"
+                            android:orientation="horizontal"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content">
+
+                            <ImageView
+                                android:src="@drawable/bitacoraa"
+                                android:layout_gravity="center"
+                                android:layout_weight="9"
+                                android:layout_width="match_parent"
+                                android:layout_height="50dp"/>
+
+                            <LinearLayout
+                                android:layout_gravity="center"
+                                android:paddingStart="5dp"
+                                android:layout_weight="1"
+                                android:weightSum="10"
+                                android:orientation="vertical"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                tools:ignore="RtlSymmetry">
+
+                                <TextView
+                                    android:textColor="@color/textos_principal"
+                                    android:id="@+id/tvNumeroBitacora"
+                                    android:layout_gravity="center"
+                                    android:textSize="25sp"
+                                    android:textStyle="bold"
+                                    android:text="GDL21ENE0956"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"/>
+
+                                <TextView
+                                    android:id="@+id/tvSecondName"
+                                    android:layout_gravity="center"
+                                    android:textSize="12sp"
+                                    android:text="Francisco González Bocanegra"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"/>
+                            </LinearLayout>
+
+                        </LinearLayout>
+
+                        <androidx.constraintlayout.widget.ConstraintLayout
+                            android:layout_marginTop="10dp"
+                            android:id="@+id/layoutDetalles"
+                            android:visibility="visible"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:paddingBottom="5dp">
+
+                            <View
+                                android:id="@+id/view"
+                                android:layout_width="15dp"
+                                android:layout_height="15dp"
+                                android:layout_marginStart="35dp"
+                                android:layout_marginTop="10dp"
+                                android:background="@drawable/circulo_view_green"
+                                app:layout_constraintStart_toStartOf="parent"
+                                app:layout_constraintTop_toTopOf="parent" />
+
+                            <TextView
+                                android:textColor="@color/textos_principal"
+                                android:id="@+id/tvOrigen"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_gravity="center"
+                                android:layout_marginStart="10dp"
+                                android:layout_marginTop="9dp"
+                                android:layout_weight="8"
+                                android:text="Origen:   Bunker"
+                                android:textSize="12sp"
+                                android:textStyle="bold"
+                                app:layout_constraintStart_toEndOf="@+id/view"
+                                app:layout_constraintTop_toTopOf="parent" />
+
+
+                            <View
+                                android:alpha="1"
+                                android:id="@+id/view2"
+                                android:layout_width="1dp"
+                                android:layout_height="5dp"
+                                android:layout_marginStart="42dp"
+                                android:layout_marginTop="5dp"
+                                android:background="@color/textos_general"
+                                app:layout_constraintStart_toStartOf="parent"
+                                app:layout_constraintTop_toBottomOf="@+id/view" />
+
+
+                            <View
+                                android:id="@+id/viwwew"
+                                android:layout_width="15dp"
+                                android:layout_height="15dp"
+                                android:layout_marginStart="35dp"
+                                android:layout_marginTop="4dp"
+                                android:background="@drawable/circulo_view"
+                                app:layout_constraintStart_toStartOf="parent"
+                                app:layout_constraintTop_toBottomOf="@+id/view2" />
+
+                            <TextView
+                                android:textColor="@color/textos_principal"
+                                android:id="@+id/tvDestino"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_gravity="center"
+                                android:layout_marginStart="10dp"
+                                android:layout_marginTop="4dp"
+                                android:layout_weight="8"
+                                android:text="Destino:  Panteón"
+                                android:textSize="12sp"
+                                android:textStyle="bold"
+                                app:layout_constraintStart_toEndOf="@+id/viwwew"
+                                app:layout_constraintTop_toBottomOf="@+id/view2" />
+
+                        </androidx.constraintlayout.widget.ConstraintLayout>
+
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:paddingStart="10dp"
+                        android:layout_weight="8"
+                        android:layout_width="match_parent"
+                        android:layout_height="fill_parent"
+                        android:orientation="vertical"
+                        tools:ignore="RtlSymmetry">
+
+                        <ImageView
+                            android:clickable="true"
+                            android:foreground="?android:attr/selectableItemBackground"
+                            android:id="@+id/imgTerminarBitacora"
+                            android:layout_width="match_parent"
+                            android:layout_height="50dp"
+                            android:layout_gravity="center"
+                            android:layout_weight="5"
+                            android:padding="15dp"
+                            android:src="@drawable/ic_power"
+                            android:focusable="true" />
+
+                        <ImageView
+                            android:clickable="true"
+                            android:foreground="?android:attr/selectableItemBackground"
+                            android:id="@+id/imgShowDetails"
+                            android:padding="15dp"
+                            android:layout_gravity="center"
+                            android:layout_weight="5"
+                            android:src="@drawable/ic_arrow_right"
+                            android:layout_width="match_parent"
+                            android:layout_height="50dp"
+                            app:tint="@color/textos_principal"
+                            android:focusable="true" />
+                    </LinearLayout>
+                    </LinearLayout>
+                </LinearLayout>
+
+
+
+
+
+            <LinearLayout
+                android:paddingTop="20dp"
+                android:layout_marginBottom="10dp"
+                android:paddingStart="24dp"
+                android:paddingEnd="15dp"
+                android:weightSum="10"
+                android:orientation="horizontal"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <ImageView
+                    android:layout_gravity="center"
+                    android:layout_weight="9"
+                    android:src="@drawable/ic_location"
+                    android:layout_width="match_parent"
+                    android:layout_height="fill_parent"
+                    app:tint="#1f5afe" />
+
+                <TextView
+                    android:id="@+id/tvRutasGoogle"
+                    android:layout_gravity="center"
+                    android:textSize="11sp"
+                    android:textColor="#1f5afe"
+                    android:layout_weight="1"
+                    android:text="Ruta en Google Maps"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"/>
+
+            </LinearLayout>
+
+            <TextView
+                android:layout_marginLeft="30dp"
+                android:layout_marginRight="30dp"
+                android:layout_marginTop="10dp"
+                android:layout_gravity="center"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Ultimo evento registrado: "
+                android:textColor="@color/textos_principal"
+                android:textStyle="bold"
+                android:textSize="12sp" />
+            <TextView
+                android:id="@+id/tvFechaUltimoEventoRegistrado"
+                android:layout_marginLeft="30dp"
+                android:layout_marginRight="30dp"
+                android:layout_marginBottom="10dp"
+                android:layout_gravity="center"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="2021-01-07 14:05:21"
+                android:textColor="@color/textos_principal"
+                android:textSize="11sp" />
+
+            <LinearLayout
+                android:weightSum="10"
+                android:layout_weight="5"
+                android:layout_marginLeft="10dp"
+                android:layout_marginRight="10dp"
+                android:layout_marginBottom="10dp"
+                android:orientation="horizontal"
+                android:layout_width="match_parent"
+                android:layout_height="0dp">
+
+
+                <androidx.appcompat.widget.AppCompatButton
+                    android:drawableTint="@color/white"
+                    android:layout_margin="5dp"
+                    android:paddingStart="10dp"
+                    android:paddingEnd="10dp"
+                    android:drawableStart="@drawable/ic_salida"
+                    android:layout_weight="5"
+                    android:visibility="visible"
+                    android:id="@+id/btRegistrarSalida"
+                    android:textColor="@color/white"
+                    android:text="Salida"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/degradado"
+                    tools:targetApi="m"
+                    tools:ignore="NestedWeights" />
+
+                <androidx.appcompat.widget.AppCompatButton
+
+                    android:drawableTint="@color/white"
+                    android:layout_margin="5dp"
+                    android:paddingStart="10dp"
+                    android:paddingEnd="10dp"
+                    android:drawableEnd="@drawable/ic_llegada"
+                    android:layout_weight="5"
+                    android:visibility="visible"
+                    android:id="@+id/btRegistrarllegada"
+                    android:textColor="@color/white"
+                    android:text="Llegada"
+                    android:background="@drawable/degradado_dos"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    tools:targetApi="m" />
+
+            </LinearLayout>
+
+
+            <TextView
+                android:paddingTop="10dp"
+                android:paddingStart="20dp"
+                android:paddingEnd="20dp"
+                android:paddingBottom="10dp"
+                android:textAlignment="textEnd"
+                android:id="@+id/tvTipoBitacora"
+                android:layout_gravity="end"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Instalación"
+                android:textColor="@color/textos_principal"
+                android:textStyle="bold"
+                android:textSize="16sp" />
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+
+</LinearLayout>

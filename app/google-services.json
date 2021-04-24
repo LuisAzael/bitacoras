@@ -1,0 +1,40 @@
+{
+  "project_info": {
+    "project_number": "364029646318",
+    "firebase_url": "https://geofirebitacoras.firebaseio.com",
+    "project_id": "geofirebitacoras",
+    "storage_bucket": "geofirebitacoras.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:364029646318:android:8548a6132d433244a26aff",
+        "android_client_info": {
+          "package_name": "com.example.bitacoras2020"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "364029646318-8q6t85umpb3s98ge00u9b97ltgtc81ck.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD5QkdTzdnu6xf1woMM4y-F79jt09TUoGI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "364029646318-8q6t85umpb3s98ge00u9b97ltgtc81ck.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

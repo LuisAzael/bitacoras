@@ -1,0 +1,518 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@color/white"
+    tools:context=".Activities.NuevaBitacora">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <androidx.core.widget.NestedScrollView
+            android:id="@+id/layout_general"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+
+            <!-- Layout de registro -->
+            <LinearLayout
+                android:visibility="visible"
+                android:id="@+id/frameRegistro"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="vertical">
+
+                <LinearLayout
+                    android:layout_margin="10dp"
+                    android:weightSum="10"
+                    android:orientation="horizontal"
+                    android:layout_width="match_parent"
+                    android:layout_height="55dp">
+
+                    <ImageView
+                        android:tint="@color/textos_principal"
+                        android:foreground="?android:attr/selectableItemBackground"
+                        android:background="@drawable/fondo_transparent_item"
+                        android:id="@+id/btBack"
+                        android:padding="15dp"
+                        android:layout_weight="8.5"
+                        android:src="@drawable/ic_back"
+                        android:layout_gravity="center"
+                        android:layout_width="match_parent"
+                        android:layout_height="fill_parent"/>
+
+                    <TextView
+                        android:paddingStart="20dp"
+                        android:textSize="16sp"
+                        android:layout_weight="1.5"
+                        android:text=" Nueva bitácora"
+                        android:layout_gravity="center"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"/>
+                </LinearLayout>
+
+
+                <LinearLayout
+                    android:visibility="visible"
+                    android:padding="16dp"
+                    android:orientation="vertical"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent">
+
+
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Completa los campos indicados"
+                        android:textColor="@color/textos_principal"
+                        android:textSize="18sp"
+                        android:textStyle="bold" />
+
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="3dp"
+                        android:orientation="horizontal">
+
+                        <TextView
+                            android:textColor="@color/textos_general"
+                            android:layout_marginBottom="3dp"
+                            android:id="@+id/tvDireccionUsuario"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="Una vez registrados presiona guardar"
+                            android:textSize="11sp" />
+
+                    </LinearLayout>
+
+                    <TextView
+                        android:layout_marginTop="20dp"
+                        android:text="Número de bitácora"
+                        android:textStyle="bold"
+                        android:textSize="14sp"
+                        android:textColor="@color/textos_principal"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"/>
+
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:background="@drawable/rounded_style_black"
+                        android:textColorHint="@color/textos_principal"
+                        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+
+                        android:layout_marginTop="5dp"
+                        android:layout_width="match_parent"
+                        android:layout_height="55dp">
+
+                        <AutoCompleteTextView
+                            android:inputType="textAutoComplete"
+                            android:paddingLeft="10dp"
+                            android:id="@+id/etBitacora"
+                            android:textColor="@color/textos_general"
+                            android:textSize="16sp"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:hint="No. Bitácora" />
+                    </com.google.android.material.textfield.TextInputLayout>
+
+
+
+
+
+
+                    <LinearLayout
+                        android:visibility="visible"
+                        android:id="@+id/layoutDatos"
+                        android:orientation="vertical"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content">
+
+                        <LinearLayout
+                            android:id="@+id/layoutAtaud"
+                            android:visibility="gone"
+                            android:layout_marginTop="20dp"
+                            android:weightSum="10"
+                            android:layout_width="match_parent"
+                            android:orientation="horizontal"
+                            android:layout_height="wrap_content">
+
+                            <TextView
+                                android:layout_gravity="center"
+                                android:layout_weight="7.5"
+                                android:text="Ataúd: "
+                                android:textStyle="bold"
+                                android:textSize="14sp"
+                                android:textColor="@color/textos_principal"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"/>
+
+                            <TextView
+                                android:layout_gravity="center"
+                                android:layout_weight="2.5"
+                                android:textColor="@color/textos_general"
+                                android:id="@+id/tvAtaud"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:text="Ataúd imperial elite"
+                                android:textSize="12sp" />
+
+                        </LinearLayout>
+
+
+
+
+
+
+                        <LinearLayout
+                            android:id="@+id/layoutPanteon"
+                            android:visibility="gone"
+                            android:layout_marginTop="10dp"
+                            android:weightSum="10"
+                            android:layout_width="match_parent"
+                            android:orientation="horizontal"
+                            android:layout_height="wrap_content">
+
+                            <TextView
+                                android:layout_weight="7.5"
+                                android:text="Panteón: "
+                                android:textStyle="bold"
+                                android:textSize="14sp"
+                                android:textColor="@color/textos_principal"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"/>
+
+                            <TextView
+                                android:layout_gravity="center"
+                                android:layout_weight="2.5"
+                                android:textColor="@color/textos_general"
+                                android:id="@+id/tvPanteon"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:text="Valle de los cipreses"
+                                android:textSize="12sp" />
+
+                        </LinearLayout>
+
+
+
+
+                        <LinearLayout
+                            android:id="@+id/layoutSevicio"
+                            android:visibility="gone"
+                            android:layout_marginTop="10dp"
+                            android:weightSum="10"
+                            android:layout_width="match_parent"
+                            android:orientation="horizontal"
+                            android:layout_height="wrap_content">
+
+                            <TextView
+                                android:layout_weight="7.5"
+                                android:text="Servicio: "
+                                android:textStyle="bold"
+                                android:textSize="14sp"
+                                android:textColor="@color/textos_principal"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"/>
+
+                            <TextView
+                                android:layout_gravity="center"
+                                android:layout_weight="2.5"
+                                android:textColor="@color/textos_general"
+                                android:id="@+id/tvCrematorio"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:text="Crematorio Guadalajara"
+                                android:textSize="12sp" />
+
+                        </LinearLayout>
+
+
+                        <!-- comienza -->
+
+                        <TextView
+                            android:layout_marginTop="20dp"
+                            android:text="Nombre del Chofer"
+                            android:textStyle="bold"
+                            android:textSize="14sp"
+                            android:textColor="@color/textos_principal"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"/>
+
+                        <com.google.android.material.textfield.TextInputLayout
+                            android:layout_marginTop="10dp"
+                            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                            android:backgroundTint="@color/black"
+                            android:layout_width="match_parent"
+                            android:layout_height="55dp">
+
+                            <AutoCompleteTextView
+                                android:inputType="textPersonName"
+                                android:paddingLeft="10dp"
+                                android:id="@+id/etChofer"
+                                android:backgroundTint="@color/textos_general"
+                                android:textColor="@color/textos_general"
+                                android:textSize="16sp"
+                                android:textColorHint="@color/textos_general"
+                                android:layout_width="match_parent"
+                                android:layout_height="match_parent"
+                                android:hint="Chofer" />
+                        </com.google.android.material.textfield.TextInputLayout>
+
+
+
+
+
+                        <TextView
+                            android:layout_marginTop="20dp"
+                            android:text="Nombre del ayudante"
+                            android:textStyle="bold"
+                            android:textSize="14sp"
+                            android:textColor="@color/textos_principal"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"/>
+
+                        <com.google.android.material.textfield.TextInputLayout
+                            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                            android:backgroundTint="@color/black"
+                            android:layout_marginTop="5dp"
+                            android:layout_width="match_parent"
+                            android:layout_height="55dp">
+
+                            <AutoCompleteTextView
+                                android:paddingLeft="10dp"
+                                android:id="@+id/etAyudante"
+                                android:backgroundTint="@color/textos_general"
+                                android:textColor="@color/textos_general"
+                                android:textSize="16sp"
+                                android:textColorHint="@color/textos_general"
+                                android:layout_width="match_parent"
+                                android:layout_height="match_parent"
+                                android:hint="Ayudante" />
+                        </com.google.android.material.textfield.TextInputLayout>
+
+
+
+
+                        <TextView
+                            android:layout_marginTop="20dp"
+                            android:text="Vehículo (Carroza)"
+                            android:textStyle="bold"
+                            android:textSize="14sp"
+                            android:textColor="@color/textos_principal"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"/>
+
+                        <com.google.android.material.textfield.TextInputLayout
+                            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                            android:backgroundTint="@color/black"
+                            android:layout_marginTop="5dp"
+                            android:layout_width="match_parent"
+                            android:layout_height="55dp">
+
+                            <AutoCompleteTextView
+                                android:paddingLeft="10dp"
+                                android:id="@+id/etCarro"
+                                android:backgroundTint="@color/textos_general"
+                                android:textColor="@color/textos_general"
+                                android:textSize="16sp"
+                                android:textColorHint="@color/textos_general"
+                                android:layout_width="match_parent"
+                                android:layout_height="match_parent"
+                                android:hint="Vehículo (Carroza)" />
+
+                        </com.google.android.material.textfield.TextInputLayout>
+
+
+
+                        <TextView
+                            android:layout_marginTop="20dp"
+                            android:text="Lugar de salida"
+                            android:textStyle="bold"
+                            android:textSize="14sp"
+                            android:textColor="@color/textos_principal"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"/>
+
+                        <com.google.android.material.textfield.TextInputLayout
+                            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                            android:backgroundTint="@color/black"
+                            android:layout_marginTop="5dp"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content">
+
+                            <Spinner
+                                android:layout_marginTop="-15dp"
+                                android:paddingLeft="10dp"
+                                android:id="@+id/spLugares"
+                                android:backgroundTint="@color/textos_general"
+                                android:textColor="@color/textos_general"
+                                android:textSize="16sp"
+                                android:textColorHint="@color/textos_general"
+                                android:layout_width="match_parent"
+                                android:layout_height="55dp"
+                                android:hint="Lugar de salida" />
+
+                        </com.google.android.material.textfield.TextInputLayout>
+
+
+
+                        <TextView
+                            android:layout_marginTop="20dp"
+                            android:text="Destino"
+                            android:textStyle="bold"
+                            android:textSize="14sp"
+                            android:textColor="@color/textos_principal"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"/>
+
+                        <com.google.android.material.textfield.TextInputLayout
+                            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                            android:backgroundTint="@color/black"
+                            android:layout_marginTop="5dp"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content">
+
+                            <Spinner
+                                android:layout_marginTop="-15dp"
+                                android:paddingLeft="10dp"
+                                android:id="@+id/spDestino"
+                                android:backgroundTint="@color/textos_general"
+                                android:textColor="@color/textos_general"
+                                android:textSize="16sp"
+                                android:textColorHint="@color/textos_general"
+                                android:layout_width="match_parent"
+                                android:layout_height="55dp"
+                                android:hint="Lugar de salida" />
+
+                        </com.google.android.material.textfield.TextInputLayout>
+
+
+
+                        <TextView
+                            android:layout_marginTop="20dp"
+                            android:text="Tipo de movimiento"
+                            android:textStyle="bold"
+                            android:textSize="14sp"
+                            android:textColor="@color/textos_principal"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"/>
+
+
+                        <com.google.android.material.textfield.TextInputLayout
+                            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                            android:backgroundTint="@color/black"
+                            android:layout_marginTop="5dp"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content">
+
+                            <Spinner
+                                android:layout_marginTop="-15dp"
+                                android:paddingLeft="10dp"
+                                android:id="@+id/spMovimiento"
+                                android:backgroundTint="@color/textos_general"
+                                android:textColor="@color/textos_general"
+                                android:textSize="16sp"
+                                android:textColorHint="@color/textos_general"
+                                android:layout_width="match_parent"
+                                android:layout_height="55dp" />
+
+                        </com.google.android.material.textfield.TextInputLayout>
+
+
+                        <LinearLayout
+                            android:layout_marginTop="50dp"
+                            android:layout_marginBottom="100dp"
+                            android:paddingBottom="100dp"
+                            android:weightSum="10"
+                            android:orientation="horizontal"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content">
+
+                            <androidx.appcompat.widget.AppCompatButton
+                                android:drawableStart="@drawable/ic_close"
+                                android:drawableTint="@color/white"
+                                android:layout_weight="5"
+                                android:background="@drawable/btn_warning"
+                                android:id="@+id/btCancelar"
+                                android:textColor="@color/white"
+                                android:padding="15dp"
+                                android:textSize="12sp"
+                                android:textStyle="bold"
+                                android:layout_margin="10dp"
+                                android:text="Cancelar"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content" />
+
+                            <androidx.appcompat.widget.AppCompatButton
+                                android:drawableEnd="@drawable/ic_chekk"
+                                android:drawableTint="@color/white"
+                                android:layout_margin="10dp"
+                                android:layout_weight="5"
+                                android:background="@drawable/btn_ok"
+                                android:id="@+id/btGuardar"
+                                android:textSize="12sp"
+                                android:textStyle="bold"
+                                android:textColor="@color/white"
+                                android:padding="15dp"
+                                android:text="Aceptar"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content" />
+
+                        </LinearLayout>
+
+                        <!-- TERMINA -->
+                    </LinearLayout>
+
+                </LinearLayout>
+
+            </LinearLayout>
+
+
+        </androidx.core.widget.NestedScrollView>
+    </LinearLayout>
+
+    <ImageView
+        android:id="@+id/btComentarios"
+        android:layout_width="60dp"
+        android:layout_height="wrap_content"
+        android:layout_gravity="top|end"
+        android:layout_weight="5"
+        android:background="@drawable/fondo_transparent_item"
+        android:padding="15dp"
+        android:layout_margin="10dp"
+        android:src="@drawable/ic_help"
+        android:tint="@color/textos_principal"
+        app:tint="@color/textos_principal" />
+
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:id="@+id/layoutCargando"
+        android:background="#AA000000"
+        android:clickable="true"
+        android:visibility="gone">
+
+        <ImageView
+            android:layout_width="85dp"
+            android:layout_height="85dp"
+            android:id="@+id/ivLoadingBackground"
+            android:layout_gravity="center"
+            android:visibility="visible" />
+
+        <ProgressBar
+            android:id="@+id/progressBar"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:visibility="visible" />
+
+    </FrameLayout>
+
+
+
+</FrameLayout>

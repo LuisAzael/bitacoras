@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout
+    android:rotation="180"
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content">
+
+    <androidx.cardview.widget.CardView
+        app:cardBackgroundColor="@color/white_card_color"
+        android:layout_margin="5dp"
+        android:id="@+id/cardContainer"
+        app:cardCornerRadius="5dp"
+        app:cardElevation="0dp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content">
+
+        <LinearLayout
+            android:orientation="horizontal"
+            android:weightSum="10"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content">
+
+            <View
+                android:id="@+id/viewLateral"
+                android:background="@color/purple_200"
+                android:layout_width="4dp"
+                android:layout_height="fill_parent"/>
+
+            <LinearLayout
+                android:id="@+id/layoutTextos"
+                android:layout_margin="10dp"
+                android:orientation="vertical"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <LinearLayout
+                    android:layout_weight="1"
+                    android:orientation="vertical"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content">
+
+                    <TextView
+                        android:rotationY="180"
+                        android:id="@+id/tvComentario"
+                        android:textColor="@color/textos_principal"
+                        android:textSize="14sp"
+                        android:textStyle="bold"
+                        android:text="La base y no gira correctamente."
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"/>
+
+
+                    <TextView
+                        android:rotationY="180"
+                        android:layout_marginTop="10dp"
+                        android:visibility="visible"
+                        android:id="@+id/tvUsuario"
+                        android:textColor="@color/purple_200"
+                        android:textSize="11sp"
+                        android:text="Funeraria san azael"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"/>
+
+                    <TextView
+                        android:rotationY="180"
+                        android:visibility="visible"
+                        android:id="@+id/tvFecha"
+                        android:textColor="@color/textos_general"
+                        android:textSize="11sp"
+                        android:text="2021-03-08 09:47:12"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"/>
+
+                </LinearLayout>
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+    </androidx.cardview.widget.CardView>
+</FrameLayout>
