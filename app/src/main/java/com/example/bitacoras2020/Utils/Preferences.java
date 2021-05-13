@@ -23,6 +23,7 @@ public class Preferences
     public static final String PREFERENCE_TUTORIAL_DETALLES="TUTORIAL_DETAILS";
     public static final String PREFERENCE_ISBUNKER="is.bunker";
     public static final String PREFERENCE_ASISTENCIA_ENTRADA="asistencia.entrada";
+    public static final String PREFERENCE_AUTOMATICA="asistencia.salida.automatica";
 
 
     public static void setPreferencesAsistenciaEntrada(Context c, boolean bandera, String key)
@@ -187,6 +188,16 @@ public class Preferences
 
     public static boolean getActividadYaIniciada(Context c, String key)
     {
+        SharedPreferences preferences= c.getSharedPreferences(STRING_PREFERENCES, c.MODE_PRIVATE);
+        return preferences.getBoolean(key, false  );
+    }
+
+    public static void setSalidaAutomatica(Context c, boolean bandera, String key) {
+        SharedPreferences preferences= c.getSharedPreferences(STRING_PREFERENCES, c.MODE_PRIVATE);
+        preferences.edit().putBoolean(key, bandera).apply();
+    }
+
+    public static boolean getSalidaAutomatica(Context c, String key) {
         SharedPreferences preferences= c.getSharedPreferences(STRING_PREFERENCES, c.MODE_PRIVATE);
         return preferences.getBoolean(key, false  );
     }

@@ -33,6 +33,8 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import soup.neumorphism.NeumorphButton;
+
 public class Welcome extends AppCompatActivity {
 
     private static final String TAG = "WELCOME";
@@ -68,12 +70,12 @@ public class Welcome extends AppCompatActivity {
     }
 
     public void showErrorDialog(final String codeError) {
-        final Button btNo, btSi;
+        final NeumorphButton btNo, btSi;
         TextView tvCodeError;
         dialogoError.setContentView(R.layout.layout_error);
         dialogoError.setCancelable(false);
-        btNo = (Button) dialogoError.findViewById(R.id.btNo);
-        btSi = (Button) dialogoError.findViewById(R.id.btSi);
+        btNo = (NeumorphButton) dialogoError.findViewById(R.id.btNo);
+        btSi = (NeumorphButton) dialogoError.findViewById(R.id.btSi);
         tvCodeError = (TextView) dialogoError.findViewById(R.id.tvCodeError);
         tvCodeError.setText(codeError);
 

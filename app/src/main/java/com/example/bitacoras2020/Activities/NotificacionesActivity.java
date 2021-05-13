@@ -10,10 +10,17 @@ import android.graphics.Color;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
+import com.android.volley.DefaultRetryPolicy;
+import com.android.volley.Request;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.JsonObjectRequest;
 import com.example.bitacoras2020.Adapters.AdapterBitacorasActivas;
 import com.example.bitacoras2020.Adapters.AdapterNotificaciones;
 import com.example.bitacoras2020.Database.DatabaseAssistant;
@@ -23,7 +30,12 @@ import com.example.bitacoras2020.MainActivity;
 import com.example.bitacoras2020.Models.ModelBitacorasActivas;
 import com.example.bitacoras2020.Models.ModelNotificaciones;
 import com.example.bitacoras2020.R;
+import com.example.bitacoras2020.Utils.ApplicationResourcesProvider;
+import com.example.bitacoras2020.Utils.ConstantsBitacoras;
+import com.example.bitacoras2020.Utils.VolleySingleton;
 
+import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.text.SimpleDateFormat;
@@ -82,9 +94,19 @@ public class NotificacionesActivity extends AppCompatActivity {
     }
 
     @Override
+    protected void onStart() {
+        super.onStart();
+        if(ApplicationResourcesProvider.checkInternetConnection()) {
+            downloadNotifications();
+        }
+
+        consultarNotificaciones();
+    }
+
+    @Override
     protected void onResume() {
         super.onResume();
-        consultarNotificaciones();
+
     }
 
     private void consultarNotificaciones() {
@@ -122,5 +144,74 @@ public class NotificacionesActivity extends AppCompatActivity {
         }
 
 
+    }
+
+    private void downloadNotifications()
+    {
+        showMyCustomDialog();
+        JSONObject params = new JSONObject();
+        try {
+            params.put("usuario", DatabaseAssistant.getUserNameFromSesiones() );
+            params.put("token_device", DatabaseAssistant.getTokenDeUsuario());
+            params.put("isProveedor", DatabaseAssistant.getIsProveedor());
+            params.put("pagina", "1");
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+
+        JsonObjectRequest postRequest = new JsonObjectRequest(Request.Method.POST, ConstantsBitacoras.WS_NOTIFICATIONS_URL, params, new Response.Listener<JSONObject>() {
+            @Override
+            public void onResponse(JSONObject response)
+            {
+                JSONArray jsonArrayNotifications = new JSONArray();
+                try {
+                    jsonArrayNotifications = response.getJSONArray("notifications");
+
+                    if(jsonArrayNotifications.length()>0) {
+                        Notificaciones.deleteAll(Notificaciones.class);
+                        for (int i = 0; i <= jsonArrayNotifications.length() - 1; i++) {
+                            String[] title = jsonArrayNotifications.getJSONObject(i).getString("title").split("-");
+                            DatabaseAssistant.insertarNotificacion(
+                                    "" + jsonArrayNotifications.getJSONObject(i).getString("title"),
+                                    "" + jsonArrayNotifications.getJSONObject(i).getString("message"),
+                                    "",
+                                    "" + title[0],
+                                    "" + jsonArrayNotifications.getJSONObject(i).getString("fecha")
+                            );
+                        }
+                        dismissMyCustomDialog();
+                        consultarNotificaciones();
+                        Log.d(TAG, "onResponse: Notificaciones descargadas correctamente.");
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    Log.e(TAG, "onResponse: Error al descargar notificaciones: " + e.getMessage());
+                    Toast.makeText(getApplicationContext(), "Ocurrio un error en descargar notificaciones", Toast.LENGTH_SHORT).show();
+                    dismissMyCustomDialog();
+                }
+            }
+        },
+                new Response.ErrorListener() {
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+                        error.printStackTrace();
+                        Log.e(TAG, "onResponse: Error al descargar notificaciones: " + error.getMessage());
+                        Toast.makeText(getApplicationContext(), "Ocurrio un error en descargar notificaciones", Toast.LENGTH_SHORT).show();
+                        dismissMyCustomDialog();
+                    }
+                }) {
+        };
+        postRequest.setRetryPolicy(new DefaultRetryPolicy(90000, 1, DefaultRetryPolicy.DEFAULT_TIMEOUT_MS));
+        VolleySingleton.getIntanciaVolley(getApplicationContext()).addToRequestQueue(postRequest);
+    }
+
+    private void showMyCustomDialog() {
+        final FrameLayout flLoading = (FrameLayout) findViewById(R.id.layoutCargando);
+        flLoading.setVisibility(View.VISIBLE);
+    }
+
+    private void dismissMyCustomDialog() {
+        final FrameLayout flLoading = (FrameLayout) findViewById(R.id.layoutCargando);
+        flLoading.setVisibility(View.GONE);
     }
 }

@@ -73,14 +73,17 @@ public class AdapterEquiposRecoleccion extends RecyclerView.Adapter<AdapterEquip
             }
         });
 
-        if(product.getSerie().contains("CL") ||product.getSerie().contains("CB") )
+        /*if(product.getSerie().contains("CL") ||product.getSerie().contains("CB") )
             holder.tvEntradaSalida.setVisibility(View.VISIBLE);
         else
-            holder.tvEntradaSalida.setVisibility(View.GONE);
+            holder.tvEntradaSalida.setVisibility(View.GONE);*/
+
+        holder.tvEntradaSalida.setVisibility(View.VISIBLE);
 
         if (product.getTipo().equals("0")){
             holder.tvEntradaSalida.setTextColor(Color.parseColor("#9a0007"));
-            holder.tvEntradaSalida.setText("Salida de inventario");}
+            holder.tvEntradaSalida.setText("Salida de inventario");
+        }
         else if(product.getTipo().equals("1")) {
             holder.tvEntradaSalida.setText("Entrada de inventario");
             holder.tvEntradaSalida.setTextColor(Color.parseColor("#ff669900"));

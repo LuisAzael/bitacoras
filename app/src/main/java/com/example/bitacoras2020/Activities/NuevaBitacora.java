@@ -1,16 +1,21 @@
 package com.example.bitacoras2020.Activities;
 
+import androidx.annotation.Nullable;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.core.widget.NestedScrollView;
+import androidx.recyclerview.widget.GridLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.KeyguardManager;
 import android.content.ActivityNotFoundException;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.content.pm.PackageInfo;
@@ -61,9 +66,25 @@ import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
+import com.example.bitacoras2020.Adapters.AdapterEquiposCortejo;
+import com.example.bitacoras2020.Adapters.AdapterEquiposInstalacion;
+import com.example.bitacoras2020.Adapters.AdapterEquiposRecoleccion;
+import com.example.bitacoras2020.Adapters.AdapterEquiposTraslado;
+import com.example.bitacoras2020.Callbacks.CancelarArticuloCortejo;
+import com.example.bitacoras2020.Callbacks.CancelarArticuloInstalacion;
+import com.example.bitacoras2020.Callbacks.CancelarArticuloRecoleccion;
+import com.example.bitacoras2020.Callbacks.CancelarArticuloTraslado;
+import com.example.bitacoras2020.Database.Adicional;
 import com.example.bitacoras2020.Database.Bitacoras;
+import com.example.bitacoras2020.Database.CatalogoArticulos;
 import com.example.bitacoras2020.Database.Codigos;
+import com.example.bitacoras2020.Database.Comentarios;
 import com.example.bitacoras2020.Database.DatabaseAssistant;
+import com.example.bitacoras2020.Database.Documentos;
+import com.example.bitacoras2020.Database.EquipoRecoleccion;
+import com.example.bitacoras2020.Database.EquipoTraslado;
+import com.example.bitacoras2020.Database.Equipocortejo;
+import com.example.bitacoras2020.Database.Equipoinstalacion;
 import com.example.bitacoras2020.MainActivity;
 import com.example.bitacoras2020.R;
 import com.example.bitacoras2020.Utils.ApplicationResourcesProvider;
@@ -76,6 +97,8 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.material.bottomsheet.BottomSheetDialog;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.firebase.iid.FirebaseInstanceId;
+import com.google.zxing.integration.android.IntentIntegrator;
+import com.google.zxing.integration.android.IntentResult;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -89,44 +112,53 @@ import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 
-public class NuevaBitacora extends Activity implements LinearLayoutThatDetectsSoftKeyboard.Listener
-{
-    private static final String TAG ="NuevaBitacora";
-    public String bitacoraSeleccionada="", choferSeleccionado="", ayudanteSeleccionado="", carroSeleccinado="", lugarSeleccionado="", destinoSeleccionado="", movimientoSeleccionado="";
+import soup.neumorphism.NeumorphButton;
+
+public class NuevaBitacora extends Activity implements LinearLayoutThatDetectsSoftKeyboard.Listener, CancelarArticuloInstalacion, CancelarArticuloRecoleccion, CancelarArticuloTraslado {
+    private static final String TAG = "NuevaBitacora";
+    public String bitacoraSeleccionada = "", choferSeleccionado = "", ayudanteSeleccionado = "", carroSeleccinado = "", lugarSeleccionado = "", destinoSeleccionado = "", movimientoSeleccionado = "";
     AutoCompleteTextView etBitacora, etCarro, etChofer, etAyudante;
     Spinner spLugares, spDestino, spMovimiento;
     ImageView btBack;
     LinearLayout frameRegistro;
-    String tipoOpcion="";
+    String tipoOpcion = "";
     BottomSheetDialog dialogBottomNavigation;
     Dialog dialogoError;
     TextView tvAtaud, tvPanteon, tvCrematorio;
-
+    NeumorphButton btBuscarBitacora;
     boolean errorStackTraceBitacoras = false;
+    boolean errorStackTraceBitacorasDetalles = false;
+    boolean errorStackTraceBitacorasComentarios = false;
     boolean bitacoraFromNotification = false;
-    String codigoErrorStackTraceBitacoras = "";
+    String codigoErrorStackTraceBitacoras = "", bitacoraGlobal="";
+
+    private boolean equipoDeTraslado = false, equipoDeInstalacion = false, equipoRecoleccion = false,  isArticuloDeVelacion = false, scannerAtaurna= false;
 
     @Override
     public void onBackPressed() {
         super.onBackPressed();
-        if(bitacoraFromNotification) {
+        if (bitacoraFromNotification) {
             Intent intent = new Intent(getApplicationContext(), MainActivity.class);
             startActivity(intent);
         }
+        eliminarArticulosDeInstalacionNoGuardados(bitacoraGlobal);
+        eliminarArticulosDeCortejoNoGuardados(bitacoraGlobal);
+        eliminarArticulosDeRecoleccionNoGuardados(bitacoraGlobal);
+        eliminarArticulosDeTrasladoNoGuardados(bitacoraGlobal);
         finish();
     }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+
         dialogBottomNavigation = new BottomSheetDialog(NuevaBitacora.this);
         dialogoError = new Dialog(this);
         setContentView(R.layout.activity_nueva_bitacora);
-        Button btCancelar = findViewById(R.id.btCancelar);
-        Button btGuardar = findViewById(R.id.btGuardar);
+        NeumorphButton btCancelar = findViewById(R.id.btCancelar);
+        NeumorphButton btGuardar = findViewById(R.id.btGuardar);
 
-        btBack =(ImageView) findViewById(R.id.btBack);
+        btBack = (ImageView) findViewById(R.id.btBack);
         etBitacora = (AutoCompleteTextView) findViewById(R.id.etBitacora);
         etChofer = (AutoCompleteTextView) findViewById(R.id.etChofer);
         etAyudante = (AutoCompleteTextView) findViewById(R.id.etAyudante);
@@ -138,6 +170,22 @@ public class NuevaBitacora extends Activity implements LinearLayoutThatDetectsSo
         tvAtaud = (TextView) findViewById(R.id.tvAtaud);
         tvPanteon = (TextView) findViewById(R.id.tvPanteon);
         tvCrematorio = (TextView) findViewById(R.id.tvCrematorio);
+        btBuscarBitacora = (NeumorphButton) findViewById(R.id.btBuscarBitacora);
+
+
+        btBuscarBitacora.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (!etBitacora.getText().toString().equals("") && etBitacora.getText().toString().length() > 8) {
+                    if (!DatabaseAssistant.laBitacoraEstaActiva(etBitacora.getText().toString().toUpperCase())) {
+                        searchBitacoraInWeb(etBitacora.getText().toString().toUpperCase());
+                    }else
+                        Toast.makeText(NuevaBitacora.this, "Ya tienes esta bitácora activa.", Toast.LENGTH_SHORT).show();
+                } else {
+                    Toast.makeText(NuevaBitacora.this, "Por favor verificar la bitácora a buscar.", Toast.LENGTH_SHORT).show();
+                }
+            }
+        });
 
 
         ImageView btComentarios = (ImageView) findViewById(R.id.btComentarios);
@@ -151,10 +199,14 @@ public class NuevaBitacora extends Activity implements LinearLayoutThatDetectsSo
         btCancelar.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if(bitacoraFromNotification) {
+                if (bitacoraFromNotification) {
                     Intent intent = new Intent(getApplicationContext(), MainActivity.class);
                     startActivity(intent);
                 }
+                eliminarArticulosDeInstalacionNoGuardados(bitacoraGlobal);
+                eliminarArticulosDeCortejoNoGuardados(bitacoraGlobal);
+                eliminarArticulosDeRecoleccionNoGuardados(bitacoraGlobal);
+                eliminarArticulosDeTrasladoNoGuardados(bitacoraGlobal);
                 finish();
             }
         });
@@ -162,39 +214,41 @@ public class NuevaBitacora extends Activity implements LinearLayoutThatDetectsSo
         btBack.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if(bitacoraFromNotification) {
+                if (bitacoraFromNotification) {
                     Intent intent = new Intent(getApplicationContext(), MainActivity.class);
                     startActivity(intent);
                 }
-                    finish();
+                eliminarArticulosDeInstalacionNoGuardados(bitacoraGlobal);
+                eliminarArticulosDeCortejoNoGuardados(bitacoraGlobal);
+                eliminarArticulosDeRecoleccionNoGuardados(bitacoraGlobal);
+                eliminarArticulosDeTrasladoNoGuardados(bitacoraGlobal);
+                finish();
             }
         });
 
 
         final Bundle extras = getIntent().getExtras();
-        if(extras!=null) {
+        if (extras != null) {
 
-            if(extras.containsKey("bitacora_from_push_notification")){
+            if (extras.containsKey("bitacora_from_push_notification")) {
                 etBitacora.setText(extras.getString("bitacora_from_push_notification"));
                 //Verificar si la bitacora existe en BD local
-                if(DatabaseAssistant.laBitacoraExisteEnLaBaseDeDatos(extras.getString("bitacora_from_push_notification"))) {
+                if (DatabaseAssistant.laBitacoraExisteEnLaBaseDeDatos(extras.getString("bitacora_from_push_notification"))) {
                     checkAndShowDataInBoxes(extras.getString("bitacora_from_push_notification"));
-                }
-                else
+                } else
                     //Actualizar las bitacoras desde WS con loadAnimation
                     loadInformationAndRequest(extras.getString("bitacora_from_push_notification"));
 
                 bitacoraFromNotification = true;
             }
 
-            if(extras.containsKey("tipo"))
+            if (extras.containsKey("tipo"))
                 tipoOpcion = extras.getString("tipo");
 
-           if(tipoOpcion.equals("2")){
-               DatabaseAssistant.updateBitacorasToCero("auxiliar");
+            if (tipoOpcion.equals("2")) {
+                DatabaseAssistant.updateBitacorasToCero("auxiliar");
             }
-        }
-        else
+        } else
             Log.v(TAG, "No se recuperaron datos de extras");
 
 
@@ -225,10 +279,12 @@ public class NuevaBitacora extends Activity implements LinearLayoutThatDetectsSo
             @Override
             public void onClick(View v) {
 
-                //Verificar lls lugares seleccionados tanto origen como destino, que no sean iguales, para poder levanar el evento de bitacora
-                if(!lugarSeleccionado.equals(destinoSeleccionado)) {
+                /**Verificar lls lugares seleccionados tanto origen como destino, que no sean iguales, para poder levanar el evento de bitacora**/
+                if (!lugarSeleccionado.equals(destinoSeleccionado)) {
+
                     String geofenceActual = Preferences.getGeofenceActual(NuevaBitacora.this, Preferences.PREFERENCE_GEOFENCE_ACTUAL);
-                    if (!geofenceActual.equals("")) {
+                    if (!geofenceActual.equals(""))
+                    {
                         Log.i(TAG, "onCreate: Geofence actual: " + geofenceActual);
 
                         if (geofenceActual.equals(lugarSeleccionado)) {
@@ -288,18 +344,13 @@ public class NuevaBitacora extends Activity implements LinearLayoutThatDetectsSo
                                     );
 
                                     ApplicationResourcesProvider.insertarMovimiento("", "", "REGISTRO DE BITÁCORA NUEVA: " + bitacora);
-
-                                    /*LayoutInflater inflater = getLayoutInflater();
-                                    View view = inflater.inflate(R.layout.custom_toast_layout, (ViewGroup) findViewById(R.id.relativeLayout1));
-                                    Toast toast = new Toast(getApplicationContext());
-                                    toast.setGravity(Gravity.CENTER, 0, 0);
-                                    toast.setDuration(Toast.LENGTH_LONG);
-                                    toast.setView(view);
-                                    toast.show()*/
-
+                                    updateArticulosDeInstalacionConSync4(bitacora);
+                                    updateArticulosDeCortejoConSync4(bitacora);
+                                    updateArticulosDeRecoleccionConSync4(bitacora);
+                                    updateArticulosDeTrasladoConSync4(bitacora);
 
                                     LayoutInflater inflater = getLayoutInflater();
-                                    View view = inflater.inflate(R.layout.custom_toast_layout, (ViewGroup)findViewById(R.id.relativeLayout1));
+                                    View view = inflater.inflate(R.layout.custom_toast_layout, (ViewGroup) findViewById(R.id.relativeLayout1));
                                     LottieAnimationView lottieAnimationView = view.findViewById(R.id.imageView1);
                                     lottieAnimationView.setAnimation("success_toast.json");
                                     lottieAnimationView.loop(false);
@@ -309,8 +360,6 @@ public class NuevaBitacora extends Activity implements LinearLayoutThatDetectsSo
                                     toast.setDuration(Toast.LENGTH_LONG);
                                     toast.setView(view);
                                     toast.show();
-
-
 
 
                                     //VERIFICAR SI LA BITACORA TIENE LUGAR DE DESTINO PARA MANDARLO A NAVEGACIÓN
@@ -334,7 +383,7 @@ public class NuevaBitacora extends Activity implements LinearLayoutThatDetectsSo
                                                     "" + String.valueOf(coordenadas.longitude));
                                         } else {
                                             //finish();
-                                            if(bitacoraFromNotification) {
+                                            if (bitacoraFromNotification) {
                                                 Intent intent = new Intent(getApplicationContext(), MainActivity.class);
                                                 startActivity(intent);
                                             }
@@ -346,7 +395,7 @@ public class NuevaBitacora extends Activity implements LinearLayoutThatDetectsSo
                                         Log.i(TAG, "onClick: No pudimos obtener las coordenadas de nada");
                                         Toast.makeText(NuevaBitacora.this, "Hubo un error al crear ruta", Toast.LENGTH_SHORT).show();
                                         //finish();
-                                        if(bitacoraFromNotification) {
+                                        if (bitacoraFromNotification) {
                                             Intent intent = new Intent(getApplicationContext(), MainActivity.class);
                                             startActivity(intent);
                                         }
@@ -418,17 +467,14 @@ public class NuevaBitacora extends Activity implements LinearLayoutThatDetectsSo
                                         "" + movimientoSeleccionado != null ? movimientoSeleccionado : spMovimiento.getSelectedItem().toString()
                                 );
 
-                                /*LayoutInflater inflater = getLayoutInflater();
-                                View view = inflater.inflate(R.layout.custom_toast_layout, (ViewGroup) findViewById(R.id.relativeLayout1));
-
-                                Toast toast = new Toast(getApplicationContext());
-                                toast.setGravity(Gravity.CENTER, 0, 0);
-                                toast.setDuration(Toast.LENGTH_LONG);
-                                toast.setView(view);
-                                toast.show();*/
+                                ApplicationResourcesProvider.insertarMovimiento("", "", "REGISTRO DE BITÁCORA NUEVA: " + bitacora);
+                                updateArticulosDeInstalacionConSync4(bitacora);
+                                updateArticulosDeCortejoConSync4(bitacora);
+                                updateArticulosDeRecoleccionConSync4(bitacora);
+                                updateArticulosDeTrasladoConSync4(bitacora);
 
                                 LayoutInflater inflater = getLayoutInflater();
-                                View view = inflater.inflate(R.layout.custom_toast_layout, (ViewGroup)findViewById(R.id.relativeLayout1));
+                                View view = inflater.inflate(R.layout.custom_toast_layout, (ViewGroup) findViewById(R.id.relativeLayout1));
                                 LottieAnimationView lottieAnimationView = view.findViewById(R.id.imageView1);
                                 lottieAnimationView.setAnimation("success_toast.json");
                                 lottieAnimationView.loop(false);
@@ -461,7 +507,7 @@ public class NuevaBitacora extends Activity implements LinearLayoutThatDetectsSo
                                                 "" + String.valueOf(coordenadas.longitude));
                                     } else {
                                         //finish();
-                                        if(bitacoraFromNotification) {
+                                        if (bitacoraFromNotification) {
                                             Intent intent = new Intent(getApplicationContext(), MainActivity.class);
                                             startActivity(intent);
                                         }
@@ -473,7 +519,7 @@ public class NuevaBitacora extends Activity implements LinearLayoutThatDetectsSo
                                     Log.i(TAG, "onClick: No pudimos obtener las coordenadas de nada");
                                     Toast.makeText(NuevaBitacora.this, "Hubo un error al crear ruta", Toast.LENGTH_SHORT).show();
                                     //finish();
-                                    if(bitacoraFromNotification) {
+                                    if (bitacoraFromNotification) {
                                         Intent intent = new Intent(getApplicationContext(), MainActivity.class);
                                         startActivity(intent);
                                     }
@@ -487,8 +533,7 @@ public class NuevaBitacora extends Activity implements LinearLayoutThatDetectsSo
                             Toast.makeText(NuevaBitacora.this, "No se guardo la bitácora, intenta nuevamente", Toast.LENGTH_SHORT).show();
                         }
                     }
-                }
-                else{
+                } else {
                     Log.e(TAG, "onClick: El destino es igual al origen seleccionado");
                     showErrorDialog("No podemos crear la bitacora porque el destino debe ser diferente origen");
                 }
@@ -497,43 +542,33 @@ public class NuevaBitacora extends Activity implements LinearLayoutThatDetectsSo
         });
 
 
-
-
         etBitacora.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {
 
             }
+
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
                 bitacoraSeleccionada = null;
                 LinearLayout layoutDatos = (LinearLayout) findViewById(R.id.layoutDatos);
                 layoutDatos.setVisibility(View.GONE);
-                if(etBitacora.getText().toString().length() >= 4) {
+
+
+
+                /*if(etBitacora.getText().toString().length() >= 4) {
                     etBitacora.setThreshold(4);
                     try {
-                        //ArrayAdapter<String> adapterColonias = new ArrayAdapter<String>(getApplicationContext(), android.R.layout.simple_dropdown_item_1line, DatabaseAssistant.getBitacoraName(etBitacora.getText().toString()));
                         ArrayAdapter<String> adapterColonias = new ArrayAdapter<String>(NuevaBitacora.this, R.layout.style_spinner, DatabaseAssistant.getBitacoraName(etBitacora.getText().toString()));
-                        //adapterColonias.setDropDownViewResource(R.layout.simple_spinner_dropdown_item);
                         etBitacora.setAdapter(adapterColonias);
-
-
-                        /*ArrayAdapter<String> adapterColonias = new ArrayAdapter<String>(getApplicationContext(), android.R.layout.simple_dropdown_item_1line, DatabaseAssistant.getBitacoraName(etBitacora.getText().toString())) {
-                            @Override
-                            public View getDropDownView(int position, View convertView, ViewGroup parent) {
-                                View view = super.getDropDownView(position, convertView, parent);
-                                TextView tv = (TextView) view;
-                                tv.setTextColor(Color.BLACK);
-                                return view;
-                            }
-                        };
-                        etBitacora.setAdapter(adapterColonias);*/
                     }catch (Throwable e){
                         Log.e(TAG, "onTextChanged: Error en etBitacora.onTextChange() " + e.getMessage() );
                     }
-                }
+                }*/
+
 
             }
+
             @Override
             public void afterTextChanged(Editable s) {
 
@@ -545,52 +580,50 @@ public class NuevaBitacora extends Activity implements LinearLayoutThatDetectsSo
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 bitacoraSeleccionada = etBitacora.getEditableText().toString();
 
-                if(DatabaseAssistant.getDataBitacora(bitacoraSeleccionada) != null)
-                {
+                if (DatabaseAssistant.getDataBitacora(bitacoraSeleccionada) != null) {
                     closeTeclado();
                     String[] bitacompletaData = DatabaseAssistant.getDataBitacora(bitacoraSeleccionada);
 
 
-
                     bitacoraSeleccionada = bitacompletaData[1];
-                    try{
+                    try {
                         choferSeleccionado = bitacompletaData[3];
                         etChofer.setText(bitacompletaData[3]);
-                    }catch (Throwable e){
-                        Log.e(TAG, "onItemClick: " + e.getMessage() );
+                    } catch (Throwable e) {
+                        Log.e(TAG, "onItemClick: " + e.getMessage());
                         choferSeleccionado = null;
                         etChofer.setText("");
                     }
 
-                    try{
+                    try {
                         ayudanteSeleccionado = bitacompletaData[4];
                         etAyudante.setText(bitacompletaData[4]);
-                    }catch (Throwable e){
-                        Log.e(TAG, "onItemClick: " + e.getMessage() );
+                    } catch (Throwable e) {
+                        Log.e(TAG, "onItemClick: " + e.getMessage());
                         ayudanteSeleccionado = null;
                         etAyudante.setText("");
                     }
 
-                    try{
+                    try {
                         carroSeleccinado = bitacompletaData[5];
                         etCarro.setText(bitacompletaData[5]);
-                    }catch (Throwable e){
-                        Log.e(TAG, "onItemClick: " + e.getMessage() );
+                    } catch (Throwable e) {
+                        Log.e(TAG, "onItemClick: " + e.getMessage());
                         carroSeleccinado = null;
                         etCarro.setText("");
                     }
 
-                    try{
+                    try {
                         lugarSeleccionado = bitacompletaData[6];
-                    }catch (Throwable e){
-                        Log.e(TAG, "onItemClick: " + e.getMessage() );
+                    } catch (Throwable e) {
+                        Log.e(TAG, "onItemClick: " + e.getMessage());
                         lugarSeleccionado = null;
                     }
 
-                    try{
+                    try {
                         destinoSeleccionado = bitacompletaData[7];
-                    }catch (Throwable e){
-                        Log.e(TAG, "onItemClick: " + e.getMessage() );
+                    } catch (Throwable e) {
+                        Log.e(TAG, "onItemClick: " + e.getMessage());
                         destinoSeleccionado = null;
                     }
 
@@ -615,19 +648,19 @@ public class NuevaBitacora extends Activity implements LinearLayoutThatDetectsSo
                     etCarro.setTextColor(Color.parseColor("#969da9"));
 
 
-                    if(etChofer.getText().toString().equals("") || choferSeleccionado.equals("")) {
+                    if (etChofer.getText().toString().equals("") || choferSeleccionado.equals("")) {
                         etChofer.setTextColor(Color.RED);
                         etChofer.setText("**** FALTA DATO AQUÍ ****");
                         choferSeleccionado = null;
                     }
 
-                    if(etAyudante.getText().toString().equals("") || ayudanteSeleccionado.equals("")) {
+                    if (etAyudante.getText().toString().equals("") || ayudanteSeleccionado.equals("")) {
                         etAyudante.setTextColor(Color.RED);
                         etAyudante.setText("**** FALTA DATO AQUÍ ****");
                         ayudanteSeleccionado = null;
                     }
 
-                    if(etCarro.getText().toString().equals("") || carroSeleccinado.equals("")) {
+                    if (etCarro.getText().toString().equals("") || carroSeleccinado.equals("")) {
                         etCarro.setTextColor(Color.RED);
                         etCarro.setText("**** FALTA DATO AQUÍ ****");
                         carroSeleccinado = null;
@@ -641,14 +674,13 @@ public class NuevaBitacora extends Activity implements LinearLayoutThatDetectsSo
                         ArrayAdapter<String> adapter = new ArrayAdapter<String>(getApplicationContext(), R.layout.style_spinner, geofenceActualPorUbicacion);
                         spLugares.setAdapter(adapter);
                         spLugares.setEnabled(false);
-                    }
-                    else{
+                    } else {
 
-                        if(lugarSeleccionado.equals("**** FALTA DATO AQUÍ ****")) {
+                        if (lugarSeleccionado.equals("**** FALTA DATO AQUÍ ****")) {
                             spLugares.setBackground(ContextCompat.getDrawable(getApplicationContext(), R.drawable.rounded_style_red));
                             ArrayAdapter<String> adapter = new ArrayAdapter<String>(getApplicationContext(), R.layout.style_spinner, DatabaseAssistant.pedirLugaresDeOrigenYDestino());
                             spLugares.setAdapter(adapter);
-                        }else{
+                        } else {
                             //String[] opciones ={lugarSeleccionado};
                             //ArrayAdapter<String> adapterLugares = new ArrayAdapter<String>(getApplicationContext(), android.R.layout.simple_dropdown_item_1line, opciones);
                             ArrayAdapter<String> adapter = new ArrayAdapter<String>(getApplicationContext(), R.layout.style_spinner, DatabaseAssistant.pedirLugaresDeOrigenYDestino());
@@ -659,11 +691,11 @@ public class NuevaBitacora extends Activity implements LinearLayoutThatDetectsSo
                     }
 
 
-                    if(destinoSeleccionado.equals("**** FALTA DATO AQUÍ ****")) {
+                    if (destinoSeleccionado.equals("**** FALTA DATO AQUÍ ****")) {
                         spDestino.setBackground(ContextCompat.getDrawable(getApplicationContext(), R.drawable.rounded_style_red));
                         ArrayAdapter<String> adapter = new ArrayAdapter<String>(getApplicationContext(), R.layout.style_spinner, DatabaseAssistant.pedirLugaresDeOrigenYDestino());
                         spDestino.setAdapter(adapter);
-                    }else{
+                    } else {
                         //String[] opciones2 ={destinoSeleccionado};
                         //ArrayAdapter<String> adapterOpciones2 = new ArrayAdapter<String>(getApplicationContext(), android.R.layout.simple_dropdown_item_1line, opciones2);
                         ArrayAdapter<String> adapterOpciones2 = new ArrayAdapter<String>(getApplicationContext(), R.layout.style_spinner, DatabaseAssistant.pedirLugaresDeOrigenYDestino());
@@ -674,37 +706,32 @@ public class NuevaBitacora extends Activity implements LinearLayoutThatDetectsSo
                     LinearLayout layoutDatos = (LinearLayout) findViewById(R.id.layoutDatos);
                     layoutDatos.setVisibility(View.VISIBLE);
 
-                }else
+                } else
                     Toast.makeText(NuevaBitacora.this, "No se encontraron datos de la bitácora seleccionada", Toast.LENGTH_LONG).show();
-
 
 
             }
         });
 
 
-
-
-
-
-
-
-
-
         etChofer.addTextChangedListener(new TextWatcher() {
             @Override
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+            }
+
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
                 //choferSeleccionado = null;
-                if(etChofer.getText().toString().length() >= 1) {
+                if (etChofer.getText().toString().length() >= 1) {
                     ArrayAdapter<String> adapterColonias = new ArrayAdapter<String>(getApplicationContext(), R.layout.style_spinner,
                             DatabaseAssistant.getChoferes(etChofer.getText().toString()));
                     etChofer.setAdapter(adapterColonias);
                 }
             }
+
             @Override
-            public void afterTextChanged(Editable s) {}
+            public void afterTextChanged(Editable s) {
+            }
         });
 
         etChofer.setOnItemClickListener(new AdapterView.OnItemClickListener() {
@@ -719,16 +746,20 @@ public class NuevaBitacora extends Activity implements LinearLayoutThatDetectsSo
 
         etAyudante.addTextChangedListener(new TextWatcher() {
             @Override
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+            }
+
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
                 //ayudanteSeleccionado = null;
-                    ArrayAdapter<String> adapterColonias = new ArrayAdapter<String>(getApplicationContext(), R.layout.style_spinner,
-                            DatabaseAssistant.getChoferes(etAyudante.getText().toString()));
-                    etAyudante.setAdapter(adapterColonias);
+                ArrayAdapter<String> adapterColonias = new ArrayAdapter<String>(getApplicationContext(), R.layout.style_spinner,
+                        DatabaseAssistant.getChoferes(etAyudante.getText().toString()));
+                etAyudante.setAdapter(adapterColonias);
             }
+
             @Override
-            public void afterTextChanged(Editable s) {}
+            public void afterTextChanged(Editable s) {
+            }
         });
 
         etAyudante.setOnItemClickListener(new AdapterView.OnItemClickListener() {
@@ -741,22 +772,23 @@ public class NuevaBitacora extends Activity implements LinearLayoutThatDetectsSo
         });
 
 
-
-
         etCarro.addTextChangedListener(new TextWatcher() {
             @Override
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+            }
+
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
                 //carroSeleccinado = null;
 
-                    ArrayAdapter<String> adapterColonias = new ArrayAdapter<String>(getApplicationContext(), R.layout.style_spinner,
-                            DatabaseAssistant.getCarrosas(etCarro.getText().toString()));
-                    etCarro.setAdapter(adapterColonias);
+                ArrayAdapter<String> adapterColonias = new ArrayAdapter<String>(getApplicationContext(), R.layout.style_spinner, DatabaseAssistant.getCarrosas(etCarro.getText().toString()));
+                etCarro.setAdapter(adapterColonias);
 
             }
+
             @Override
-            public void afterTextChanged(Editable s) {}
+            public void afterTextChanged(Editable s) {
+            }
         });
 
         etCarro.setOnItemClickListener(new AdapterView.OnItemClickListener() {
@@ -809,16 +841,65 @@ public class NuevaBitacora extends Activity implements LinearLayoutThatDetectsSo
 
 
         String geofenceActual = Preferences.getGeofenceActual(NuevaBitacora.this, Preferences.PREFERENCE_GEOFENCE_ACTUAL);
-        if(!geofenceActual.equals("")){
+        if (!geofenceActual.equals("")) {
             Log.w(TAG, "onCreate: Geofence actual: " + geofenceActual);
-        }else
+        } else
             Log.w(TAG, "onCreate: La Geofence esta vacia");
 
 
-        if(!bitacoraFromNotification) {
+        if (!bitacoraFromNotification) {
             LinearLayout layoutDatos = (LinearLayout) findViewById(R.id.layoutDatos);
             layoutDatos.setVisibility(View.GONE);
         }
+
+
+
+
+
+        TextView btAnadirEquipo = (TextView) findViewById(R.id.btAnadirEquipo);
+        btAnadirEquipo.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+                equipoDeInstalacion = true;
+                isArticuloDeVelacion = false;
+                scannerAtaurna = false;
+                equipoRecoleccion = false;
+                equipoDeTraslado = false;
+                new IntentIntegrator(NuevaBitacora.this).initiateScan();
+            }
+        });
+
+        TextView btAnadirEquipoDeTraslado = (TextView) findViewById(R.id.btAnadirEquipoTraslado);
+        btAnadirEquipoDeTraslado.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+                equipoDeInstalacion = false;
+                isArticuloDeVelacion = false;
+                scannerAtaurna = false;
+                equipoRecoleccion = false;
+                equipoDeTraslado = true;
+                new IntentIntegrator(NuevaBitacora.this).initiateScan();
+            }
+        });
+
+
+
+
+        TextView btAnadirEquipoRecoleccion = (TextView) findViewById(R.id.btAnadirEquipoRecoleccion);
+        btAnadirEquipoRecoleccion.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+                equipoDeInstalacion = false;
+                isArticuloDeVelacion = false;
+                scannerAtaurna = false;
+                equipoRecoleccion = true;
+                equipoDeTraslado = false;
+                new IntentIntegrator(NuevaBitacora.this).initiateScan();
+            }
+        });
 
     }//End onCreate
 
@@ -837,7 +918,7 @@ public class NuevaBitacora extends Activity implements LinearLayoutThatDetectsSo
             }
 
             Address location = address.get(0);
-            p1 = new LatLng(location.getLatitude(), location.getLongitude() );
+            p1 = new LatLng(location.getLatitude(), location.getLongitude());
 
         } catch (IOException ex) {
             ex.printStackTrace();
@@ -846,32 +927,29 @@ public class NuevaBitacora extends Activity implements LinearLayoutThatDetectsSo
         return p1;
     }
 
-    private void closeTeclado()
-    {
+    private void closeTeclado() {
         try {
             View view = this.getCurrentFocus();
             view.clearFocus();
             if (view != null) {
-                InputMethodManager imm = (InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE);
+                InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
                 imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
             }
-        }catch (Throwable e){
+        } catch (Throwable e) {
             Log.e(TAG, "closeTeclado: Error en cerrar teclado" + e.getMessage());
         }
 
     }
 
-    private boolean checkFields()
-    {
-        return bitacoraSeleccionada!=null && !bitacoraSeleccionada.equals("")
-                        && (choferSeleccionado!=null && !etChofer.getText().toString().contains("**** FALTA DATO AQUÍ ****"))
-                        && (ayudanteSeleccionado!=null && !etAyudante.getText().toString().contains("**** FALTA DATO AQUÍ ****"))
-                        && (carroSeleccinado!=null && !etCarro.getText().toString().contains("**** FALTA DATO AQUÍ ****"))
-                        && (lugarSeleccionado!=null && !lugarSeleccionado.equals("**** FALTA DATO AQUÍ ****"))
-                        && (movimientoSeleccionado!=null && !movimientoSeleccionado.equals("**** FALTA DATO AQUÍ ****") && !spMovimiento.getSelectedItem().toString().equals("Selecciona movimiento..."))
-                        && (destinoSeleccionado != null && !destinoSeleccionado.equals("**** FALTA DATO AQUÍ ****"));
+    private boolean checkFields() {
+        return bitacoraSeleccionada != null && !bitacoraSeleccionada.equals("")
+                && (choferSeleccionado != null && !etChofer.getText().toString().contains("**** FALTA DATO AQUÍ ****"))
+                && (ayudanteSeleccionado != null && !etAyudante.getText().toString().contains("**** FALTA DATO AQUÍ ****"))
+                && (carroSeleccinado != null && !etCarro.getText().toString().contains("**** FALTA DATO AQUÍ ****"))
+                && (lugarSeleccionado != null && !lugarSeleccionado.equals("**** FALTA DATO AQUÍ ****"))
+                && (movimientoSeleccionado != null && !movimientoSeleccionado.equals("**** FALTA DATO AQUÍ ****") && !spMovimiento.getSelectedItem().toString().equals("Selecciona movimiento..."))
+                && (destinoSeleccionado != null && !destinoSeleccionado.equals("**** FALTA DATO AQUÍ ****"));
     }
-
 
 
     public static float dpToPx(Context context, float valueInDp) {
@@ -902,7 +980,7 @@ public class NuevaBitacora extends Activity implements LinearLayoutThatDetectsSo
         tvNoIniciarNavegacion.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if(dialogBottomNavigation.isShowing())
+                if (dialogBottomNavigation.isShowing())
                     dialogBottomNavigation.dismiss();
                 finish();
             }
@@ -912,14 +990,14 @@ public class NuevaBitacora extends Activity implements LinearLayoutThatDetectsSo
             @Override
             public void onClick(View v) {
                 try {
-                    String uri = "https://www.waze.com/ul?ll="+ latitudDestino +"," + longitudDestino +"&navigate=yes&zoom=17";
+                    String uri = "https://www.waze.com/ul?ll=" + latitudDestino + "," + longitudDestino + "&navigate=yes&zoom=17";
                     Intent intentWaze = new Intent(android.content.Intent.ACTION_VIEW, Uri.parse(uri));
                     intentWaze.setPackage("com.waze");
                     startActivity(intentWaze);
                     onPause();
                     dialogBottomNavigation.dismiss();
                     finish();
-                }catch (ActivityNotFoundException e){
+                } catch (ActivityNotFoundException e) {
                     try {
                         startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=com.waze")));
                     } catch (android.content.ActivityNotFoundException anfe) {
@@ -950,19 +1028,20 @@ public class NuevaBitacora extends Activity implements LinearLayoutThatDetectsSo
         dialogBottomNavigation.show();
 
     }
+
     public void showErrorDialog(final String codeError) {
-        final Button btNo, btSi;
+        final NeumorphButton btNo, btSi;
         TextView tvCodeError, tvBitacora;
         dialogoError.setContentView(R.layout.layout_error);
         dialogoError.setCancelable(true);
-        btNo = (Button) dialogoError.findViewById(R.id.btNo);
-        btSi = (Button) dialogoError.findViewById(R.id.btSi);
+        btNo = (NeumorphButton) dialogoError.findViewById(R.id.btNo);
+        btSi = (NeumorphButton) dialogoError.findViewById(R.id.btSi);
         tvCodeError = (TextView) dialogoError.findViewById(R.id.tvCodeError);
         tvBitacora = (TextView) dialogoError.findViewById(R.id.tvBitacora);
         tvCodeError.setText(codeError);
 
         if (codeError.equals("No se puede crear la bitácora por que la zona dónde estás, no corresponde a tu lugar seleccionado.") ||
-        codeError.equals("No podemos crear la bitacora porque el destino debe ser diferente origen")) {
+                codeError.equals("No podemos crear la bitacora porque el destino debe ser diferente origen")) {
             btNo.setVisibility(View.GONE);
             btSi.setVisibility(View.VISIBLE);
         }
@@ -986,43 +1065,100 @@ public class NuevaBitacora extends Activity implements LinearLayoutThatDetectsSo
     }
 
 
-    private void loadInformationAndRequest(String bitacora) {
-        if(ApplicationResourcesProvider.checkInternetConnection()) {
+    private void loadInformationAndRequest(String bitacora)
+    {
+        if (ApplicationResourcesProvider.checkInternetConnection())
+        {
             showMyCustomDialog();
-            Thread thread = new Thread() {
+
+            try {
+                String token = FirebaseInstanceId.getInstance().getToken();
+                Log.d("FIREBASE", "Refresh Token: " + token);
+                if (token != null)
+                    DatabaseAssistant.insertarToken(token);
+                else
+                    DatabaseAssistant.insertarToken("Unknown");
+            } catch (Throwable e) {
+                Log.e(TAG, "downloadBitacoras: " + e.getMessage());
+            }
+
+            JSONObject params = new JSONObject();
+            try {
+                params.put("usuario", DatabaseAssistant.getUserNameFromSesiones());
+                params.put("token_device", DatabaseAssistant.getTokenDeUsuario());
+                params.put("isProveedor", DatabaseAssistant.getIsProveedor());
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+
+            JsonObjectRequest postRequest = new JsonObjectRequest(Request.Method.POST, ConstantsBitacoras.WS_DOWNLOAD_BITACORAS_COMPLETAS, params, new Response.Listener<JSONObject>() {
                 @Override
-                public void run() {
+                public void onResponse(JSONObject response) {
+                    Bitacoras.deleteAll(Bitacoras.class);
+                    JSONArray bitacorasArray = new JSONArray();
                     try {
-                        downloadBitacoras();
-                        synchronized (this) {
-                            wait(5000);
-
-                            runOnUiThread(new Runnable() {
-                                @Override
-                                public void run() {
-                                    checkAndShowDataInBoxes(bitacora);
-                                    dismissMyCustomDialog();
-                                }
-                            });
-
+                        bitacorasArray = response.getJSONArray("catalogo");
+                        errorStackTraceBitacoras = false;
+                        for (int i = 0; i <= bitacorasArray.length() - 1; i++) {
+                            DatabaseAssistant.insertarBitacoras(
+                                    "" + i,
+                                    "" + bitacorasArray.getJSONObject(i).getString("name"),
+                                    "" + bitacorasArray.getJSONObject(i).getString("secondName"),
+                                    "" + bitacorasArray.getJSONObject(i).getString("address"),
+                                    "" + bitacorasArray.getJSONObject(i).getString("phones"),
+                                    "" + bitacorasArray.getJSONObject(i).getString("chofer"),
+                                    "" + bitacorasArray.getJSONObject(i).getString("ayudante"),
+                                    "" + bitacorasArray.getJSONObject(i).getString("vehiculo"),
+                                    "" + bitacorasArray.getJSONObject(i).getString("salida"),
+                                    "" + bitacorasArray.getJSONObject(i).getString("destino"),
+                                    "" + bitacorasArray.getJSONObject(i).getString("destino_domicilio"),
+                                    "" + bitacorasArray.getJSONObject(i).getString("destino_latitud"),
+                                    "" + bitacorasArray.getJSONObject(i).getString("destino_longitud"),
+                                    "" + bitacorasArray.getJSONObject(i).getString("ataud"),
+                                    "" + bitacorasArray.getJSONObject(i).getString("panteon"),
+                                    "" + bitacorasArray.getJSONObject(i).getString("tipo_servicio"),
+                                    "" + bitacorasArray.getJSONObject(i).getString("inicio_velacion"),
+                                    "" + bitacorasArray.getJSONObject(i).getString("inicio_cortejo"),
+                                    "" + bitacorasArray.getJSONObject(i).getString("templo")
+                            );
                         }
-                    } catch (InterruptedException e) {
+
+                        checkAndShowDataInBoxes(bitacora);
+                        dismissMyCustomDialog();
+                    } catch (Exception e) {
                         e.printStackTrace();
+                        errorStackTraceBitacoras = true;
+                        codigoErrorStackTraceBitacoras = e.getMessage();
+                        Toast.makeText(NuevaBitacora.this, "Ocurrio un error: " +e.getMessage(), Toast.LENGTH_SHORT).show();
                     }
-                };
+                }
+            },
+                    new Response.ErrorListener() {
+                        @Override
+                        public void onErrorResponse(VolleyError error) {
+                            error.printStackTrace();
+                            errorStackTraceBitacoras = true;
+                            codigoErrorStackTraceBitacoras = error.getMessage();
+                            Toast.makeText(NuevaBitacora.this, "Ocurrio un error: " + error.getMessage(), Toast.LENGTH_SHORT).show();
+                        }
+                    }) {
+
             };
-            thread.start();
-        }else
+
+            postRequest.setRetryPolicy(new DefaultRetryPolicy(90000, 2, DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
+            VolleySingleton.getIntanciaVolley(getApplicationContext()).addToRequestQueue(postRequest);
+
+        } else
             showErrorDialog("No hay conexión a internet");
     }
 
 
-    private void showMyCustomDialog(){
+    private void showMyCustomDialog() {
         final FrameLayout flLoading = (FrameLayout) findViewById(R.id.layoutCargando);
         flLoading.setVisibility(View.VISIBLE);
     }
 
-    private void dismissMyCustomDialog(){
+    private void dismissMyCustomDialog() {
         final FrameLayout flLoading = (FrameLayout) findViewById(R.id.layoutCargando);
         flLoading.setVisibility(View.GONE);
     }
@@ -1076,9 +1212,7 @@ public class NuevaBitacora extends Activity implements LinearLayoutThatDetectsSo
     }*/
 
 
-
-    private void downloadBitacoras()
-    {
+    private void downloadBitacoras() {
         try {
             String token = FirebaseInstanceId.getInstance().getToken();
             Log.d("FIREBASE", "Refresh Token: " + token);
@@ -1086,13 +1220,13 @@ public class NuevaBitacora extends Activity implements LinearLayoutThatDetectsSo
                 DatabaseAssistant.insertarToken(token);
             else
                 DatabaseAssistant.insertarToken("Unknown");
-        }catch (Throwable e){
+        } catch (Throwable e) {
             Log.e(TAG, "downloadBitacoras: " + e.getMessage());
         }
 
         JSONObject params = new JSONObject();
         try {
-            params.put("usuario", DatabaseAssistant.getUserNameFromSesiones() );
+            params.put("usuario", DatabaseAssistant.getUserNameFromSesiones());
             params.put("token_device", DatabaseAssistant.getTokenDeUsuario());
             params.put("isProveedor", DatabaseAssistant.getIsProveedor());
         } catch (JSONException e) {
@@ -1101,8 +1235,7 @@ public class NuevaBitacora extends Activity implements LinearLayoutThatDetectsSo
 
         JsonObjectRequest postRequest = new JsonObjectRequest(Request.Method.POST, ConstantsBitacoras.WS_DOWNLOAD_BITACORAS_COMPLETAS, params, new Response.Listener<JSONObject>() {
             @Override
-            public void onResponse(JSONObject response)
-            {
+            public void onResponse(JSONObject response) {
                 Bitacoras.deleteAll(Bitacoras.class);
                 JSONArray bitacorasArray = new JSONArray();
                 try {
@@ -1148,9 +1281,9 @@ public class NuevaBitacora extends Activity implements LinearLayoutThatDetectsSo
                                 "" + bitacorasArray.getJSONObject(i).getString("ataud"),
                                 "" + bitacorasArray.getJSONObject(i).getString("panteon"),
                                 "" + bitacorasArray.getJSONObject(i).getString("tipo_servicio"),
-                                "12:38:89",
-                                "05:34:13",
-                                "Templo de San Paracho"
+                                "" + bitacorasArray.getJSONObject(i).getString("inicio_velacion"),
+                                "" + bitacorasArray.getJSONObject(i).getString("inicio_cortejo"),
+                                "" + bitacorasArray.getJSONObject(i).getString("templo")
                         );
                     }
                 } catch (Exception e) {
@@ -1176,55 +1309,52 @@ public class NuevaBitacora extends Activity implements LinearLayoutThatDetectsSo
     }
 
 
-
     private void checkAndShowDataInBoxes(String bitacora) {
-        if(DatabaseAssistant.getDataBitacora(bitacora) != null)
-        {
+        if (DatabaseAssistant.getDataBitacora(bitacora) != null) {
             bitacoraSeleccionada = bitacora;
             closeTeclado();
             String[] bitacompletaData = DatabaseAssistant.getDataBitacora(bitacoraSeleccionada);
 
 
-
             bitacoraSeleccionada = bitacompletaData[1];
-            try{
+            try {
                 choferSeleccionado = bitacompletaData[3];
                 etChofer.setText(bitacompletaData[3]);
-            }catch (Throwable e){
-                Log.e(TAG, "onItemClick: " + e.getMessage() );
+            } catch (Throwable e) {
+                Log.e(TAG, "onItemClick: " + e.getMessage());
                 choferSeleccionado = null;
                 etChofer.setText("");
             }
 
-            try{
+            try {
                 ayudanteSeleccionado = bitacompletaData[4];
                 etAyudante.setText(bitacompletaData[4]);
-            }catch (Throwable e){
-                Log.e(TAG, "onItemClick: " + e.getMessage() );
+            } catch (Throwable e) {
+                Log.e(TAG, "onItemClick: " + e.getMessage());
                 ayudanteSeleccionado = null;
                 etAyudante.setText("");
             }
 
-            try{
+            try {
                 carroSeleccinado = bitacompletaData[5];
                 etCarro.setText(bitacompletaData[5]);
-            }catch (Throwable e){
-                Log.e(TAG, "onItemClick: " + e.getMessage() );
+            } catch (Throwable e) {
+                Log.e(TAG, "onItemClick: " + e.getMessage());
                 carroSeleccinado = null;
                 etCarro.setText("");
             }
 
-            try{
+            try {
                 lugarSeleccionado = bitacompletaData[6];
-            }catch (Throwable e){
-                Log.e(TAG, "onItemClick: " + e.getMessage() );
+            } catch (Throwable e) {
+                Log.e(TAG, "onItemClick: " + e.getMessage());
                 lugarSeleccionado = null;
             }
 
-            try{
+            try {
                 destinoSeleccionado = bitacompletaData[7];
-            }catch (Throwable e){
-                Log.e(TAG, "onItemClick: " + e.getMessage() );
+            } catch (Throwable e) {
+                Log.e(TAG, "onItemClick: " + e.getMessage());
                 destinoSeleccionado = null;
             }
 
@@ -1250,19 +1380,19 @@ public class NuevaBitacora extends Activity implements LinearLayoutThatDetectsSo
             etCarro.setTextColor(Color.parseColor("#969da9"));
 
 
-            if(etChofer.getText().toString().equals("") || choferSeleccionado.equals("")) {
+            if (etChofer.getText().toString().equals("") || choferSeleccionado.equals("")) {
                 etChofer.setTextColor(Color.RED);
                 etChofer.setText("**** FALTA DATO AQUÍ ****");
                 choferSeleccionado = null;
             }
 
-            if(etAyudante.getText().toString().equals("") || ayudanteSeleccionado.equals("")) {
+            if (etAyudante.getText().toString().equals("") || ayudanteSeleccionado.equals("")) {
                 etAyudante.setTextColor(Color.RED);
                 etAyudante.setText("**** FALTA DATO AQUÍ ****");
                 ayudanteSeleccionado = null;
             }
 
-            if(etCarro.getText().toString().equals("") || carroSeleccinado.equals("")) {
+            if (etCarro.getText().toString().equals("") || carroSeleccinado.equals("")) {
                 etCarro.setTextColor(Color.RED);
                 etCarro.setText("**** FALTA DATO AQUÍ ****");
                 carroSeleccinado = null;
@@ -1276,14 +1406,13 @@ public class NuevaBitacora extends Activity implements LinearLayoutThatDetectsSo
                 ArrayAdapter<String> adapter = new ArrayAdapter<String>(getApplicationContext(), R.layout.style_spinner, geofenceActualPorUbicacion);
                 spLugares.setAdapter(adapter);
                 //spLugares.setEnabled(false);
-            }
-            else{
+            } else {
 
-                if(lugarSeleccionado.equals("**** FALTA DATO AQUÍ ****")) {
+                if (lugarSeleccionado.equals("**** FALTA DATO AQUÍ ****")) {
                     spLugares.setBackground(ContextCompat.getDrawable(getApplicationContext(), R.drawable.rounded_style_red));
                     ArrayAdapter<String> adapter = new ArrayAdapter<String>(getApplicationContext(), R.layout.style_spinner, DatabaseAssistant.pedirLugaresDeOrigenYDestino());
                     spLugares.setAdapter(adapter);
-                }else{
+                } else {
                     //String[] opciones ={lugarSeleccionado};
                     //ArrayAdapter<String> adapterLugares = new ArrayAdapter<String>(getApplicationContext(), android.R.layout.simple_dropdown_item_1line, opciones);
                     ArrayAdapter<String> adapter = new ArrayAdapter<String>(getApplicationContext(), R.layout.style_spinner, DatabaseAssistant.pedirLugaresDeOrigenYDestino());
@@ -1294,11 +1423,11 @@ public class NuevaBitacora extends Activity implements LinearLayoutThatDetectsSo
             }
 
 
-            if(destinoSeleccionado.equals("**** FALTA DATO AQUÍ ****")) {
+            if (destinoSeleccionado.equals("**** FALTA DATO AQUÍ ****")) {
                 spDestino.setBackground(ContextCompat.getDrawable(getApplicationContext(), R.drawable.rounded_style_red));
                 ArrayAdapter<String> adapter = new ArrayAdapter<String>(getApplicationContext(), R.layout.style_spinner, DatabaseAssistant.pedirLugaresDeOrigenYDestino());
                 spDestino.setAdapter(adapter);
-            }else{
+            } else {
                 //String[] opciones2 ={destinoSeleccionado};
                 //ArrayAdapter<String> adapterOpciones2 = new ArrayAdapter<String>(getApplicationContext(), android.R.layout.simple_dropdown_item_1line, opciones2);
                 ArrayAdapter<String> adapterOpciones2 = new ArrayAdapter<String>(getApplicationContext(), R.layout.style_spinner, DatabaseAssistant.pedirLugaresDeOrigenYDestino());
@@ -1309,7 +1438,7 @@ public class NuevaBitacora extends Activity implements LinearLayoutThatDetectsSo
             LinearLayout layoutDatos = (LinearLayout) findViewById(R.id.layoutDatos);
             layoutDatos.setVisibility(View.VISIBLE);
 
-        }else
+        } else
             Toast.makeText(NuevaBitacora.this, "No se encontraron datos de la bitácora seleccionada", Toast.LENGTH_LONG).show();
     }
 
@@ -1342,7 +1471,1305 @@ public class NuevaBitacora extends Activity implements LinearLayoutThatDetectsSo
                     }
                 });
     }
+
+
+    private void searchBitacoraInWeb(String bitacora) {
+
+        if (ApplicationResourcesProvider.checkInternetConnection())
+        {
+            Thread thread = new Thread() {
+                @Override
+                public void run() {
+                    try {
+
+                        /*runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() { {
+                                    downloadBitacoraIndividual(bitacora);
+                                }
+                            }
+                        });*/
+
+
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+
+                                /**Muestra el dialogo de carga loading**/
+                                showMyCustomDialog();
+
+                                /********Obtiene el token de firebase y lo actualiza o inserta en la base de datos*******/
+                                try {
+                                    String token = FirebaseInstanceId.getInstance().getToken();
+                                    Log.d("FIREBASE", "Refresh Token: " + token);
+                                    if (token != null)
+                                        DatabaseAssistant.insertarToken(token);
+                                    else
+                                        DatabaseAssistant.insertarToken("Unknown");
+                                } catch (Throwable e) {
+                                    Log.e(TAG, "downloadBitacoras: " + e.getMessage());
+                                }
+
+
+                                /*********Creamos los parametros del WS de getSingleBitacora*********/
+                                JSONObject params = new JSONObject();
+                                try {
+                                    params.put("usuario", DatabaseAssistant.getUserNameFromSesiones());
+                                    params.put("token_device", DatabaseAssistant.getTokenDeUsuario());
+                                    params.put("isProveedor", DatabaseAssistant.getIsProveedor());
+                                    params.put("isBunker", Preferences.getPreferenceIsbunker(NuevaBitacora.this, Preferences.PREFERENCE_ISBUNKER) ? "1" : "0");
+                                    params.put("bitacora", bitacora);
+                                } catch (JSONException e) {
+                                    e.printStackTrace();
+                                }
+
+
+                                /**********Creamos el request*************/
+                                JsonObjectRequest postRequest = new JsonObjectRequest(Request.Method.POST, ConstantsBitacoras.WS_DOWNLOAD_BITACORA_INDIVIDUAL, params, new Response.Listener<JSONObject>() {
+                                    @Override
+                                    public void onResponse(JSONObject response) {
+
+                                        /**Declaramos los arreglos de tipo JSONArray**/
+                                        JSONArray bitacorasArray = new JSONArray();
+                                        JSONArray bitacoraDetallesArray = new JSONArray();
+                                        JSONArray bitacorasComentariosArray = new JSONArray();
+
+                                        try {
+                                            if (response.has("bitacoraDrivers")) {
+
+                                                /***** Borramos toda la informacion de bitacoras en la tabla local para agregar los nuevos registros********/
+                                                Bitacoras.deleteAll(Bitacoras.class);
+
+                                                try {
+                                                    /** Obtenenos toda la información de bitacoraDrivers para procesarla, sini embargo solo es 1 un registro **/
+                                                    bitacorasArray = response.getJSONArray("bitacoraDrivers");
+                                                    errorStackTraceBitacoras = false;
+
+                                                    for (int i = 0; i <= bitacorasArray.length() - 1; i++) {
+                                                        DatabaseAssistant.insertarBitacoras(
+                                                                "" + i,
+                                                                "" + bitacorasArray.getJSONObject(i).getString("name"),
+                                                                "" + bitacorasArray.getJSONObject(i).getString("secondName"),
+                                                                "" + bitacorasArray.getJSONObject(i).getString("address"),
+                                                                "" + bitacorasArray.getJSONObject(i).getString("phones"),
+                                                                "" + bitacorasArray.getJSONObject(i).getString("chofer"),
+                                                                "" + bitacorasArray.getJSONObject(i).getString("ayudante"),
+                                                                "" + bitacorasArray.getJSONObject(i).getString("vehiculo"),
+                                                                "" + bitacorasArray.getJSONObject(i).getString("salida"),
+                                                                "" + bitacorasArray.getJSONObject(i).getString("destino"),
+                                                                "" + bitacorasArray.getJSONObject(i).getString("destino_domicilio"),
+                                                                "" + bitacorasArray.getJSONObject(i).getString("destino_latitud"),
+                                                                "" + bitacorasArray.getJSONObject(i).getString("destino_longitud"),
+                                                                "" + bitacorasArray.getJSONObject(i).getString("ataud"),
+                                                                "" + bitacorasArray.getJSONObject(i).getString("panteon"),
+                                                                "" + bitacorasArray.getJSONObject(i).getString("tipo_servicio"),
+                                                                "" + bitacorasArray.getJSONObject(i).getString("inicio_velacion"),
+                                                                "" + bitacorasArray.getJSONObject(i).getString("inicio_cortejo"),
+                                                                "" + bitacorasArray.getJSONObject(i).getString("templo")
+
+                                                        );
+                                                        //bitacoraSeleccionada = bitacora;
+                                                        bitacoraSeleccionada = bitacorasArray.getJSONObject(i).getString("name");
+                                                        bitacoraGlobal = bitacorasArray.getJSONObject(i).getString("name");
+                                                    }
+                                                    Log.d(TAG, "onResponse: Bitacora guardada y consultada correctamente");
+                                                    errorStackTraceBitacoras = false;
+
+                                                    /** Verificamos si la respuesta (Response)  contiene la llave "bitacorasDetails" para procesarla, sin embargo solo es 1 un registro **/
+                                                    if (response.has("bitacorasDetails")) {
+                                                        try {
+                                                            errorStackTraceBitacorasDetalles = false;
+
+                                                            /** Obtenenos toda la información de bitacorasDetails para procesarla, sin embargo solo es 1 un registro **/
+                                                            bitacoraDetallesArray = response.getJSONArray("bitacorasDetails");
+
+                                                            for (int i = 0; i <= bitacoraDetallesArray.length() - 1; i++)
+                                                            {
+                                                                String bitacoraFromResponse = bitacoraDetallesArray.getJSONObject(i).getString("bitacora");
+                                                                Adicional.executeQuery("DELETE FROM ADICIONAL WHERE bitacora = '" + bitacoraFromResponse + "' and sync ='1'");
+                                                                String seleccionarHora = "00:00:00";
+                                                                if (bitacoraDetallesArray.getJSONObject(i).getString("hora_instalacion").equals("Selecciona aqui..."))
+                                                                    seleccionarHora = "00:00:00";
+                                                                else
+                                                                    seleccionarHora = bitacoraDetallesArray.getJSONObject(i).getString("hora_instalacion");
+
+                                                                DatabaseAssistant.insertarInformacionAdicional(
+                                                                        "" + seleccionarHora,
+                                                                        "" + bitacoraDetallesArray.getJSONObject(i).getString("ropa_entregada"),
+                                                                        "" + bitacoraDetallesArray.getJSONObject(i).getString("lugar_de_velacion"),
+                                                                        "" + bitacoraDetallesArray.getJSONObject(i).getString("tipo_servicio"),
+                                                                        "",
+                                                                        "" + bitacoraDetallesArray.getJSONObject(i).getString("observaciones_instalacion"),
+                                                                        "",
+                                                                        "" + bitacoraDetallesArray.getJSONObject(i).getString("observaciones_cortejo"),
+                                                                        "" + bitacoraDetallesArray.getJSONObject(i).getString("documentos_seleccion"),
+                                                                        "" + bitacoraFromResponse,
+                                                                        "" + bitacoraDetallesArray.getJSONObject(i).getString("encapsulado"),
+                                                                        "" + bitacoraDetallesArray.getJSONObject(i).getString("observaciones_recoleccion"),
+                                                                        "" + bitacoraDetallesArray.getJSONObject(i).getString("observaciones_traslado"),
+                                                                        "" + bitacoraDetallesArray.getJSONObject(i).getString("embalsamado_o_arreglo"),
+                                                                        "" + bitacoraDetallesArray.getJSONObject(i).getString("laboratorio"),
+                                                                        "" + bitacoraDetallesArray.getJSONObject(i).getString("idLaboratorio")
+                                                                );
+
+
+                                                                if (bitacoraDetallesArray.getJSONObject(i).has("Equipos_instalacion")) {
+                                                                    Equipoinstalacion.executeQuery("DELETE FROM EQUIPOINSTALACION WHERE bitacora = '" + bitacoraFromResponse + "' and sync ='1'");
+                                                                    JSONArray jsonArrayEquiposInstalacion = bitacoraDetallesArray.getJSONObject(i).getJSONArray("Equipos_instalacion");
+                                                                    for (int position = 0; position <= jsonArrayEquiposInstalacion.length() - 1; position++) {
+
+
+                                                                        DatabaseAssistant.insertarEquipoInstalacionFromWebService(
+                                                                                "" + bitacoraFromResponse,
+                                                                                "" + jsonArrayEquiposInstalacion.getJSONObject(position).getString("serie"),
+                                                                                "" + jsonArrayEquiposInstalacion.getJSONObject(position).getString("nombre"),
+                                                                                "" + (Preferences.getPreferenceIsbunker(NuevaBitacora.this, Preferences.PREFERENCE_ISBUNKER) ? "1" : "0")
+                                                                        );
+                                                                    }
+                                                                }
+
+                                                                if (bitacoraDetallesArray.getJSONObject(i).has("Equipos_cortejo")) {
+                                                                    Equipocortejo.executeQuery("DELETE FROM EQUIPOCORTEJO WHERE bitacora = '" + bitacoraFromResponse + "' and sync ='1'");
+                                                                    JSONArray jsonArrayEquiposCortejo = bitacoraDetallesArray.getJSONObject(i).getJSONArray("Equipos_cortejo");
+                                                                    for (int position = 0; position <= jsonArrayEquiposCortejo.length() - 1; position++) {
+
+                                                                        DatabaseAssistant.insertarEquipoCortejoFromWebservice(
+                                                                                "" + bitacoraFromResponse,
+                                                                                "" + jsonArrayEquiposCortejo.getJSONObject(position).getString("serie"),
+                                                                                "" + jsonArrayEquiposCortejo.getJSONObject(position).getString("nombre"),
+                                                                                "" + (Preferences.getPreferenceIsbunker(NuevaBitacora.this, Preferences.PREFERENCE_ISBUNKER) ? "1" : "0")
+                                                                        );
+                                                                    }
+                                                                }
+
+                                                                if (bitacoraDetallesArray.getJSONObject(i).has("Documentos_extras")) {
+                                                                    Documentos.executeQuery("DELETE FROM DOCUMENTOS WHERE bitacora = '" + bitacoraFromResponse + "' and sync ='1'");
+                                                                    JSONArray jsonArrayDocumentosExtras = bitacoraDetallesArray.getJSONObject(i).getJSONArray("Documentos_extras");
+                                                                    for (int position = 0; position <= jsonArrayDocumentosExtras.length() - 1; position++) {
+
+                                                                        DatabaseAssistant.insertarDocumentoExtraFromWebService(
+                                                                                "" + bitacoraFromResponse,
+                                                                                "" + jsonArrayDocumentosExtras.getJSONObject(position).getString("nombre")
+                                                                        );
+
+                                                                    }
+                                                                }
+                                                            }
+                                                            errorStackTraceBitacorasDetalles = false;
+                                                            Log.d(TAG, "onResponse: Detalles registrados correctamente");
+
+
+                                                            //*************************** COMENTARIOS EDE BITACORA **********************
+                                                            if (response.has("comments")) {
+                                                                try {
+                                                                    errorStackTraceBitacorasComentarios = false;
+                                                                    bitacorasComentariosArray = response.getJSONArray("comments");
+                                                                    Comentarios.executeQuery("DELETE FROM COMENTARIOS WHERE bitacora = '" + bitacorasComentariosArray.getJSONObject(0).getString("bitacora") + "' and sync ='1'");
+
+                                                                    for (int i = 0; i <= bitacorasComentariosArray.length() - 1; i++) {
+                                                                        DatabaseAssistant.insertarComentarios(
+                                                                                "" + bitacorasComentariosArray.getJSONObject(i).getString("bitacora"),
+                                                                                "" + bitacorasComentariosArray.getJSONObject(i).getString("comentario"),
+                                                                                "" + bitacorasComentariosArray.getJSONObject(i).getString("usuario"),
+                                                                                "" + bitacorasComentariosArray.getJSONObject(i).getString("fecha_captura"),
+                                                                                "1",
+                                                                                DatabaseAssistant.getUserNameFromSesiones().equals(bitacorasComentariosArray.getJSONObject(i).getString("usuario")) ? "1" : "0"
+                                                                        );
+                                                                    }
+                                                                    Log.d(TAG, "onResponse: Comentarios actualizados");
+
+                                                                } catch (JSONException e) {
+                                                                    errorStackTraceBitacorasComentarios = true;
+                                                                    e.printStackTrace();
+                                                                }
+                                                            }
+                                                            //*************************************************************************
+
+
+                                                        } catch (Exception e) {
+                                                            e.printStackTrace();
+                                                            errorStackTraceBitacorasDetalles = true;
+                                                            Log.e(TAG, "onResponse: Error en bitacora details al descargar: " + e.getMessage());
+                                                        }
+                                                    }
+                                                    //*******************************************************************************************************************
+
+                                                    try {
+                                                        consultarEquiposDeInstalacion(bitacoraGlobal);
+                                                        consultarEquiposDeRecoleccion(bitacoraGlobal);
+                                                        consultarEquiposDeTraslado(bitacoraGlobal);
+                                                    }catch (Throwable e){
+                                                        Log.e(TAG, "onResume: Error en consulta: " + e.getMessage());
+                                                    }
+                                                } catch (Throwable e) {
+                                                    errorStackTraceBitacoras = true;
+                                                    Log.e(TAG, "onResponse: Error al consultar y guardar la bitacora individual: " + e.getMessage());
+                                                }
+                                            }
+                                            //**********************************************************************************************
+
+
+                                            // write code here...
+                                            if (DatabaseAssistant.getDataBitacora(bitacora.toUpperCase()) != null) {
+                                                closeTeclado();
+                                                String[] bitacompletaData = DatabaseAssistant.getDataBitacora(bitacora.toUpperCase());
+
+                                                bitacoraSeleccionada = bitacompletaData[1];
+                                                try {
+                                                    choferSeleccionado = bitacompletaData[3];
+                                                    etChofer.setText(bitacompletaData[3]);
+                                                } catch (Throwable e) {
+                                                    Log.e(TAG, "onItemClick: " + e.getMessage());
+                                                    choferSeleccionado = null;
+                                                    etChofer.setText("");
+                                                }
+
+                                                try {
+                                                    ayudanteSeleccionado = bitacompletaData[4];
+                                                    etAyudante.setText(bitacompletaData[4]);
+                                                } catch (Throwable e) {
+                                                    Log.e(TAG, "onItemClick: " + e.getMessage());
+                                                    ayudanteSeleccionado = null;
+                                                    etAyudante.setText("");
+                                                }
+
+                                                try {
+                                                    carroSeleccinado = bitacompletaData[5];
+                                                    etCarro.setText(bitacompletaData[5]);
+                                                } catch (Throwable e) {
+                                                    Log.e(TAG, "onItemClick: " + e.getMessage());
+                                                    carroSeleccinado = null;
+                                                    etCarro.setText("");
+                                                }
+
+                                                try {
+                                                    lugarSeleccionado = bitacompletaData[6];
+                                                } catch (Throwable e) {
+                                                    Log.e(TAG, "onItemClick: " + e.getMessage());
+                                                    lugarSeleccionado = null;
+                                                }
+
+                                                try {
+                                                    destinoSeleccionado = bitacompletaData[7];
+                                                } catch (Throwable e) {
+                                                    Log.e(TAG, "onItemClick: " + e.getMessage());
+                                                    destinoSeleccionado = null;
+                                                }
+
+
+                                                TextView tvAtaud = (TextView) findViewById(R.id.tvAtaud);
+                                                tvAtaud.setText(bitacompletaData[14]);
+                                                LinearLayout layoutAtaud = (LinearLayout) findViewById(R.id.layoutAtaud);
+                                                layoutAtaud.setVisibility(View.VISIBLE);
+
+                                                TextView tvPanteon = (TextView) findViewById(R.id.tvPanteon);
+                                                tvPanteon.setText(bitacompletaData[15]);
+                                                LinearLayout layoutPanteon = (LinearLayout) findViewById(R.id.layoutPanteon);
+                                                layoutPanteon.setVisibility(View.VISIBLE);
+
+                                                TextView tvCrematorio = (TextView) findViewById(R.id.tvCrematorio);
+                                                tvCrematorio.setText(bitacompletaData[16]);
+                                                LinearLayout layoutSevicio = (LinearLayout) findViewById(R.id.layoutSevicio);
+                                                layoutSevicio.setVisibility(View.VISIBLE);
+
+                                                etChofer.setTextColor(Color.parseColor("#969da9"));
+                                                etAyudante.setTextColor(Color.parseColor("#969da9"));
+                                                etCarro.setTextColor(Color.parseColor("#969da9"));
+
+
+                                                if (etChofer.getText().toString().equals("") || choferSeleccionado.equals("")) {
+                                                    etChofer.setTextColor(Color.RED);
+                                                    etChofer.setText("**** FALTA DATO AQUÍ ****");
+                                                    choferSeleccionado = null;
+                                                }
+
+                                                if (etAyudante.getText().toString().equals("") || ayudanteSeleccionado.equals("")) {
+                                                    etAyudante.setTextColor(Color.RED);
+                                                    etAyudante.setText("**** FALTA DATO AQUÍ ****");
+                                                    ayudanteSeleccionado = null;
+                                                }
+
+                                                if (etCarro.getText().toString().equals("") || carroSeleccinado.equals("")) {
+                                                    etCarro.setTextColor(Color.RED);
+                                                    etCarro.setText("**** FALTA DATO AQUÍ ****");
+                                                    carroSeleccinado = null;
+                                                }
+
+                                                String geofenceActual = Preferences.getGeofenceActual(NuevaBitacora.this, Preferences.PREFERENCE_GEOFENCE_ACTUAL);
+                                                if (!geofenceActual.equals("")) {
+                                                    ArrayList<String> geofenceActualPorUbicacion = new ArrayList<String>();
+                                                    geofenceActualPorUbicacion.add(geofenceActual);
+                                                    ArrayAdapter<String> adapter = new ArrayAdapter<String>(getApplicationContext(), R.layout.style_spinner, geofenceActualPorUbicacion);
+                                                    spLugares.setAdapter(adapter);
+                                                    spLugares.setEnabled(false);
+                                                } else {
+
+                                                    if (lugarSeleccionado.equals("**** FALTA DATO AQUÍ ****")) {
+                                                        spLugares.setBackground(ContextCompat.getDrawable(getApplicationContext(), R.drawable.rounded_style_red));
+                                                        ArrayAdapter<String> adapter = new ArrayAdapter<String>(getApplicationContext(), R.layout.style_spinner, DatabaseAssistant.pedirLugaresDeOrigenYDestino());
+                                                        spLugares.setAdapter(adapter);
+                                                    } else {
+                                                        ArrayAdapter<String> adapter = new ArrayAdapter<String>(getApplicationContext(), R.layout.style_spinner, DatabaseAssistant.pedirLugaresDeOrigenYDestino());
+                                                        spLugares.setAdapter(adapter);
+                                                        spLugares.setSelection(adapter.getPosition(lugarSeleccionado));
+                                                    }
+
+                                                }
+
+
+                                                if (destinoSeleccionado.equals("**** FALTA DATO AQUÍ ****")) {
+                                                    spDestino.setBackground(ContextCompat.getDrawable(getApplicationContext(), R.drawable.rounded_style_red));
+                                                    ArrayAdapter<String> adapter = new ArrayAdapter<String>(getApplicationContext(), R.layout.style_spinner, DatabaseAssistant.pedirLugaresDeOrigenYDestino());
+                                                    spDestino.setAdapter(adapter);
+                                                } else {
+                                                    ArrayAdapter<String> adapterOpciones2 = new ArrayAdapter<String>(getApplicationContext(), R.layout.style_spinner, DatabaseAssistant.pedirLugaresDeOrigenYDestino());
+                                                    spDestino.setAdapter(adapterOpciones2);
+                                                    spDestino.setSelection(adapterOpciones2.getPosition(destinoSeleccionado));
+                                                }
+
+                                                LinearLayout layoutDatos = (LinearLayout) findViewById(R.id.layoutDatos);
+                                                layoutDatos.setVisibility(View.VISIBLE);
+
+                                            } else {
+                                                Toast.makeText(NuevaBitacora.this, "No se encontraron datos de la bitácora seleccionada", Toast.LENGTH_LONG).show();
+                                            }
+
+
+                                            dismissMyCustomDialog();
+
+                                        } catch (Exception e) {
+                                            e.printStackTrace();
+                                            errorStackTraceBitacoras = true;
+                                            codigoErrorStackTraceBitacoras = e.getMessage();
+                                        }
+                                    }
+                                },
+                                        new Response.ErrorListener() {
+                                            @Override
+                                            public void onErrorResponse(VolleyError error) {
+                                                error.printStackTrace();
+                                                errorStackTraceBitacoras = true;
+                                                errorStackTraceBitacorasDetalles = true;
+                                                errorStackTraceBitacorasComentarios = true;
+                                                codigoErrorStackTraceBitacoras = error.getMessage();
+                                            }
+                                        }) {
+
+                                };
+
+                                postRequest.setRetryPolicy(new DefaultRetryPolicy(90000, 2, DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
+                                VolleySingleton.getIntanciaVolley(getApplicationContext()).addToRequestQueue(postRequest);
+
+
+                                /*******************************************/
+                            }
+                        });
+
+
+                        synchronized (this) {
+                            wait(2000);
+                            runOnUiThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    // write code here...
+                                    if (DatabaseAssistant.getDataBitacora(bitacora.toUpperCase()) != null) {
+                                        closeTeclado();
+                                        String[] bitacompletaData = DatabaseAssistant.getDataBitacora(bitacora.toUpperCase());
+
+                                        bitacoraSeleccionada = bitacompletaData[1];
+                                        try {
+                                            choferSeleccionado = bitacompletaData[3];
+                                            etChofer.setText(bitacompletaData[3]);
+                                        } catch (Throwable e) {
+                                            Log.e(TAG, "onItemClick: " + e.getMessage());
+                                            choferSeleccionado = null;
+                                            etChofer.setText("");
+                                        }
+
+                                        try {
+                                            ayudanteSeleccionado = bitacompletaData[4];
+                                            etAyudante.setText(bitacompletaData[4]);
+                                        } catch (Throwable e) {
+                                            Log.e(TAG, "onItemClick: " + e.getMessage());
+                                            ayudanteSeleccionado = null;
+                                            etAyudante.setText("");
+                                        }
+
+                                        try {
+                                            carroSeleccinado = bitacompletaData[5];
+                                            etCarro.setText(bitacompletaData[5]);
+                                        } catch (Throwable e) {
+                                            Log.e(TAG, "onItemClick: " + e.getMessage());
+                                            carroSeleccinado = null;
+                                            etCarro.setText("");
+                                        }
+
+                                        try {
+                                            lugarSeleccionado = bitacompletaData[6];
+                                        } catch (Throwable e) {
+                                            Log.e(TAG, "onItemClick: " + e.getMessage());
+                                            lugarSeleccionado = null;
+                                        }
+
+                                        try {
+                                            destinoSeleccionado = bitacompletaData[7];
+                                        } catch (Throwable e) {
+                                            Log.e(TAG, "onItemClick: " + e.getMessage());
+                                            destinoSeleccionado = null;
+                                        }
+
+
+                                        TextView tvAtaud = (TextView) findViewById(R.id.tvAtaud);
+                                        tvAtaud.setText(bitacompletaData[14]);
+                                        LinearLayout layoutAtaud = (LinearLayout) findViewById(R.id.layoutAtaud);
+                                        layoutAtaud.setVisibility(View.VISIBLE);
+
+                                        TextView tvPanteon = (TextView) findViewById(R.id.tvPanteon);
+                                        tvPanteon.setText(bitacompletaData[15]);
+                                        LinearLayout layoutPanteon = (LinearLayout) findViewById(R.id.layoutPanteon);
+                                        layoutPanteon.setVisibility(View.VISIBLE);
+
+                                        TextView tvCrematorio = (TextView) findViewById(R.id.tvCrematorio);
+                                        tvCrematorio.setText(bitacompletaData[16]);
+                                        LinearLayout layoutSevicio = (LinearLayout) findViewById(R.id.layoutSevicio);
+                                        layoutSevicio.setVisibility(View.VISIBLE);
+
+                                        etChofer.setTextColor(Color.parseColor("#969da9"));
+                                        etAyudante.setTextColor(Color.parseColor("#969da9"));
+                                        etCarro.setTextColor(Color.parseColor("#969da9"));
+
+
+                                        if (etChofer.getText().toString().equals("") || choferSeleccionado.equals("")) {
+                                            etChofer.setTextColor(Color.RED);
+                                            etChofer.setText("**** FALTA DATO AQUÍ ****");
+                                            choferSeleccionado = null;
+                                        }
+
+                                        if (etAyudante.getText().toString().equals("") || ayudanteSeleccionado.equals("")) {
+                                            etAyudante.setTextColor(Color.RED);
+                                            etAyudante.setText("**** FALTA DATO AQUÍ ****");
+                                            ayudanteSeleccionado = null;
+                                        }
+
+                                        if (etCarro.getText().toString().equals("") || carroSeleccinado.equals("")) {
+                                            etCarro.setTextColor(Color.RED);
+                                            etCarro.setText("**** FALTA DATO AQUÍ ****");
+                                            carroSeleccinado = null;
+                                        }
+
+                                        String geofenceActual = Preferences.getGeofenceActual(NuevaBitacora.this, Preferences.PREFERENCE_GEOFENCE_ACTUAL);
+                                        if (!geofenceActual.equals("")) {
+                                            ArrayList<String> geofenceActualPorUbicacion = new ArrayList<String>();
+                                            geofenceActualPorUbicacion.add(geofenceActual);
+                                            ArrayAdapter<String> adapter = new ArrayAdapter<String>(getApplicationContext(), R.layout.style_spinner, geofenceActualPorUbicacion);
+                                            spLugares.setAdapter(adapter);
+                                            spLugares.setEnabled(false);
+                                        } else {
+
+                                            if (lugarSeleccionado.equals("**** FALTA DATO AQUÍ ****")) {
+                                                spLugares.setBackground(ContextCompat.getDrawable(getApplicationContext(), R.drawable.rounded_style_red));
+                                                ArrayAdapter<String> adapter = new ArrayAdapter<String>(getApplicationContext(), R.layout.style_spinner, DatabaseAssistant.pedirLugaresDeOrigenYDestino());
+                                                spLugares.setAdapter(adapter);
+                                            } else {
+                                                ArrayAdapter<String> adapter = new ArrayAdapter<String>(getApplicationContext(), R.layout.style_spinner, DatabaseAssistant.pedirLugaresDeOrigenYDestino());
+                                                spLugares.setAdapter(adapter);
+                                                spLugares.setSelection(adapter.getPosition(lugarSeleccionado));
+                                            }
+
+                                        }
+
+
+                                        if (destinoSeleccionado.equals("**** FALTA DATO AQUÍ ****")) {
+                                            spDestino.setBackground(ContextCompat.getDrawable(getApplicationContext(), R.drawable.rounded_style_red));
+                                            ArrayAdapter<String> adapter = new ArrayAdapter<String>(getApplicationContext(), R.layout.style_spinner, DatabaseAssistant.pedirLugaresDeOrigenYDestino());
+                                            spDestino.setAdapter(adapter);
+                                        } else {
+                                            ArrayAdapter<String> adapterOpciones2 = new ArrayAdapter<String>(getApplicationContext(), R.layout.style_spinner, DatabaseAssistant.pedirLugaresDeOrigenYDestino());
+                                            spDestino.setAdapter(adapterOpciones2);
+                                            spDestino.setSelection(adapterOpciones2.getPosition(destinoSeleccionado));
+                                        }
+
+                                        LinearLayout layoutDatos = (LinearLayout) findViewById(R.id.layoutDatos);
+                                        layoutDatos.setVisibility(View.VISIBLE);
+
+                                    } else {
+                                        Toast.makeText(NuevaBitacora.this, "No se encontraron datos de la bitácora seleccionada", Toast.LENGTH_LONG).show();
+                                    }
+
+
+                                    dismissMyCustomDialog();
+                                }
+                            });
+
+                        }
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                };
+            };
+            thread.start();
+
+        } else
+            showErrorDialog("No hay conexión a internet");
+
+    }
+
+
+  /*  private void downloadBitacoraIndividual(String bitacoraParametro){
+
+        try {
+            String token = FirebaseInstanceId.getInstance().getToken();
+            Log.d("FIREBASE", "Refresh Token: " + token);
+            if (token != null)
+                DatabaseAssistant.insertarToken(token);
+            else
+                DatabaseAssistant.insertarToken("Unknown");
+        } catch (Throwable e) {
+            Log.e(TAG, "downloadBitacoras: " + e.getMessage());
+        }
+
+        JSONObject params = new JSONObject();
+        try {
+            params.put("usuario", DatabaseAssistant.getUserNameFromSesiones());
+            params.put("token_device", DatabaseAssistant.getTokenDeUsuario());
+            params.put("isProveedor", DatabaseAssistant.getIsProveedor());
+            params.put("isBunker", Preferences.getPreferenceIsbunker(NuevaBitacora.this, Preferences.PREFERENCE_ISBUNKER) ? "1" : "0");
+            params.put("bitacora", bitacoraParametro);
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+
+        JsonObjectRequest postRequest = new JsonObjectRequest(Request.Method.POST, ConstantsBitacoras.WS_DOWNLOAD_BITACORA_INDIVIDUAL, params, new Response.Listener<JSONObject>() {
+            @Override
+            public void onResponse(JSONObject response) {
+                Bitacoras.deleteAll(Bitacoras.class);
+                JSONArray bitacorasArray = new JSONArray();
+                JSONArray bitacoraDetallesArray = new JSONArray();
+                JSONArray bitacorasComentariosArray = new JSONArray();
+
+                try {
+                    //****************************** BITACORA DATA ***********************************************
+                    if(response.has("bitacoraDrivers"))
+                    {
+                        try {
+                            bitacorasArray = response.getJSONArray("bitacoraDrivers");
+                            errorStackTraceBitacoras = false;
+                            for (int i = 0; i <= bitacorasArray.length() - 1; i++) {
+
+                                DatabaseAssistant.insertarBitacoras(
+                                        "" + i,
+                                        "" + bitacorasArray.getJSONObject(i).getString("name"),
+                                        "" + bitacorasArray.getJSONObject(i).getString("secondName"),
+                                        "" + bitacorasArray.getJSONObject(i).getString("address"),
+                                        "" + bitacorasArray.getJSONObject(i).getString("phones"),
+                                        "" + bitacorasArray.getJSONObject(i).getString("chofer"),
+                                        "" + bitacorasArray.getJSONObject(i).getString("ayudante"),
+                                        "" + bitacorasArray.getJSONObject(i).getString("vehiculo"),
+                                        "" + bitacorasArray.getJSONObject(i).getString("salida"),
+                                        "" + bitacorasArray.getJSONObject(i).getString("destino"),
+                                        "" + bitacorasArray.getJSONObject(i).getString("destino_domicilio"),
+                                        "" + bitacorasArray.getJSONObject(i).getString("destino_latitud"),
+                                        "" + bitacorasArray.getJSONObject(i).getString("destino_longitud"),
+                                        "" + bitacorasArray.getJSONObject(i).getString("ataud"),
+                                        "" + bitacorasArray.getJSONObject(i).getString("panteon"),
+                                        "" + bitacorasArray.getJSONObject(i).getString("tipo_servicio"),
+                                        "" + bitacorasArray.getJSONObject(i).getString("inicio_velacion"),
+                                        "" + bitacorasArray.getJSONObject(i).getString("inicio_cortejo"),
+                                        "" + bitacorasArray.getJSONObject(i).getString("templo")
+
+                                );
+                            }
+                            Log.d(TAG, "onResponse: Bitacora guardada y consultada correctamente");
+                            errorStackTraceBitacoras = false;
+                        }catch (Throwable e){
+                            errorStackTraceBitacoras = true;
+                            Log.e(TAG, "onResponse: Error al consultar y guardar la bitacora individual: " + e.getMessage());
+                        }
+                    }
+                    //**********************************************************************************************
+
+
+
+                    //****************************DETALLES***********************************
+                    if(response.has("bitacorasDetails")){
+                        try {
+                            errorStackTraceBitacorasDetalles = false;
+                            bitacoraDetallesArray = response.getJSONArray("bitacorasDetails");
+
+                            for (int i = 0; i <= bitacoraDetallesArray.length() - 1; i++)
+                            {
+                                String bitacoraFromResponse = bitacoraDetallesArray.getJSONObject(i).getString("bitacora");
+                                Adicional.executeQuery("DELETE FROM ADICIONAL WHERE bitacora = '" + bitacoraFromResponse + "' and sync ='1'");
+                                String seleccionarHora="00:00:00";
+                                if (bitacoraDetallesArray.getJSONObject(i).getString("hora_instalacion").equals("Selecciona aqui..."))
+                                    seleccionarHora = "00:00:00";
+                                else
+                                    seleccionarHora = bitacoraDetallesArray.getJSONObject(i).getString("hora_instalacion");
+
+                                DatabaseAssistant.insertarInformacionAdicional(
+                                        "" + seleccionarHora,
+                                        "" + bitacoraDetallesArray.getJSONObject(i).getString("ropa_entregada"),
+                                        "" + bitacoraDetallesArray.getJSONObject(i).getString("lugar_de_velacion"),
+                                        "" + bitacoraDetallesArray.getJSONObject(i).getString("tipo_servicio"),
+                                        "",
+                                        "" + bitacoraDetallesArray.getJSONObject(i).getString("observaciones_instalacion"),
+                                        "",
+                                        "" + bitacoraDetallesArray.getJSONObject(i).getString("observaciones_cortejo"),
+                                        "" + bitacoraDetallesArray.getJSONObject(i).getString("documentos_seleccion"),
+                                        "" + bitacoraFromResponse,
+                                        "" + bitacoraDetallesArray.getJSONObject(i).getString("encapsulado"),
+                                        "" + bitacoraDetallesArray.getJSONObject(i).getString("observaciones_recoleccion"),
+                                        "" + bitacoraDetallesArray.getJSONObject(i).getString("observaciones_traslado"),
+                                        "" + bitacoraDetallesArray.getJSONObject(i).getString("embalsamado_o_arreglo"),
+                                        "" + bitacoraDetallesArray.getJSONObject(i).getString("laboratorio"),
+                                        "" + bitacoraDetallesArray.getJSONObject(i).getString("idLaboratorio")
+                                );
+
+
+                                if(bitacoraDetallesArray.getJSONObject(i).has("Equipos_instalacion")) {
+                                    Equipoinstalacion.executeQuery("DELETE FROM EQUIPOINSTALACION WHERE bitacora = '" + bitacoraFromResponse + "' and sync ='1'");
+                                    JSONArray jsonArrayEquiposInstalacion = bitacoraDetallesArray.getJSONObject(i).getJSONArray("Equipos_instalacion");
+                                    for (int position = 0; position <= jsonArrayEquiposInstalacion.length() - 1; position++) {
+
+
+                                        DatabaseAssistant.insertarEquipoInstalacionFromWebService(
+                                                "" + bitacoraFromResponse,
+                                                "" + jsonArrayEquiposInstalacion.getJSONObject(position).getString("serie"),
+                                                "" + jsonArrayEquiposInstalacion.getJSONObject(position).getString("nombre"),
+                                                "" + (Preferences.getPreferenceIsbunker(NuevaBitacora.this, Preferences.PREFERENCE_ISBUNKER) ? "1" : "0")
+                                        );
+                                    }
+                                }
+
+                                if(bitacoraDetallesArray.getJSONObject(i).has("Equipos_cortejo")) {
+                                    Equipocortejo.executeQuery("DELETE FROM EQUIPOCORTEJO WHERE bitacora = '" + bitacoraFromResponse + "' and sync ='1'");
+                                    JSONArray jsonArrayEquiposCortejo = bitacoraDetallesArray.getJSONObject(i).getJSONArray("Equipos_cortejo");
+                                    for (int position = 0; position <= jsonArrayEquiposCortejo.length() - 1; position++) {
+
+                                        DatabaseAssistant.insertarEquipoCortejoFromWebservice(
+                                                "" + bitacoraFromResponse,
+                                                "" + jsonArrayEquiposCortejo.getJSONObject(position).getString("serie"),
+                                                "" + jsonArrayEquiposCortejo.getJSONObject(position).getString("nombre"),
+                                                "" + (Preferences.getPreferenceIsbunker(NuevaBitacora.this, Preferences.PREFERENCE_ISBUNKER) ? "1" : "0")
+                                        );
+                                    }
+                                }
+
+                                if(bitacoraDetallesArray.getJSONObject(i).has("Documentos_extras")) {
+                                    Documentos.executeQuery("DELETE FROM DOCUMENTOS WHERE bitacora = '" + bitacoraFromResponse + "' and sync ='1'");
+                                    JSONArray jsonArrayDocumentosExtras = bitacoraDetallesArray.getJSONObject(i).getJSONArray("Documentos_extras");
+                                    for (int position = 0; position <= jsonArrayDocumentosExtras.length() - 1; position++) {
+
+                                        DatabaseAssistant.insertarDocumentoExtraFromWebService(
+                                                "" + bitacoraFromResponse,
+                                                "" + jsonArrayDocumentosExtras.getJSONObject(position).getString("nombre")
+                                        );
+
+                                    }
+                                }
+                            }
+                            errorStackTraceBitacorasDetalles = false;
+                            Log.d(TAG, "onResponse: Detalles registrados correctamente");
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                            errorStackTraceBitacorasDetalles = true;
+                            Log.e(TAG, "onResponse: Error en bitacora details al descargar: " + e.getMessage());
+                        }
+                    }
+                    //*******************************************************************************************************************
+
+
+                    //*************************** COMENTARIOS EDE BITACORA **********************
+                    if(response.has("comments")){
+                        try
+                        {
+                            errorStackTraceBitacorasComentarios = false;
+                            bitacorasComentariosArray = response.getJSONArray("comments");
+                            Comentarios.executeQuery("DELETE FROM COMENTARIOS WHERE bitacora = '" +  bitacorasComentariosArray.getJSONObject(0).getString("bitacora") + "' and sync ='1'");
+
+                            for(int i =0; i<=bitacorasComentariosArray.length()-1;i++)
+                            {
+                                DatabaseAssistant.insertarComentarios(
+                                        "" + bitacorasComentariosArray.getJSONObject(i).getString("bitacora"),
+                                        "" + bitacorasComentariosArray.getJSONObject(i).getString("comentario"),
+                                        "" + bitacorasComentariosArray.getJSONObject(i).getString("usuario"),
+                                        "" + bitacorasComentariosArray.getJSONObject(i).getString("fecha_captura"),
+                                        "1",
+                                        DatabaseAssistant.getUserNameFromSesiones().equals(bitacorasComentariosArray.getJSONObject(i).getString("usuario")) ? "1" :"0"
+                                );
+                            }
+                            Log.d(TAG, "onResponse: Comentarios actualizados");
+
+                        } catch (JSONException e) {
+                            errorStackTraceBitacorasComentarios = true;
+                            e.printStackTrace();
+                        }
+                    }
+                    //*************************************************************************
+
+
+
+
+
+
+
+
+
+
+
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    errorStackTraceBitacoras = true;
+                    codigoErrorStackTraceBitacoras = e.getMessage();
+                }
+            }
+        },
+                new Response.ErrorListener() {
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+                        error.printStackTrace();
+                        errorStackTraceBitacoras = true;
+                        errorStackTraceBitacorasDetalles = true;
+                        errorStackTraceBitacorasComentarios = true;
+                        codigoErrorStackTraceBitacoras = error.getMessage();
+                    }
+                }) {
+
+        };
+
+        //postRequest.setRetryPolicy(new DefaultRetryPolicy(90000, 2, DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
+        VolleySingleton.getIntanciaVolley(getApplicationContext()).addToRequestQueue(postRequest);
+    }
+    */
+
+
+
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        IntentResult result = IntentIntegrator.parseActivityResult(requestCode, resultCode, data);
+        if(result != null){
+            if(result.getContents() != null) {
+
+                if(equipoDeInstalacion) {
+
+                    if(result.getContents().length()<=6) {
+                        boolean guardarEquipo = false, guardar4Candelabros = false;
+                        String nombreDeEquipo = "DESCONOCIDO", inicialesDeEquipo = "";
+
+                        if (!result.getContents().contains("AA")) {
+
+                            inicialesDeEquipo = result.getContents().substring(0, 2);
+                            List<CatalogoArticulos> catalogoArticulosList = CatalogoArticulos.findWithQuery(CatalogoArticulos.class, "SELECT * FROM catalogo_Articulos WHERE letras ='" + inicialesDeEquipo + "'");
+                            if (catalogoArticulosList.size() > 0) {
+                                Log.d(TAG, "onActivityResult: Azael si encontre información de articulos con las letras: " + inicialesDeEquipo);
+                                nombreDeEquipo = catalogoArticulosList.get(0).getNombre();
+                                guardarEquipo = true;
+
+                                if (inicialesDeEquipo.equals("CB")) {
+                                    guardar4Candelabros = true;
+                                }
+                            } else {
+                                nombreDeEquipo = "DESCONOCIDO";
+                                guardarEquipo = false;
+                                guardar4Candelabros = false;
+                            }
+
+                            if (!nombreDeEquipo.equals("DESCONOCIDO") && !(inicialesDeEquipo.equals("CL") && nombreDeEquipo.equals("Candelabro"))) {
+                                guardarEquipo = !DatabaseAssistant.yaExisteInformacionDelArticuloDeVelacionDeInstalacion("" + result.getContents(), "" + bitacoraGlobal);
+                            }
+
+                            if (guardarEquipo) {
+                                DatabaseAssistant.insertarEquipoInstalacion(
+                                        "" + bitacoraGlobal,
+                                        "" + result.getContents(),
+                                        "" + nombreDeEquipo,
+                                        "" + (Preferences.getPreferenceIsbunker(getApplicationContext(), Preferences.PREFERENCE_ISBUNKER) ? "1" : "0"),
+                                        "4"
+                                );
+
+                                if (guardar4Candelabros) {
+                                    for (int i = 0; i <= 3; i++) {
+                                        int random = (int) Math.floor(Math.random() * 247 + 1);
+                                        String randomString = String.valueOf(random);
+                                        String s = randomString.length() == 2 ? "CL00" : randomString.length() == 3 ? "CL0" : randomString.length() == 1 ? "CL000" : "CL000";
+                                        String serie = s + random;
+                                        DatabaseAssistant.insertarEquipoInstalacion(
+                                                "" + bitacoraGlobal,
+                                                serie,
+                                                "Candelabro",
+                                                "" + (Preferences.getPreferenceIsbunker(getApplicationContext(), Preferences.PREFERENCE_ISBUNKER) ? "1" : "0"),
+                                                "4"
+                                        );
+                                    }
+                                } else
+                                    Log.d(TAG, "onActivityResult: No se guardaran candelabros");
+
+                                consultarEquiposDeInstalacion(bitacoraGlobal);
+                                Toast.makeText(this, "Equipo guardado correctamente", Toast.LENGTH_SHORT).show();
+
+                            } else {
+                                showErrorDialog("Código repetido o desconocido para articulos de instalación, verifica nuevamente");
+                            }
+
+
+                        }
+                        else
+                            showErrorDialog("Código repetido o desconocido para articulos de instalación, verifica nuevamente");
+                    }
+                    else {
+                        showErrorDialog("El código no corresponde a un artículo de velación, verifica nuevamente.");
+                    }
+
+
+                }else if(equipoDeTraslado){
+
+                    if(result.getContents().length()<=6) {
+
+
+                        boolean guardarEquipo = false, guardar4Candelabros = false;
+                        String nombreDeEquipo = "DESCONOCIDO", inicialesDeEquipo = "", entradaOsalida = "";
+
+                        if (!result.getContents().contains("AA")) {
+                            inicialesDeEquipo = result.getContents().substring(0, 2);
+                            List<CatalogoArticulos> catalogoArticulosList = CatalogoArticulos.findWithQuery(CatalogoArticulos.class, "SELECT * FROM catalogo_Articulos WHERE letras ='" + inicialesDeEquipo + "'");
+                            if (catalogoArticulosList.size() > 0) {
+                                Log.d(TAG, "onActivityResult: Azael si encontre información de articulos con las letras: " + inicialesDeEquipo);
+                                nombreDeEquipo = catalogoArticulosList.get(0).getNombre();
+                                guardarEquipo = true;
+
+                                if (inicialesDeEquipo.equals("CB")) {
+                                    guardar4Candelabros = true;
+                                }
+                            } else {
+                                nombreDeEquipo = "DESCONOCIDO";
+                                guardarEquipo = false;
+                                guardar4Candelabros = false;
+                            }
+
+
+
+                            //if (!nombreDeEquipo.equals("DESCONOCIDO") && !((result.getContents().contains("CL") && nombreDeEquipo.equals("Candelabro")) || (result.getContents().contains("CB") && nombreDeEquipo.equals("Cristo y base"))))
+                            //  guardarEquipo = !DatabaseAssistant.yaExisteInformacionDelArticuloDeVelacionDeTraslado("" + result.getContents(), "" + bitacora);
+
+                            if (guardarEquipo) {
+                                if (DatabaseAssistant.entradaSalidaTraslado("" + result.getContents(), "" + bitacoraGlobal).equals("1")) {
+                                    showErrorDialog("El código ya tiene un registro de salida y entrada de inventario.");
+                                } else {
+                                    if (DatabaseAssistant.entradaSalidaTraslado("" + result.getContents(), "" + bitacoraGlobal).equals("")) {
+                                        entradaOsalida = "0";
+                                    } else if (DatabaseAssistant.entradaSalidaTraslado("" + result.getContents(), "" + bitacoraGlobal).equals("0")) {
+                                        entradaOsalida = "1";
+                                    }
+
+
+                                    DatabaseAssistant.insertarEquipoTraslado(
+                                            "" + bitacoraGlobal,
+                                            "" + result.getContents(),
+                                            nombreDeEquipo,
+                                            entradaOsalida,
+                                            "" + (Preferences.getPreferenceIsbunker(getApplicationContext(), Preferences.PREFERENCE_ISBUNKER) ? "1" : "0"),
+                                            "4"
+                                    );
+                                    if (guardar4Candelabros) {
+                                        for (int i = 0; i <= 3; i++) {
+                                            int random = (int) Math.floor(Math.random() * 247 + 1);
+                                            String randomString = String.valueOf(random);
+                                            String s = randomString.length() == 2 ? "CL00" : randomString.length() == 3 ? "CL0" : randomString.length() == 1 ? "CL000" : "CL000";
+                                            String serie = s + random;
+                                            DatabaseAssistant.insertarEquipoTraslado(
+                                                    "" + bitacoraGlobal,
+                                                    serie,
+                                                    "Candelabro",
+                                                    entradaOsalida,
+                                                    "" + (Preferences.getPreferenceIsbunker(getApplicationContext(), Preferences.PREFERENCE_ISBUNKER) ? "1" : "0"),
+                                                    "4"
+                                            );
+                                        }
+                                    } else
+                                        Log.d(TAG, "onActivityResult: No se guardaran candelabros");
+
+                                    consultarEquiposDeTraslado(bitacoraGlobal);
+                                    Toast.makeText(this, "Equipo guardado correctamente", Toast.LENGTH_SHORT).show();
+
+                                }
+                            } else
+                                showErrorDialog("Código repetido o desconocido para articulos de Traslado, verifica nuevamente");
+
+                        } else
+                            showErrorDialog("Código repetido o desconocido para articulos de Traslado, verifica nuevamente");
+                    }
+                    else {
+                        showErrorDialog("El código no corresponde a un artículo de velación, verifica nuevamente.");
+                    }
+
+                }
+                else if(equipoRecoleccion){
+                    if(result.getContents().length()<=6) {
+
+
+                        boolean guardarEquipo = false, guardar4Candelabros = false;
+                        String nombreDeEquipo = "DESCONOCIDO", inicialesDeEquipo="", entradaOsalida="";
+
+                        inicialesDeEquipo = result.getContents().substring(0, 2);
+                        List<CatalogoArticulos> catalogoArticulosList = CatalogoArticulos.findWithQuery(CatalogoArticulos.class, "SELECT * FROM catalogo_Articulos WHERE letras ='"+ inicialesDeEquipo + "'");
+                        if(catalogoArticulosList.size() > 0 ){
+                            Log.d(TAG, "onActivityResult: Azael si encontre información de articulos con las letras: " + inicialesDeEquipo);
+                            nombreDeEquipo = catalogoArticulosList.get(0).getNombre();
+                            guardarEquipo = true;
+
+                            if(inicialesDeEquipo.equals("CB")){
+                                guardar4Candelabros = true;
+                            }
+                        }
+                        else{
+                            nombreDeEquipo = "DESCONOCIDO";
+                            guardarEquipo = false;
+                            guardar4Candelabros = false;
+                        }
+
+
+
+
+
+
+
+                        /* Esta validación sirve para no permitir agregar otro registro (entrada y salida) que no sea Candelabro o cristo base NO BORRAR*/
+                        //NO BORRAR
+                        //NO BORRAR
+                        //NO BORRAR
+                        //NO BORRAR
+                        //if(!nombreDeEquipo.equals("DESCONOCIDO") && !(   ( result.getContents().contains("CL") && nombreDeEquipo.equals("Candelabro") ) || (   result.getContents().contains("CB") && nombreDeEquipo.equals("Cristo y base")   )      ))
+                        //  guardarEquipo = !DatabaseAssistant.yaExisteInformacionDelArticuloDeVelacionDeRecoleccion("" + result.getContents(), "" + bitacora);
+
+
+                        if (guardarEquipo) {
+                            if (DatabaseAssistant.entradaSalidaRecoleccion("" + result.getContents(), "" + bitacoraGlobal).equals("1")) {
+                                Toast.makeText(this, "No se guarda ningun dato porque ya tiene un registro de entrada y salida", Toast.LENGTH_LONG).show();
+                                showErrorDialog("El código ya tiene un registro de salida y entrada de inventario.");
+                            } else {
+                                if (DatabaseAssistant.entradaSalidaRecoleccion("" + result.getContents(), "" + bitacoraGlobal).equals("")) {
+                                    entradaOsalida = "0";
+                                } else if (DatabaseAssistant.entradaSalidaRecoleccion("" + result.getContents(), "" + bitacoraGlobal).equals("0")) {
+                                    entradaOsalida = "1";
+                                }
+
+                                DatabaseAssistant.insertarEquipoRecoleccion(
+                                        "" + bitacoraGlobal,
+                                        "" + result.getContents(),
+                                        nombreDeEquipo,
+                                        entradaOsalida,
+                                        "" + (Preferences.getPreferenceIsbunker(getApplicationContext(), Preferences.PREFERENCE_ISBUNKER) ? "1" : "0"),
+                                        "4"
+                                );
+
+                                if (guardar4Candelabros) {
+                                    for (int i = 0; i <= 3; i++) {
+                                        int random = (int) Math.floor(Math.random() * 247 + 1);
+                                        String randomString = String.valueOf(random);
+                                        String s = randomString.length() == 2 ? "CL00" : randomString.length() == 3 ? "CL0" : randomString.length() == 1 ? "CL000" : "CL000";
+                                        String serie = s + random;
+                                        DatabaseAssistant.insertarEquipoRecoleccion(
+                                                "" + bitacoraGlobal,
+                                                serie,
+                                                "Candelabro",
+                                                entradaOsalida,
+                                                "" + (Preferences.getPreferenceIsbunker(getApplicationContext(), Preferences.PREFERENCE_ISBUNKER) ? "1" : "0"),
+                                                "4"
+                                        );
+                                    }
+                                } else
+                                    Log.d(TAG, "onActivityResult: No se guardaran candelabros");
+
+                                consultarEquiposDeRecoleccion(bitacoraGlobal);
+                                Toast.makeText(this, "Equipo guardado correctamente", Toast.LENGTH_SHORT).show();
+
+                            }
+
+
+                        } else
+                            showErrorDialog("Código repetido o desconocido para articulos de recolección, verifica nuevamente");
+
+                    }
+                    else{
+                        showErrorDialog("El código no corresponde a un artículo de velación, verifica nuevamente.");
+                    }
+
+                } else {
+                    Log.d(TAG, "onActivityResult: No se guarda en ningun lugar");
+                    Toast.makeText(this, "No se puede guardar el código", Toast.LENGTH_SHORT).show();
+                }
+            }
+            else {
+                Toast.makeText(this, "No se puede escanear el código.", Toast.LENGTH_SHORT).show();
+            }
+        }
+    }
+
+    private void consultarEquiposDeInstalacion(String bitacora) {
+        RecyclerView rvDocumentos;
+        GridLayoutManager gridLayoutManager;
+        rvDocumentos = (RecyclerView) findViewById(R.id.rvEquiposEscaneadosInstalacion);
+        rvDocumentos.setHasFixedSize(true);
+        gridLayoutManager = new GridLayoutManager(this, 1);
+        rvDocumentos.setLayoutManager(gridLayoutManager);
+        List<Equipoinstalacion> modelDocumentos = new ArrayList<>();
+        AdapterEquiposInstalacion adapterDocumentos = null;
+
+        List<Equipoinstalacion> documentosList = Equipoinstalacion.findWithQuery(Equipoinstalacion.class, "SELECT * FROM EQUIPOINSTALACION WHERE bitacora = '" + bitacora + "' ORDER BY id ASC");
+        if (documentosList.size() > 0) {
+            rvDocumentos.setVisibility(View.VISIBLE);
+            //frameSinDatos.setVisibility(View.GONE);
+            modelDocumentos.clear();
+            for (int i = 0; i <= documentosList.size() - 1; i++) {
+                Equipoinstalacion product = new Equipoinstalacion(
+                        "" + documentosList.get(i).getBitacora(),
+                        "" + documentosList.get(i).getSerie(),
+                        "" + documentosList.get(i).getFecha(),
+                        "" + documentosList.get(i).getSync(),
+                        "" + documentosList.get(i).getNombre(),
+                        "",
+                        "",
+                        "",
+                        ""
+                );
+                modelDocumentos.add(product);
+            }
+
+            adapterDocumentos = new AdapterEquiposInstalacion(getApplicationContext(), modelDocumentos, NuevaBitacora.this);
+            rvDocumentos.setAdapter(adapterDocumentos);
+        } else {
+            modelDocumentos.clear();
+            adapterDocumentos = null;
+            rvDocumentos.setVisibility(View.GONE);
+            //frameSinDatos.setVisibility(View.VISIBLE);
+        }
+    }
+
+    private void consultarEquiposDeTraslado(String bitacora) {
+        RecyclerView rvDocumentos;
+        GridLayoutManager gridLayoutManager;
+        rvDocumentos = (RecyclerView) findViewById(R.id.rvEquiposEscaneadosTraslado);
+        rvDocumentos.setHasFixedSize(true);
+        gridLayoutManager = new GridLayoutManager(this, 1);
+        rvDocumentos.setLayoutManager(gridLayoutManager);
+        List<EquipoTraslado> modelDocumentos = new ArrayList<>();
+        AdapterEquiposTraslado adapterDocumentos = null;
+
+        List<EquipoTraslado> documentosList = EquipoTraslado.findWithQuery(EquipoTraslado.class, "SELECT * FROM EQUIPO_TRASLADO WHERE bitacora = '" + bitacora + "' ORDER BY id ASC");
+        if (documentosList.size() > 0) {
+            rvDocumentos.setVisibility(View.VISIBLE);
+            //frameSinDatos.setVisibility(View.GONE);
+            modelDocumentos.clear();
+            for (int i = 0; i <= documentosList.size() - 1; i++) {
+                EquipoTraslado product = new EquipoTraslado(
+                        "" + documentosList.get(i).getBitacora(),
+                        "" + documentosList.get(i).getSerie(),
+                        "" + documentosList.get(i).getFecha(),
+                        "" + documentosList.get(i).getSync(),
+                        "" + documentosList.get(i).getNombre(),
+                        "",
+                        "",
+                        "" + documentosList.get(i).getTipo(),
+                        "", ""
+                );
+                modelDocumentos.add(product);
+            }
+
+            adapterDocumentos = new AdapterEquiposTraslado(getApplicationContext(), modelDocumentos, NuevaBitacora.this);
+            rvDocumentos.setAdapter(adapterDocumentos);
+        } else {
+            modelDocumentos.clear();
+            adapterDocumentos = null;
+            rvDocumentos.setVisibility(View.GONE);
+            //frameSinDatos.setVisibility(View.VISIBLE);
+        }
+
+
+    }
+
+
+    private void consultarEquiposDeRecoleccion(String bitacora) {
+        RecyclerView rvDocumentos;
+        GridLayoutManager gridLayoutManager;
+        rvDocumentos = (RecyclerView) findViewById(R.id.rvEquiposEscaneadosRecoleccion);
+        rvDocumentos.setHasFixedSize(true);
+        gridLayoutManager = new GridLayoutManager(this, 1);
+        rvDocumentos.setLayoutManager(gridLayoutManager);
+        List<EquipoRecoleccion> modelDocumentos = new ArrayList<>();
+        AdapterEquiposRecoleccion adapterDocumentos = null;
+
+        List<EquipoRecoleccion> documentosList = EquipoRecoleccion.findWithQuery(EquipoRecoleccion.class, "SELECT * FROM EQUIPO_RECOLECCION WHERE bitacora = '" + bitacora + "' ORDER BY id ASC");
+        if (documentosList.size() > 0) {
+            rvDocumentos.setVisibility(View.VISIBLE);
+            modelDocumentos.clear();
+            for (int i = 0; i <= documentosList.size() - 1; i++) {
+                EquipoRecoleccion product = new EquipoRecoleccion(
+                        "" + documentosList.get(i).getBitacora(),
+                        "" + documentosList.get(i).getSerie(),
+                        "" + documentosList.get(i).getFecha(),
+                        "" + documentosList.get(i).getSync(),
+                        "" + documentosList.get(i).getNombre(),
+                        "",
+                        "",
+                        documentosList.get(i).getTipo(),
+                        "", ""
+                );
+                modelDocumentos.add(product);
+            }
+            adapterDocumentos = new AdapterEquiposRecoleccion(getApplicationContext(), modelDocumentos, NuevaBitacora.this);
+            rvDocumentos.setAdapter(adapterDocumentos);
+        } else {
+            modelDocumentos.clear();
+            adapterDocumentos = null;
+            rvDocumentos.setVisibility(View.GONE);
+        }
+    }
+
+
+
+    @Override
+    public void onClickCancelarArticuloInstalacion(int position, String serie, String fecha, String bitacora) {
+        AlertDialog.Builder dialogo1 = new AlertDialog.Builder(this);
+        dialogo1.setCancelable(false);
+        dialogo1.setTitle("Eliminación...");
+        dialogo1.setMessage("¿ Seguro que deséas eliminar el artículo ?");
+        dialogo1.setCancelable(false);
+        dialogo1.setPositiveButton("Eliminar", new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialogo1, int id) {
+
+                List<Equipoinstalacion> listaArticulos = Equipoinstalacion.findWithQuery(Equipoinstalacion.class, "SELECT * FROM EQUIPOINSTALACION WHERE serie = '" + serie + "' and fecha ='" + fecha + "' and bitacora='" + bitacora + "'");
+                if (listaArticulos.size() > 0) {
+                    Equipoinstalacion.executeQuery("DELETE FROM EQUIPOINSTALACION WHERE serie = '" + serie + "' and fecha ='" + fecha + "' and bitacora='" + bitacora + "'");
+                    consultarEquiposDeInstalacion(bitacora);
+
+                }else{
+                    Log.d(TAG, "onClick: No se puede cancelar el articulo");
+                }
+
+
+            }
+        });
+        dialogo1.setNegativeButton("Cancelar", new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialogo1, int id) {
+                dialogo1.dismiss();
+            }
+        });
+        dialogo1.show();
+    }
+
+    @Override
+    public void onClickCancelarArticuloRecoleccion(int position, String serie, String fecha, String bitacora) {
+        AlertDialog.Builder dialogo1 = new AlertDialog.Builder(this);
+        dialogo1.setCancelable(false);
+        dialogo1.setTitle("Eliminación...");
+        dialogo1.setMessage("¿ Seguro que deséas eliminar el artículo ?");
+        dialogo1.setCancelable(false);
+        dialogo1.setPositiveButton("Eliminar", new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialogo1, int id) {
+
+                List<EquipoRecoleccion> listaArticulos = EquipoRecoleccion.findWithQuery(EquipoRecoleccion.class, "SELECT * FROM EQUIPO_RECOLECCION WHERE serie = '" + serie + "' and fecha ='" + fecha + "' and bitacora='" + bitacora + "'");
+                if (listaArticulos.size() > 0) {
+                    EquipoRecoleccion.executeQuery("DELETE FROM EQUIPO_RECOLECCION WHERE serie = '" + serie + "' and fecha ='" + fecha + "' and bitacora='" + bitacora + "'");
+                    consultarEquiposDeRecoleccion(bitacora);
+
+                }else{
+                    Log.d(TAG, "onClick: No se puede cancelar el articulo");
+                }
+
+
+            }
+        });
+        dialogo1.setNegativeButton("Cancelar", new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialogo1, int id) {
+                dialogo1.dismiss();
+            }
+        });
+        dialogo1.show();
+    }
+
+    @Override
+    public void onClickCancelarArticuloTraslado(int position, String serie, String fecha, String bitacora) {
+        AlertDialog.Builder dialogo1 = new AlertDialog.Builder(this);
+        dialogo1.setCancelable(false);
+        dialogo1.setTitle("Eliminación...");
+        dialogo1.setMessage("¿ Seguro que deséas eliminar el artículo ?");
+        dialogo1.setCancelable(false);
+        dialogo1.setPositiveButton("Eliminar", new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialogo1, int id) {
+
+                List<EquipoTraslado> listaArticulos = EquipoTraslado.findWithQuery(EquipoTraslado.class, "SELECT * FROM EQUIPO_TRASLADO WHERE serie = '" + serie + "' and fecha ='" + fecha + "' and bitacora='" + bitacora + "'");
+                if (listaArticulos.size() > 0) {
+                    EquipoTraslado.executeQuery("DELETE FROM EQUIPO_TRASLADO WHERE serie = '" + serie + "' and fecha ='" + fecha + "' and bitacora='" + bitacora + "'");
+                    consultarEquiposDeTraslado(bitacora);
+
+                }else{
+                    Log.d(TAG, "onClick: No se puede cancelar el articulo");
+                }
+
+
+            }
+        });
+        dialogo1.setNegativeButton("Cancelar", new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialogo1, int id) {
+                dialogo1.dismiss();
+            }
+        });
+        dialogo1.show();
+    }
+
+
+
+
+
+    private void eliminarArticulosDeInstalacionNoGuardados(String bitacora){
+        //Equipoinstalacion.executeQuery("DELETE FROM EQUIPOINSTALACION WHERE bitacora='" + bitacora + "' and sync ='4'");
+        Equipoinstalacion.executeQuery("DELETE FROM EQUIPOINSTALACION WHERE bitacora='" + bitacora + "'");
+    }
+
+    private void eliminarArticulosDeCortejoNoGuardados(String bitacora){
+        Equipocortejo.executeQuery("DELETE FROM EQUIPOCORTEJO WHERE bitacora='" + bitacora + "'");
+    }
+
+    private void eliminarArticulosDeRecoleccionNoGuardados(String bitacora){
+        EquipoRecoleccion.executeQuery("DELETE FROM EQUIPO_RECOLECCION WHERE bitacora='" + bitacora + "'");
+    }
+
+    private void eliminarArticulosDeTrasladoNoGuardados(String bitacora){
+        EquipoTraslado.executeQuery("DELETE FROM EQUIPO_TRASLADO WHERE bitacora='" + bitacora + "'");
+    }
+
+
+
+
+
+
+    private void updateArticulosDeInstalacionConSync4(String bitacora){
+        Equipoinstalacion.executeQuery("UPDATE EQUIPOINSTALACION set sync ='0' WHERE bitacora='" + bitacora + "' and sync ='4'");
+    }
+
+    private void updateArticulosDeCortejoConSync4(String bitacora){
+        Equipocortejo.executeQuery("UPDATE EQUIPOCORTEJO set sync ='0' WHERE bitacora='" + bitacora + "' and sync ='4'");
+    }
+
+    private void updateArticulosDeRecoleccionConSync4(String bitacora){
+        EquipoRecoleccion.executeQuery("UPDATE EQUIPO_RECOLECCION set sync ='0' WHERE bitacora='" + bitacora + "' and sync ='4'");
+    }
+
+    private void updateArticulosDeTrasladoConSync4(String bitacora){
+        EquipoTraslado.executeQuery("UPDATE EQUIPO_TRASLADO set sync ='0' WHERE bitacora='" + bitacora + "' and sync ='4'");
+    }
+
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+
+    }
+
 }
+
 
 
 class LinearLayoutThatDetectsSoftKeyboard extends LinearLayout {

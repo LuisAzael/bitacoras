@@ -2,13 +2,13 @@ package com.example.bitacoras2020.Database;
 
 import com.orm.SugarRecord;
 
-public class EquipoTraslado extends SugarRecord {
-    String bitacora ="", serie="", fecha="", sync="", nombre="", latitud="", longitud="", tipo="",  isBunker="", usuario="";
+public class PreSaveEquipoRecoleccion extends SugarRecord {
+    String bitacora ="", serie="", fecha="", sync="", nombre="", latitud="", longitud="", tipo="", isBunker="", usuario="";
 
-    public EquipoTraslado() {
+    public PreSaveEquipoRecoleccion() {
     }
 
-    public EquipoTraslado(String bitacora, String serie, String fecha, String sync, String nombre, String latitud, String longitud, String tipo, String isBunker, String usuario) {
+    public PreSaveEquipoRecoleccion(String bitacora, String serie, String fecha, String sync, String nombre, String latitud, String longitud, String tipo, String isBunker, String usuario) {
         this.bitacora = bitacora;
         this.serie = serie;
         this.fecha = fecha;

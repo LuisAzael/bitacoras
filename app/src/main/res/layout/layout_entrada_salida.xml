@@ -133,43 +133,59 @@
             </com.google.android.material.textfield.TextInputLayout>
 
 
+
+
             <LinearLayout
-                android:layout_marginTop="40dp"
+                android:layout_marginTop="50dp"
+
                 android:weightSum="10"
                 android:orientation="horizontal"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content">
 
-                <androidx.appcompat.widget.AppCompatButton
+                <soup.neumorphism.NeumorphButton
+                    app:neumorph_backgroundColor="@color/white"
+                    style="@style/Widget.Neumorph.Button"
+                    app:neumorph_shapeType="flat"
+                    android:textAlignment="center"
+                    app:neumorph_shadowElevation="6dp"
+                    app:neumorph_lightSource="leftTop"
+                    android:padding="25dp"
                     android:drawableStart="@drawable/ic_close"
-                    android:drawableTint="@color/white"
+                    android:drawableTint="@color/red_color"
                     android:layout_weight="5"
-                    android:background="@drawable/btn_warning"
                     android:id="@+id/btCancelar"
-                    android:textColor="@color/white"
-                    android:padding="15dp"
+                    android:textColor="@color/textos_general"
                     android:textSize="12sp"
                     android:textStyle="bold"
-                    android:layout_margin="5dp"
                     android:text="Cancelar"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content" />
 
-                <androidx.appcompat.widget.AppCompatButton
+                <soup.neumorphism.NeumorphButton
+                    app:neumorph_backgroundColor="@color/white"
+                    style="@style/Widget.Neumorph.Button"
+                    app:neumorph_shapeType="flat"
+                    android:textAlignment="center"
+                    app:neumorph_shadowElevation="6dp"
+                    app:neumorph_lightSource="leftTop"
+                    android:padding="25dp"
                     android:drawableEnd="@drawable/ic_chekk"
-                    android:drawableTint="@color/white"
-                    android:layout_margin="5dp"
+                    android:drawableTint="@android:color/holo_green_dark"
                     android:layout_weight="5"
                     android:background="@drawable/btn_ok"
                     android:id="@+id/btGuardar"
                     android:textSize="12sp"
                     android:textStyle="bold"
-                    android:textColor="@color/white"
-                    android:padding="15dp"
+                    android:textColor="@color/textos_general"
                     android:text="Aceptar"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content" />
+
             </LinearLayout>
+
+
+
 
 
         </LinearLayout>

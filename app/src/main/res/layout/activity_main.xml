@@ -23,7 +23,7 @@
                 android:layout_height="match_parent">
 
                 <LinearLayout
-                    android:layout_margin="10dp"
+                    android:padding="15dp"
                     android:weightSum="12"
                     android:orientation="horizontal"
                     android:layout_width="match_parent"
@@ -58,16 +58,19 @@
                     </LinearLayout>
 
 
-                    <ImageView
-                        android:padding="5dp"
-                        android:clickable="true"
-                        android:foreground="?android:attr/selectableItemBackground"
+                    <soup.neumorphism.NeumorphImageButton
+                        app:neumorph_backgroundColor="@color/white"
+                        style="@style/Widget.Neumorph.Button"
+                        app:neumorph_shapeType="flat"
+                        app:neumorph_lightSource="leftTop"
+                        android:padding="20dp"
                         android:id="@+id/btDescargarTodo"
+                        android:tint="@color/textos_general"
                         android:src="@drawable/ic_sync_green"
                         android:layout_gravity="center"
                         android:layout_weight="5"
                         android:layout_width="match_parent"
-                        android:layout_height="fill_parent"/>
+                        android:layout_height="60dp"/>
 
 
                     <com.polyak.iconswitch.IconSwitch
@@ -78,32 +81,37 @@
                         android:layout_height="wrap_content"
                         app:isw_icon_left="@drawable/ic_power_tutorial"
                         app:isw_icon_right="@drawable/ic_power_on"
-                        app:isw_background_color="#eeeeee"
+                        app:isw_background_color="#ffffff"
                         app:isw_thumb_color_left="@color/red_color"
                         app:isw_thumb_color_right="@android:color/holo_green_dark"
-                        app:isw_inactive_tint_icon_left="@color/white"
-                        app:isw_inactive_tint_icon_right="@color/white"
+                        app:isw_inactive_tint_icon_left="@color/black"
+                        app:isw_inactive_tint_icon_right="@color/black"
                         app:isw_active_tint_icon_left="@color/white"
                         app:isw_active_tint_icon_right="@color/white"/>
 
                 </LinearLayout>
 
 
-                <TextView
+
+                <soup.neumorphism.NeumorphButton
+
+                    app:neumorph_backgroundColor="@color/white"
+                    style="@style/Widget.Neumorph.CardView"
+                    app:neumorph_shadowElevation="6dp"
+                    app:neumorph_shapeType="basin"
+                    app:neumorph_lightSource="leftTop"
+
                     android:id="@+id/tvRegistroDeAsistencia"
                     android:layout_marginTop="10dp"
-                    android:drawableTint="@color/white"
+                    android:drawableTint="@color/textos_general"
                     android:textSize="12sp"
-                    android:textColor="@color/white"
+                    android:textColor="@color/textos_general"
                     android:background="@drawable/gradiation_text"
                     android:gravity="center"
-                    android:paddingTop="5dp"
-                    android:paddingBottom="5dp"
-                    android:paddingLeft="10dp"
-                    android:paddingEnd="10dp"
+                    android:padding="25dp"
                     android:drawablePadding="15dp"
                     android:drawableEnd="@drawable/ic_asistencia"
-                    android:text="            Registro de asistencia"
+                    android:text="    Mi Registro de asistencia    "
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"/>
 
@@ -140,7 +148,7 @@
                     android:layout_gravity="center"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Bitacoras activas"
+                    android:text="Gestoría de bitacoras activas"
                     android:textStyle="bold"
                     android:textColor="@color/textos_principal"
                     android:textSize="20sp" />
@@ -451,49 +459,63 @@
 
 
 
-                <androidx.cardview.widget.CardView
-                    android:clickable="true"
-                    android:foreground="?android:attr/selectableItemBackground"
-                    app:cardCornerRadius="8dp"
-                    android:layout_marginLeft="10dp"
-                    android:layout_marginRight="10dp"
-                    android:layout_marginBottom="10dp"
+                <soup.neumorphism.NeumorphCardView
+                    android:id="@+id/cardBtacoras"
+                    app:neumorph_backgroundColor="@color/white"
+                    style="@style/Widget.Neumorph.CardView"
+                    app:neumorph_shadowElevation="6dp"
+                    app:neumorph_shapeType="pressed"
+                    app:neumorph_lightSource="leftTop"
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    app:cardElevation="4dp">
+                    android:layout_height="wrap_content">
+
+                    <TextView
+                        android:textColor="@color/textos_general"
+                        android:id="@+id/tvNada"
+                        android:gravity="center"
+                        android:layout_gravity="center"
+                        android:text="No tienes bitácoras activas"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"/>
 
                     <androidx.recyclerview.widget.RecyclerView
+                        android:padding="12dp"
                         android:visibility="visible"
                         android:id="@+id/rvBitacorasActivas"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"/>
 
-                </androidx.cardview.widget.CardView>
+                </soup.neumorphism.NeumorphCardView>
 
 
 
 
-                <androidx.cardview.widget.CardView
+                <soup.neumorphism.NeumorphCardView
+                    app:neumorph_backgroundColor="@color/white"
+                    style="@style/Widget.Neumorph.CardView"
+                    app:neumorph_shadowElevation="6dp"
+                    app:neumorph_shapeType="pressed"
+                    app:neumorph_lightSource="leftTop"
                     android:visibility="visible"
-                    android:clickable="true"
-                    android:foreground="?android:attr/selectableItemBackground"
-                    app:cardCornerRadius="8dp"
-                    android:layout_marginTop="10dp"
-                    android:layout_marginLeft="10dp"
-                    android:layout_marginRight="10dp"
-                    android:layout_marginBottom="10dp"
                     android:id="@+id/cardMapa"
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    app:cardElevation="4dp">
+                    android:layout_height="wrap_content">
 
-                    <fragment
-                        android:id="@+id/map"
-                        android:name="com.google.android.gms.maps.SupportMapFragment"
+                    <FrameLayout
+
                         android:layout_width="match_parent"
-                        android:layout_height="300dp"/>
+                        android:layout_height="match_parent">
 
-                </androidx.cardview.widget.CardView>
+                        <fragment
+                            android:id="@+id/map"
+                            android:name="com.google.android.gms.maps.SupportMapFragment"
+                            android:layout_width="match_parent"
+                            android:layout_height="300dp"/>
+
+                    </FrameLayout>
+
+
+                </soup.neumorphism.NeumorphCardView>
 
 
                 <LinearLayout
@@ -647,16 +669,14 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content">
 
-                    <androidx.cardview.widget.CardView
-                        app:cardBackgroundColor="@color/white"
+                    <soup.neumorphism.NeumorphCardView
+                        style="@style/Widget.Neumorph.CardView"
+                        app:neumorph_shadowElevation="6dp"
+                        app:neumorph_shapeType="flat"
+                        app:neumorph_lightSource="leftTop"
                         android:visibility="visible"
-                        android:clickable="true"
-                        android:foreground="?android:attr/selectableItemBackground"
                         android:id="@+id/cardScanner"
                         android:layout_weight="5"
-                        app:cardCornerRadius="8dp"
-                        android:layout_margin="10dp"
-                        app:cardElevation="4dp"
                         android:layout_width="match_parent"
                         android:layout_height="120dp">
 
@@ -681,18 +701,17 @@
                             android:layout_height="wrap_content" />
 
 
-                    </androidx.cardview.widget.CardView>
+                    </soup.neumorphism.NeumorphCardView>
 
-                    <androidx.cardview.widget.CardView
-                        app:cardBackgroundColor="@color/white"
+                    <soup.neumorphism.NeumorphCardView
+                        android:padding="12dp"
+                        style="@style/CustomShapeAppearance"
+                        app:neumorph_shadowElevation="6dp"
+                        app:neumorph_shapeType="flat"
+                        app:neumorph_lightSource="leftTop"
                         android:visibility="visible"
-                        android:clickable="true"
-                        android:foreground="?android:attr/selectableItemBackground"
                         android:id="@+id/cardEnviar"
                         android:layout_weight="5"
-                        app:cardCornerRadius="8dp"
-                        android:layout_margin="10dp"
-                        app:cardElevation="4dp"
                         android:layout_width="match_parent"
                         android:layout_height="120dp">
 
@@ -741,8 +760,7 @@
                             android:layout_height="wrap_content"/>
 
 
-                    </androidx.cardview.widget.CardView>
-
+                    </soup.neumorphism.NeumorphCardView>
 
                 </LinearLayout>
 
@@ -781,41 +799,59 @@
         </androidx.core.widget.NestedScrollView>
 
 
-        <com.google.android.material.floatingactionbutton.FloatingActionButton
+        <soup.neumorphism.NeumorphFloatingActionButton
+
+            style="@style/Widget.Neumorph.FloatingActionButton"
+            app:neumorph_shadowElevation="6dp"
+            app:neumorph_shapeType="flat"
+            app:neumorph_lightSource="leftTop"
+            app:neumorph_backgroundColor="@color/white"
             android:id="@+id/fab"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_width="85dp"
+            android:layout_height="85dp"
             android:layout_gravity="bottom|end"
             android:layout_margin="@dimen/fab_margin"
-            app:srcCompat="@android:drawable/ic_input_add"
+            android:src="@drawable/ic_add_black"
+            android:padding="30dp"
             android:contentDescription="@string/todo"
             tools:ignore="ContentDescription" />
 
 
 
-        <FrameLayout
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:id="@+id/layoutCargando"
-            android:background="#AA000000"
-            android:clickable="true"
-            android:visibility="gone">
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:id="@+id/layoutCargando"
+        android:background="#AA000000"
+        android:clickable="true"
+        android:visibility="gone">
 
-            <ImageView
-                android:layout_width="85dp"
-                android:layout_height="85dp"
-                android:id="@+id/ivLoadingBackground"
-                android:layout_gravity="center"
-                android:visibility="visible" />
+        <TextView
+            android:id="@+id/tvMensajeLoading"
+            android:layout_marginTop="60dp"
+            android:layout_gravity="center"
+            android:textSize="12sp"
+            android:textColor="@color/white"
+            android:text="Cargando"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"/>
 
-            <ProgressBar
-                android:id="@+id/progressBar"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center"
-                android:visibility="visible" />
+        <ImageView
+            android:src="@drawable/btn_loading"
+            android:layout_width="85dp"
+            android:layout_height="85dp"
+            android:id="@+id/ivLoadingBackground"
+            android:layout_gravity="center"
+            android:visibility="visible" />
 
-        </FrameLayout>
+        <ProgressBar
+            android:id="@+id/progressBar"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:visibility="visible" />
+
+    </FrameLayout>
 
     <FrameLayout
         android:layout_gravity="bottom"
@@ -913,6 +949,48 @@
         </androidx.cardview.widget.CardView>
 
     </FrameLayout>
+
+
+    <RelativeLayout
+        android:visibility="gone"
+        android:id="@+id/frameLoading"
+        android:clickable="true"
+        android:background="@color/transparent_black"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+            <ProgressBar
+                android:layout_gravity="center"
+                android:layout_width="50dp"
+                android:layout_height="50dp"/>
+
+            <TextView
+                android:layout_marginTop="35dp"
+                android:layout_gravity="center"
+                android:textColor="@color/white"
+                android:text="Esperando autorización"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"/>
+
+            <androidx.appcompat.widget.AppCompatButton
+                android:id="@+id/btCancelarPeticion"
+                android:paddingStart="10dp"
+                android:paddingEnd="10dp"
+                android:background="@drawable/btn_warning"
+                android:layout_marginTop="80dp"
+                android:layout_gravity="center"
+                android:textColor="@color/white"
+                android:text="Cancelar autorización"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"/>
+
+        </FrameLayout>
+
+    </RelativeLayout>
 
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

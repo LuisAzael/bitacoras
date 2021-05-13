@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout
+    android:padding="20dp"
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@color/white"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    app:behavior_hideable="false"
+    app:behavior_peekHeight="60dp"
+    app:layout_behavior="com.google.android.material.bottomsheet.BottomSheetBehavior">
+
+    <LinearLayout
+        android:orientation="vertical"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <TextView
+            android:id="@+id/etTitulo"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Escaneo de urna"
+            android:textColor="@color/textos_principal"
+            android:textSize="24sp"
+            android:textStyle="bold" />
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="3dp"
+            android:orientation="horizontal">
+
+            <TextView
+                android:textColor="@color/textos_general"
+                android:layout_marginBottom="3dp"
+                android:id="@+id/tvDireccionUsuario"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:lineSpacingExtra="3dp"
+                android:text="Urna escaneada correctamente"
+                android:textSize="13sp" />
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/layoutRegistrosEntradaSalida"
+            android:orientation="vertical"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <TextView
+                android:layout_marginTop="40dp"
+                android:id="@+id/tvMensaje"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="¿Deseas registrar la urna escaneada?"
+                android:textColor="@color/textos_principal"
+                android:textSize="18sp"
+                android:textStyle="bold" />
+
+
+            <TextView
+                android:layout_marginTop="20dp"
+                android:text="------------"
+                android:id="@+id/tvUrnaVendida"
+                android:textSize="14sp"
+                android:textColor="@color/textos_principal"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"/>
+
+
+        </LinearLayout>
+
+
+        <LinearLayout
+            android:layout_marginTop="50dp"
+
+            android:weightSum="10"
+            android:orientation="horizontal"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <soup.neumorphism.NeumorphButton
+                app:neumorph_backgroundColor="@color/white"
+                style="@style/Widget.Neumorph.Button"
+                app:neumorph_shapeType="pressed"
+                android:textAlignment="center"
+                app:neumorph_shadowElevation="6dp"
+                app:neumorph_lightSource="leftTop"
+                android:padding="25dp"
+                android:drawableStart="@drawable/ic_close"
+                android:drawableTint="@color/red_color"
+                android:layout_weight="5"
+                android:id="@+id/btCancelar"
+                android:textColor="@color/textos_general"
+                android:textSize="12sp"
+                android:textStyle="bold"
+
+                android:text="Cancelar"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" />
+
+            <soup.neumorphism.NeumorphButton
+                app:neumorph_backgroundColor="@color/white"
+                style="@style/Widget.Neumorph.Button"
+                app:neumorph_shapeType="basin"
+                android:textAlignment="center"
+                app:neumorph_shadowElevation="6dp"
+                app:neumorph_lightSource="leftTop"
+                android:padding="25dp"
+
+                android:drawableEnd="@drawable/ic_chekk"
+                android:drawableTint="@android:color/holo_green_dark"
+
+                android:layout_weight="5"
+                android:background="@drawable/btn_ok"
+                android:id="@+id/btGuardar"
+                android:textSize="12sp"
+                android:textStyle="bold"
+                android:textColor="@color/textos_general"
+
+                android:text="Aceptar"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" />
+
+        </LinearLayout>
+
+
+    </LinearLayout>
+
+</FrameLayout>

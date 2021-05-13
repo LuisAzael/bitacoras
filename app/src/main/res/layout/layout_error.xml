@@ -18,6 +18,7 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent">
 
+
         <LinearLayout
             android:background="#f65656"
             android:orientation="vertical"
@@ -75,38 +76,94 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content" />
 
+
+
+            <TextView
+                android:visibility="gone"
+                android:layout_marginStart="20dp"
+                android:layout_marginEnd="20dp"
+                android:layout_marginTop="20dp"
+                android:text="Describe tu petición"
+                android:textStyle="bold"
+                android:textSize="14sp"
+                android:textColor="@color/textos_principal"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"/>
+
+            <com.google.android.material.textfield.TextInputLayout
+                android:visibility="visible"
+                android:layout_marginStart="20dp"
+                android:layout_marginEnd="20dp"
+                android:layout_marginTop="10dp"
+                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                android:backgroundTint="@color/black"
+                android:layout_width="match_parent"
+                android:layout_height="55dp">
+
+                <AutoCompleteTextView
+                    android:visibility="gone"
+                    android:inputType="textPersonName"
+                    android:paddingLeft="10dp"
+                    android:paddingRight="10dp"
+                    android:id="@+id/etDescripcionPeticion"
+                    android:backgroundTint="@color/textos_general"
+                    android:textColor="@color/textos_general"
+                    android:textSize="16sp"
+                    android:textColorHint="@color/textos_general"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:hint="Petición..." />
+            </com.google.android.material.textfield.TextInputLayout>
+
+
+
+
             <LinearLayout
+                android:layout_marginTop="10dp"
                 android:weightSum="10"
                 android:orientation="horizontal"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content">
 
-                <androidx.appcompat.widget.AppCompatButton
+                <soup.neumorphism.NeumorphButton
+                    app:neumorph_backgroundColor="@color/white"
+                    style="@style/Widget.Neumorph.Button"
+                    app:neumorph_shapeType="flat"
+                    android:textAlignment="center"
+                    app:neumorph_shadowElevation="6dp"
+                    app:neumorph_lightSource="leftTop"
+                    android:padding="25dp"
                     android:drawableStart="@drawable/ic_close"
-                    android:drawableTint="@color/white"
+                    android:drawableTint="@color/red_color"
                     android:layout_weight="5"
-                    android:background="@drawable/btn_warning"
                     android:id="@+id/btNo"
-                    android:textColor="@color/white"
-                    android:padding="15dp"
+                    android:textColor="@color/textos_general"
                     android:textSize="12sp"
                     android:textStyle="bold"
-                    android:layout_margin="20dp"
+
                     android:text="Cancelar"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content" />
 
-                <androidx.appcompat.widget.AppCompatButton
+                <soup.neumorphism.NeumorphButton
+                    app:neumorph_backgroundColor="@color/white"
+                    style="@style/Widget.Neumorph.Button"
+                    app:neumorph_shapeType="flat"
+                    android:textAlignment="center"
+                    app:neumorph_shadowElevation="6dp"
+                    app:neumorph_lightSource="leftTop"
+                    android:padding="25dp"
+
                     android:drawableEnd="@drawable/ic_chekk"
-                    android:drawableTint="@color/white"
-                    android:layout_margin="20dp"
+                    android:drawableTint="@android:color/holo_green_dark"
+
                     android:layout_weight="5"
                     android:background="@drawable/btn_ok"
                     android:id="@+id/btSi"
                     android:textSize="12sp"
                     android:textStyle="bold"
-                    android:textColor="@color/white"
-                    android:padding="15dp"
+                    android:textColor="@color/textos_general"
+
                     android:text="Aceptar"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content" />

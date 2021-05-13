@@ -8,6 +8,7 @@ import android.app.TimePickerDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.ActivityInfo;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
@@ -42,6 +43,7 @@ import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.RadioButton;
+import android.widget.RelativeLayout;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.TimePicker;
@@ -60,6 +62,11 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.airbnb.lottie.LottieAnimationView;
+import com.android.volley.DefaultRetryPolicy;
+import com.android.volley.Request;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.JsonObjectRequest;
 import com.example.bitacoras2020.Adapters.AdapterArticulosEscaneados;
 import com.example.bitacoras2020.Adapters.AdapterComentarios;
 import com.example.bitacoras2020.Adapters.AdapterDocumentos;
@@ -96,7 +103,9 @@ import com.example.bitacoras2020.Models.ModelNotificaciones;
 import com.example.bitacoras2020.R;
 import com.example.bitacoras2020.Utils.ApplicationResourcesProvider;
 import com.example.bitacoras2020.Utils.BaseActivity;
+import com.example.bitacoras2020.Utils.ConstantsBitacoras;
 import com.example.bitacoras2020.Utils.Preferences;
+import com.example.bitacoras2020.Utils.VolleySingleton;
 import com.getkeepsafe.taptargetview.TapTarget;
 import com.getkeepsafe.taptargetview.TapTargetView;
 import com.google.android.gms.tasks.OnCompleteListener;
@@ -121,6 +130,9 @@ import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 
+import soup.neumorphism.NeumorphButton;
+import soup.neumorphism.NeumorphCardView;
+
 public class BitacoraDetalle extends BaseActivity implements CancelarArticuloEscaneado, CancelarArticuloInstalacion, CancelarArticuloCortejo, CancelarArticuloRecoleccion, CancelarArticuloTraslado {
 
 
@@ -129,12 +141,15 @@ public class BitacoraDetalle extends BaseActivity implements CancelarArticuloEsc
     ImageView btBack;
     LottieAnimationView imgSuccess;
     String bitacora="";
-    CardView btScanner, btSalida, btllegada;
+    NeumorphCardView btScanner, btSalida, btllegada;
     Button btFinalizarBitacora;
-    Dialog dialogoError, dialogoSalidas;
+    Dialog dialogoSalidas;
     SimpleDateFormat dateFormat;
     ImageView btComentarios;
     Dialog mBottomSheetDialogComentarios;
+    int status;
+    String descripcionPeticion ="", fechaEstatica="";
+    boolean requesterCanceled = false;
 
     private boolean equipoDeTraslado = false, equipoDeCortejo = false, equipoDeInstalacion = false, equipoRecoleccion = false,  isArticuloDeVelacion = false, scannerAtaurna= false;
 
@@ -221,7 +236,7 @@ public class BitacoraDetalle extends BaseActivity implements CancelarArticuloEsc
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+
         AppCompatDelegate.setCompatVectorFromResourcesEnabled(true);
         setContentView(R.layout.fragment_bitacora_detalle);
         setTypefaceTextViews();
@@ -236,14 +251,14 @@ public class BitacoraDetalle extends BaseActivity implements CancelarArticuloEsc
 
 
         dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        fechaEstatica = dateFormat.format(new Date());
         spTipoProcedimiento = (Spinner) findViewById(R.id.spTipoProcedimiento);
         spLaboratorios = (Spinner) findViewById(R.id.spLaboratorio);
 
-        dialogoError = new Dialog(this);
         dialogoSalidas = new Dialog(this);
-        btScanner =( CardView) findViewById(R.id.btScanner);
-        btSalida =( CardView) findViewById(R.id.btSalida);
-        btllegada =( CardView) findViewById(R.id.btLlegada);
+        btScanner =( NeumorphCardView) findViewById(R.id.btScanner);
+        btSalida =( NeumorphCardView) findViewById(R.id.btSalida);
+        btllegada =( NeumorphCardView) findViewById(R.id.btLlegada);
         btBack =( ImageView) findViewById(R.id.btBack);
         imgSuccess =(LottieAnimationView) findViewById(R.id.imgSuccess);
         btFinalizarBitacora =( Button ) findViewById(R.id.btFinalizarBitacora);
@@ -302,6 +317,16 @@ public class BitacoraDetalle extends BaseActivity implements CancelarArticuloEsc
 
                 //showAnimationFromSuccessRecord();
                 showComentariosDialog(v, bitacora);
+            }
+        });
+
+        Button btCancelarPeticion =(Button) findViewById(R.id.btCancelarPeticion);
+        btCancelarPeticion.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                status = -1;
+                requesterCanceled = true;
+                hideLoadingDialog();
             }
         });
 
@@ -685,8 +710,8 @@ public class BitacoraDetalle extends BaseActivity implements CancelarArticuloEsc
                         ropaEncapsulada,
                         "" + etObservacionesRecoleccion.getText().toString(),
                         "" + etObservacionesTraslado.getText().toString(),
-                        tipoProcedimiento,
-                        laboratorio,
+                        tipoProcedimiento.equals("Selecciona una opción...") ? "" : tipoProcedimiento,
+                        laboratorio.equals("Selecciona una opción...") ? "" : laboratorio,
                         DatabaseAssistant.getIDFromLaboratorioString(laboratorio)
                 );
 
@@ -812,7 +837,18 @@ public class BitacoraDetalle extends BaseActivity implements CancelarArticuloEsc
         btFinalizarBitacora.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                showErrorDialog("Estas a punto de terminar la bitácora\n¿Estás de acuerdo?", bitacora);
+                //verificar aqui si la bitacora esta completa de equipos de velacion.
+                if(DatabaseAssistant.articulosDeVelacionYCortejoEstanCompletos(bitacora)
+                        && DatabaseAssistant.articulosDeRecoleccionEstanCompletos(bitacora)
+                        && DatabaseAssistant.articulosDeTrasladoEstanCompletos(bitacora)) {
+                    //Realizar el cerrado de la bitacora por medio de request
+                    showErrorDialog("Estas a punto de terminar la bitácora\n¿Estás de acuerdo?", bitacora);
+                }
+                else {
+                    //showErrorDialog("No puedes terminar la bitácora, porque los articulos de velación no estan completos, verifica nuevamente.", bitacora);
+                    showErrorDialog("Parece que los articulos de velación no estan completos, necesitas autorización para terminar la bitácora.", bitacora);
+                }
+
             }
         });
 
@@ -853,13 +889,15 @@ public class BitacoraDetalle extends BaseActivity implements CancelarArticuloEsc
             }
         });
 
-        Button btGuardarProcedimiento =(Button) findViewById(R.id.btGuardarProcedimiento);
+        NeumorphButton btGuardarProcedimiento =(NeumorphButton) findViewById(R.id.btGuardarProcedimiento);
         btGuardarProcedimiento.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onClick(View v) {
-
-                if (spTipoProcedimiento.getSelectedItemPosition() != 0) {
-                    try {
+            public void onClick(View v)
+            {
+                if (spTipoProcedimiento.getSelectedItemPosition() != 0 && spLaboratorios.getSelectedItemPosition() != 0)
+                {
+                    try
+                    {
                         String ropaEntregada = "", ropaEncapsulada = "";
                         if (rbSi.isChecked())
                             ropaEntregada = "SI";
@@ -911,8 +949,8 @@ public class BitacoraDetalle extends BaseActivity implements CancelarArticuloEsc
                                 ropaEncapsulada,
                                 "" + etObservacionesRecoleccion.getText().toString(),
                                 "" + etObservacionesTraslado.getText().toString(),
-                                tipoProcedimiento,
-                                laboratorio,
+                                tipoProcedimiento.equals("Selecciona una opción...") ? "" : tipoProcedimiento,
+                                laboratorio.equals("Selecciona una opción...") ? "" : laboratorio,
                                 DatabaseAssistant.getIDFromLaboratorioString(laboratorio)
                         );
 
@@ -935,19 +973,20 @@ public class BitacoraDetalle extends BaseActivity implements CancelarArticuloEsc
                         Log.d(TAG, "onClick: Error: " + e.getMessage());
                     }
                 }else
-                    Toast.makeText(BitacoraDetalle.this, "Seleccióna una opción de tipo de procedimiento.", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(BitacoraDetalle.this, "Tienes que seleccionar el procedimiento y el laboratorio.", Toast.LENGTH_SHORT).show();
 
             }
         });
 
 
-        Button btGuardarLaboratorio =(Button) findViewById(R.id.btGuardarLaboratorio);
+        NeumorphButton btGuardarLaboratorio =(NeumorphButton) findViewById(R.id.btGuardarLaboratorio);
         btGuardarLaboratorio.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
 
 
-                if (spLaboratorios.getSelectedItemPosition() != 0) {
+                if (spTipoProcedimiento.getSelectedItemPosition() != 0 && spLaboratorios.getSelectedItemPosition() != 0)
+                {
                     try {
                         String ropaEntregada = "", ropaEncapsulada = "";
                         if (rbSi.isChecked())
@@ -1001,8 +1040,8 @@ public class BitacoraDetalle extends BaseActivity implements CancelarArticuloEsc
                                 ropaEncapsulada,
                                 "" + etObservacionesRecoleccion.getText().toString(),
                                 "" + etObservacionesTraslado.getText().toString(),
-                                tipoProcedimiento,
-                                laboratorio,
+                                tipoProcedimiento.equals("Selecciona una opción...") ? "" : tipoProcedimiento,
+                                laboratorio.equals("Selecciona una opción...") ? "" : laboratorio,
                                 DatabaseAssistant.getIDFromLaboratorioString(laboratorio)
                         );
 
@@ -1025,7 +1064,7 @@ public class BitacoraDetalle extends BaseActivity implements CancelarArticuloEsc
                         Log.d(TAG, "onClick: Error: " + e.getMessage());
                     }
                 }else
-                    Toast.makeText(BitacoraDetalle.this, "Seleccióna una opción de laboratorio.", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(BitacoraDetalle.this, "Tienes que seleccionar el procedimiento y el laboratorio.", Toast.LENGTH_SHORT).show();
 
             }
         });
@@ -1276,12 +1315,15 @@ public class BitacoraDetalle extends BaseActivity implements CancelarArticuloEsc
     }
 
     public void showErrorDialog(final String codeError, String bitacora) {
-        final Button btNo, btSi;
+        final NeumorphButton btNo, btSi;
         TextView tvCodeError, tvBitacora;
+        EditText etDescripcionPeticion;
+        Dialog dialogoError = new Dialog(BitacoraDetalle.this);
         dialogoError.setContentView(R.layout.layout_error);
         dialogoError.setCancelable(true);
-        btNo = (Button) dialogoError.findViewById(R.id.btNo);
-        btSi = (Button) dialogoError.findViewById(R.id.btSi);
+        btNo = (NeumorphButton) dialogoError.findViewById(R.id.btNo);
+        btSi = (NeumorphButton) dialogoError.findViewById(R.id.btSi);
+        etDescripcionPeticion = (EditText) dialogoError.findViewById(R.id.etDescripcionPeticion);
         tvCodeError = (TextView) dialogoError.findViewById(R.id.tvCodeError);
         tvBitacora = (TextView) dialogoError.findViewById(R.id.tvBitacora);
         tvCodeError.setText(codeError);
@@ -1289,6 +1331,11 @@ public class BitacoraDetalle extends BaseActivity implements CancelarArticuloEsc
         if(codeError.equals("Estas a punto de terminar la bitácora\n¿Estás de acuerdo?")){
             tvBitacora.setText(bitacora);
             tvBitacora.setVisibility(View.VISIBLE);
+        }
+        else if( codeError.equals("Parece que los articulos de velación no estan completos, necesitas autorización para terminar la bitácora.") ){
+            etDescripcionPeticion.setVisibility(View.VISIBLE);
+            btSi.setText("Solicitar autorización");
+            btNo.setText("Cancelar");
         }
         else{
             tvBitacora.setText("");
@@ -1321,9 +1368,20 @@ public class BitacoraDetalle extends BaseActivity implements CancelarArticuloEsc
         btSi.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                if(codeError.equals("Estas a punto de terminar la bitácora\n¿Estás de acuerdo?"))
-                {
+                if(codeError.equals("Estas a punto de terminar la bitácora\n¿Estás de acuerdo?")) {
                     registrarBitacoraTerminada(bitacora);
+                }
+                else if (codeError.equals("Parece que los articulos de velación no estan completos, necesitas autorización para terminar la bitácora.")) {
+
+
+                    dialogoError.dismiss();
+                    descripcionPeticion = etDescripcionPeticion.getText().toString();
+                    doRequestForEndBinnacle();
+                    requesterCanceled = false;
+                    status = 0;
+
+
+
                 }
                 else
                     dialogoError.dismiss();
@@ -1334,11 +1392,22 @@ public class BitacoraDetalle extends BaseActivity implements CancelarArticuloEsc
         dialogoError.show();
     }
 
+    void hideLoadingDialog(){
+        btFinalizarBitacora.setVisibility(View.VISIBLE);
+        RelativeLayout frameLoading = (RelativeLayout) findViewById(R.id.frameLoading);
+        frameLoading.setVisibility(View.GONE);
+    }
+
+    void showLoadingDialog(){
+        btFinalizarBitacora.setVisibility(View.GONE);
+        RelativeLayout frameLoading = (RelativeLayout) findViewById(R.id.frameLoading);
+        frameLoading.setVisibility(View.VISIBLE);
+    }
 
     public void showSalidaLlegada(int tipo, boolean pedirDestino, String destinoAnterior) {
         TextView etTitulo, etSalidaLlegada, etDestino;
         Spinner spLugares, spDestino;
-        Button btCancelar, btGuardar;
+        NeumorphButton btCancelar, btGuardar;
         dialogoSalidas.setContentView(R.layout.layout_entrada_salida);
         dialogoSalidas.setCancelable(false);
         etTitulo = (TextView) dialogoSalidas.findViewById(R.id.etTitulo);
@@ -1346,8 +1415,8 @@ public class BitacoraDetalle extends BaseActivity implements CancelarArticuloEsc
         etDestino = (TextView) dialogoSalidas.findViewById(R.id.etDestino);
         spLugares = (Spinner) dialogoSalidas.findViewById(R.id.spLugares);
         spDestino = (Spinner) dialogoSalidas.findViewById(R.id.spDestino);
-        btGuardar = (Button) dialogoSalidas.findViewById(R.id.btGuardar);
-        btCancelar = (Button) dialogoSalidas.findViewById(R.id.btCancelar);
+        btGuardar = (NeumorphButton) dialogoSalidas.findViewById(R.id.btGuardar);
+        btCancelar = (NeumorphButton) dialogoSalidas.findViewById(R.id.btCancelar);
 
         ArrayAdapter<String> adapterColonias = new ArrayAdapter<String>(getApplicationContext(), R.layout.style_spinner, DatabaseAssistant.getLugares());
 
@@ -1554,6 +1623,45 @@ public class BitacoraDetalle extends BaseActivity implements CancelarArticuloEsc
     }
 
 
+    void doRequestForEndBinnacle()
+    {
+        try {
+            status = 0;
+            showLoadingDialog();
+            new Thread(() -> {
+                while (status == 0)
+                {
+                    Log.d("TIMER", "doRequestForEndBinnacle: Iteracion de ciclo para saber si la bitacora fue autorizada a terminar");
+                    if (ApplicationResourcesProvider.checkInternetConnection() && getApplicationContext() != null) {
+                        runOnUiThread(this::getStatusBinaccle);
+                    } else {
+                        runOnUiThread(() -> {
+                            if (getApplicationContext() != null) {
+                                Toast toast = Toast.makeText(getApplicationContext(), "Verifica tu conexión a internet", Toast.LENGTH_SHORT);toast.show();
+                                hideLoadingDialog();
+                            }
+                        });
+                        runOnUiThread(this::showLoadingDialog);
+                    }
+                    Log.d("TIMER", "doRequestForEndBinnacle: Esperando 5 segundos...");
+                    try {
+                        Thread.sleep(5000);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                        hideLoadingDialog();
+                        Toast.makeText(this, "Error: " +e.getMessage(), Toast.LENGTH_SHORT).show();
+                        Log.e("TIMER", "doRequestForEndBinnacle: Error: " + e.getMessage());
+                    }
+                }
+             Log.d("TIMER" ,"while(status == 0) -> status = " + status);
+            }).start();
+        }catch (Throwable e){
+            Log.e("TIMER", "registrarBitacoraTerminada: " + e.getMessage());
+            hideLoadingDialog();
+            Toast.makeText(this, "Error: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+        }
+    }
+
 
     void registrarBitacoraTerminada(String bitacora)
     {
@@ -1601,16 +1709,6 @@ public class BitacoraDetalle extends BaseActivity implements CancelarArticuloEsc
                 toast.setDuration(Toast.LENGTH_LONG);
                 toast.setView(view);
                 toast.show();
-
-
-                /*LayoutInflater inflater = getLayoutInflater();
-                View view = inflater.inflate(R.layout.custom_toast_layout, (ViewGroup)findViewById(R.id.relativeLayout1));
-                Toast toast = new Toast(getApplicationContext());
-                toast.setGravity(Gravity.CENTER, 0, 0);
-                toast.setDuration(Toast.LENGTH_LONG);
-                toast.setView(view);
-                toast.show();*/
-
                 finish();
             }
         }catch (Throwable e){
@@ -1653,150 +1751,67 @@ public class BitacoraDetalle extends BaseActivity implements CancelarArticuloEsc
 
                     if(result.getContents().length()<=6) {
                         boolean guardarEquipo = false, guardar4Candelabros = false;
-                        String nombreDeEquipo = "DESCONOCIDO", inicialesDeEquipo="";
+                        String nombreDeEquipo = "DESCONOCIDO", inicialesDeEquipo = "";
 
-                        //****************************** MOFICACION ***********************
-                        //inicialesDeEquipo = result.getContents().substring(0, 2); //"CB 9999"
-                        inicialesDeEquipo = "BM9999";
-                        List<CatalogoArticulos> catalogoArticulosList = CatalogoArticulos.findWithQuery(CatalogoArticulos.class, "SELECT * FROM catalogo_Articulos WHERE letras ='"+ inicialesDeEquipo + "'");
-                        if(catalogoArticulosList.size() > 0 ){
-                            Log.d(TAG, "onActivityResult: Azael si encontre información de articulos con las letras: " + inicialesDeEquipo);
-                            nombreDeEquipo = catalogoArticulosList.get(0).getNombre();
-                            guardarEquipo = true;
+                        if (!result.getContents().contains("AA")) {
 
-                            if(inicialesDeEquipo.equals("CB"))
-                                guardar4Candelabros = true;
+                            inicialesDeEquipo = result.getContents().substring(0, 2);
+                            List<CatalogoArticulos> catalogoArticulosList = CatalogoArticulos.findWithQuery(CatalogoArticulos.class, "SELECT * FROM catalogo_Articulos WHERE letras ='" + inicialesDeEquipo + "'");
+                            if (catalogoArticulosList.size() > 0) {
+                                Log.d(TAG, "onActivityResult: Azael si encontre información de articulos con las letras: " + inicialesDeEquipo);
+                                nombreDeEquipo = catalogoArticulosList.get(0).getNombre();
+                                guardarEquipo = true;
 
-                        }
-                        else{
-                            nombreDeEquipo = "DESCONOCIDO";
-                            guardarEquipo = false;
-                            guardar4Candelabros = false;
-                        }
-
-                        if(!nombreDeEquipo.equals("DESCONOCIDO") && !(inicialesDeEquipo.equals("CL") && nombreDeEquipo.equals("Candelabro")))
-                            guardarEquipo = !DatabaseAssistant.yaExisteInformacionDelArticuloDeVelacionDeInstalacion("" + result.getContents(), "" + bitacora);
-
-                        if (guardarEquipo) {
-                            DatabaseAssistant.insertarEquipoInstalacion(
-                                    "" + bitacora,
-                                    "" + result.getContents(),
-                                    "" + nombreDeEquipo,
-                                    "" + (Preferences.getPreferenceIsbunker(BitacoraDetalle.this, Preferences.PREFERENCE_ISBUNKER) ? "1" : "0")
-                            );
-
-                            if(guardar4Candelabros){
-                                for(int i=0; i<=3; i++){
-                                    int random = (int) Math.floor(Math.random()*247+1);
-                                    String randomString = String.valueOf(random);
-                                    String s = randomString.length() == 2 ? "CL00" : randomString.length() == 3 ? "CL0" : randomString.length() == 1 ? "CL000" : "CL000";
-                                    String serie = s + random;
-                                    DatabaseAssistant.insertarEquipoInstalacion(
-                                            "" + bitacora,
-                                            serie,
-                                            "Candelabro",
-                                            "" + (Preferences.getPreferenceIsbunker(BitacoraDetalle.this, Preferences.PREFERENCE_ISBUNKER) ? "1" : "0")
-                                    );
+                                if (inicialesDeEquipo.equals("CB")) {
+                                    guardar4Candelabros = true;
                                 }
-                            }
-                            else
-                                Log.d(TAG, "onActivityResult: No se guardaran candelabros");
-
-                            consultarEquiposDeInstalacion(bitacora);
-                            Toast.makeText(this, "Equipo guardado correctamente", Toast.LENGTH_SHORT).show();
-                            showAnimationFromSuccessRecord();
-                        } else {
-                            showErrorDialog("Código repetido o desconocido para articulos de instalación, verifica nuevamente", "");
-                        }
-
-                        //**************************************************************
-                        /*{
-                            if (result.getContents().contains("CF")) {
-                                nombreDeEquipo = "Cafetera";
-                                guardarEquipo = true;
-                                guardar4Candelabros = false;
-                            } else if (result.getContents().contains("CL")) {
-                                nombreDeEquipo = "Candelabro";
-                                guardarEquipo = true;
-                                guardar4Candelabros = false;
-                            } else if (result.getContents().contains("CB")) {
-                                nombreDeEquipo = "Cristo y base";
-                                guardarEquipo = true;
-                                guardar4Candelabros = true;
-                            } else if (result.getContents().contains("PD")) {
-                                nombreDeEquipo = "Pedestal";
-                                guardarEquipo = true;
-                                guardar4Candelabros = false;
-                            } else if (result.getContents().contains("BM")) {
-                                nombreDeEquipo = "Biombo";
-                                guardarEquipo = true;
-                                guardar4Candelabros = false;
-                            } else if (result.getContents().contains("AT")) {
-                                nombreDeEquipo = "Ataúd de traslado";
-                                guardarEquipo = true;
-                                guardar4Candelabros = false;
-                            } else if (result.getContents().contains("CP")) {
-                                nombreDeEquipo = "Carrito pedestal";
-                                guardarEquipo = true;
-                                guardar4Candelabros = false;
-                            } else if (result.getContents().contains("CI")) {
-                                nombreDeEquipo = "Carrito infantil";
-                                guardarEquipo = true;
-                                guardar4Candelabros = false;
-                            } else if (result.getContents().contains("CN")) {
-                                nombreDeEquipo = "Candelero infantil";
-                                guardarEquipo = true;
-                                guardar4Candelabros = false;
-                            } else if (result.getContents().contains("PI")) {
-                                nombreDeEquipo = "Pedestal infantil";
-                                guardarEquipo = true;
-                                guardar4Candelabros = false;
-                            }
-                            else if (result.getContents().contains("KC")) {
-                                nombreDeEquipo = "Kit de Cafetería";
-                                guardarEquipo = true;
-                                guardar4Candelabros = false;
-                            }else {
+                            } else {
                                 nombreDeEquipo = "DESCONOCIDO";
                                 guardarEquipo = false;
                                 guardar4Candelabros = false;
                             }
 
-                        }*/
-                        /*if(!nombreDeEquipo.equals("DESCONOCIDO") && !(result.getContents().contains("CL") && nombreDeEquipo.equals("Candelabro")))
-                            guardarEquipo = !DatabaseAssistant.yaExisteInformacionDelArticuloDeVelacionDeInstalacion("" + result.getContents(), "" + bitacora);
-
-                        if (guardarEquipo) {
-                            DatabaseAssistant.insertarEquipoInstalacion(
-                                    "" + bitacora,
-                                    "" + result.getContents(), nombreDeEquipo,
-                                    "" + (Preferences.getPreferenceIsbunker(BitacoraDetalle.this, Preferences.PREFERENCE_ISBUNKER) ? "1" : "0")
-                            );
-
-                            if(guardar4Candelabros){
-                                for(int i=0; i<=3; i++){
-                                    int random = (int) Math.floor(Math.random()*247+1);
-                                    String randomString = String.valueOf(random);
-                                    String s = randomString.length() == 2 ? "CL00" : randomString.length() == 3 ? "CL0" : randomString.length() == 1 ? "CL000" : "CL000";
-                                    String serie = s + random;
-                                    DatabaseAssistant.insertarEquipoInstalacion(
-                                            "" + bitacora,
-                                            serie,
-                                            "Candelabro",
-                                            "" + (Preferences.getPreferenceIsbunker(BitacoraDetalle.this, Preferences.PREFERENCE_ISBUNKER) ? "1" : "0")
-                                            );
-                                }
+                            if (!nombreDeEquipo.equals("DESCONOCIDO") && !(inicialesDeEquipo.equals("CL") && nombreDeEquipo.equals("Candelabro"))) {
+                                guardarEquipo = !DatabaseAssistant.yaExisteInformacionDelArticuloDeVelacionDeInstalacion("" + result.getContents(), "" + bitacora);
                             }
-                            else
-                                Log.d(TAG, "onActivityResult: No se guardaran candelabros");
 
-                            consultarEquiposDeInstalacion(bitacora);
-                            Toast.makeText(this, "Equipo guardado correctamente", Toast.LENGTH_SHORT).show();
-                            showAnimationFromSuccessRecord();
+                            if (guardarEquipo) {
+                                DatabaseAssistant.insertarEquipoInstalacion(
+                                        "" + bitacora,
+                                        "" + result.getContents(),
+                                        "" + nombreDeEquipo,
+                                        "" + (Preferences.getPreferenceIsbunker(BitacoraDetalle.this, Preferences.PREFERENCE_ISBUNKER) ? "1" : "0"),
+                                        "0"
+                                );
 
-                        } else {
+                                if (guardar4Candelabros) {
+                                    for (int i = 0; i <= 3; i++) {
+                                        int random = (int) Math.floor(Math.random() * 247 + 1);
+                                        String randomString = String.valueOf(random);
+                                        String s = randomString.length() == 2 ? "CL00" : randomString.length() == 3 ? "CL0" : randomString.length() == 1 ? "CL000" : "CL000";
+                                        String serie = s + random;
+                                        DatabaseAssistant.insertarEquipoInstalacion(
+                                                "" + bitacora,
+                                                serie,
+                                                "Candelabro",
+                                                "" + (Preferences.getPreferenceIsbunker(BitacoraDetalle.this, Preferences.PREFERENCE_ISBUNKER) ? "1" : "0"),
+                                                "0"
+                                        );
+                                    }
+                                } else
+                                    Log.d(TAG, "onActivityResult: No se guardaran candelabros");
+
+                                consultarEquiposDeInstalacion(bitacora);
+                                Toast.makeText(this, "Equipo guardado correctamente", Toast.LENGTH_SHORT).show();
+                                showAnimationFromSuccessRecord();
+                            } else {
+                                showErrorDialog("Código repetido o desconocido para articulos de instalación, verifica nuevamente", "");
+                            }
+
+
+                        }
+                        else
                             showErrorDialog("Código repetido o desconocido para articulos de instalación, verifica nuevamente", "");
-                        }*/
                     }
                     else {
                         showErrorDialog("El código no corresponde a un artículo de velación, verifica nuevamente.", "");
@@ -1805,7 +1820,77 @@ public class BitacoraDetalle extends BaseActivity implements CancelarArticuloEsc
 
                 }else if(equipoDeCortejo){
 
+
+                    //*********MODIFICACION *****************
                     if(result.getContents().length()<=6) {
+                        boolean guardarEquipo = false, guardar4Candelabros = false;
+                        String nombreDeEquipo = "DESCONOCIDO", inicialesDeEquipo = "";
+
+                        if (!result.getContents().contains("AA")) {
+                            inicialesDeEquipo = result.getContents().substring(0, 2);
+                            List<CatalogoArticulos> catalogoArticulosList = CatalogoArticulos.findWithQuery(CatalogoArticulos.class, "SELECT * FROM catalogo_Articulos WHERE letras ='" + inicialesDeEquipo + "'");
+                            if (catalogoArticulosList.size() > 0) {
+                                Log.d(TAG, "onActivityResult: Azael si encontre información de articulos con las letras: " + inicialesDeEquipo);
+                                nombreDeEquipo = catalogoArticulosList.get(0).getNombre();
+                                guardarEquipo = true;
+
+                                if (inicialesDeEquipo.equals("CB")) {
+                                    guardar4Candelabros = true;
+                                }
+                            } else {
+                                nombreDeEquipo = "DESCONOCIDO";
+                                guardarEquipo = false;
+                                guardar4Candelabros = false;
+                            }
+
+                            if (!nombreDeEquipo.equals("DESCONOCIDO") && !(result.getContents().contains("CL") && nombreDeEquipo.equals("Candelabro")))
+                                guardarEquipo = !DatabaseAssistant.yaExisteInformacionDelArticuloDeVelacionDeCortejo("" + result.getContents(), "" + bitacora);
+
+
+                            if (guardarEquipo) {
+                                DatabaseAssistant.insertarEquipoCortejo(
+                                        "" + bitacora,
+                                        "" + result.getContents(),
+                                        nombreDeEquipo,
+                                        "" + (Preferences.getPreferenceIsbunker(BitacoraDetalle.this, Preferences.PREFERENCE_ISBUNKER) ? "1" : "0")
+                                );
+
+                                if (guardar4Candelabros) {
+                                    List<Equipoinstalacion> equipoinstalacionList = Equipoinstalacion.findWithQuery(Equipoinstalacion.class, "SELECT * FROM EQUIPOINSTALACION WHERE bitacora = '" + bitacora + "' ORDER BY fecha DESC");
+                                    if (equipoinstalacionList.size() > 0) {
+                                        Equipocortejo.executeQuery("DELETE FROM EQUIPOCORTEJO WHERE bitacora ='" + bitacora + "' and nombre ='Candelabro'");
+                                        for (int i = 0; i <= equipoinstalacionList.size() - 1; i++) {
+                                            if (equipoinstalacionList.get(i).getSerie().contains("CL")) {
+                                                DatabaseAssistant.insertarEquipoCortejo(
+                                                        "" + bitacora,
+                                                        equipoinstalacionList.get(i).getSerie(),
+                                                        equipoinstalacionList.get(i).getNombre(),
+                                                        "" + (Preferences.getPreferenceIsbunker(BitacoraDetalle.this, Preferences.PREFERENCE_ISBUNKER) ? "1" : "0")
+                                                );
+                                            } else
+                                                Log.d(TAG, "onActivityResult: No se guarda informacion de candelabros de instalacion");
+                                        }
+                                    } else
+                                        Log.d(TAG, "onActivityResult: Equipo de cortejo no contiene información");
+                                } else {
+                                    Log.d(TAG, "onActivityResult: No se guardaran candelabros");
+                                }
+
+                                consultarEquiposDeCortejo(bitacora);
+                                Toast.makeText(this, "Equipo guardado correctamente", Toast.LENGTH_SHORT).show();
+                                showAnimationFromSuccessRecord();
+                            } else {
+                                showErrorDialog("Código repetido o desconocido para articulos de Cortejo, verifica nuevamente", "");
+                            }
+                        } else
+                            showErrorDialog("Código repetido o desconocido para articulos de Cortejo, verifica nuevamente", "");
+                    }
+                    else {
+                        showErrorDialog("El código no corresponde a un artículo de velación, verifica nuevamente.", "");
+                    }
+                    //*************************************
+
+                    /*if(result.getContents().length()<=6) {
 
                         boolean guardarEquipo = false, guardar4Candelabros = false;
                         String nombreDeEquipo = "DESCONOCIDO";
@@ -1908,12 +1993,34 @@ public class BitacoraDetalle extends BaseActivity implements CancelarArticuloEsc
                     }
                     else {
                         showErrorDialog("El código no corresponde a un artículo de velación, verifica nuevamente.", "");
-                    }
+                    }*/
 
                 } else if(equipoDeTraslado){
 
                     if(result.getContents().length()<=6) {
+
+
                         boolean guardarEquipo = false, guardar4Candelabros = false;
+                        String nombreDeEquipo = "DESCONOCIDO", inicialesDeEquipo = "", entradaOsalida = "";
+
+                        if (!result.getContents().contains("AA")) {
+                            inicialesDeEquipo = result.getContents().substring(0, 2);
+                            List<CatalogoArticulos> catalogoArticulosList = CatalogoArticulos.findWithQuery(CatalogoArticulos.class, "SELECT * FROM catalogo_Articulos WHERE letras ='" + inicialesDeEquipo + "'");
+                            if (catalogoArticulosList.size() > 0) {
+                                Log.d(TAG, "onActivityResult: Azael si encontre información de articulos con las letras: " + inicialesDeEquipo);
+                                nombreDeEquipo = catalogoArticulosList.get(0).getNombre();
+                                guardarEquipo = true;
+
+                                if (inicialesDeEquipo.equals("CB")) {
+                                    guardar4Candelabros = true;
+                                }
+                            } else {
+                                nombreDeEquipo = "DESCONOCIDO";
+                                guardarEquipo = false;
+                                guardar4Candelabros = false;
+                            }
+
+                        /*boolean guardarEquipo = false, guardar4Candelabros = false;
                         String nombreDeEquipo = "DESCONOCIDO", entradaOsalida="";
 
                         {
@@ -1967,87 +2074,57 @@ public class BitacoraDetalle extends BaseActivity implements CancelarArticuloEsc
                                 guardar4Candelabros = false;
                             }
 
-                        }
-
-                        /*if(!nombreDeEquipo.equals("DESCONOCIDO") && !(result.getContents().contains("CL") && nombreDeEquipo.equals("Candelabro")))
-                            guardarEquipo = !DatabaseAssistant.yaExisteInformacionDelArticuloDeVelacionDeTraslado("" + result.getContents(), "" + bitacora);
-
-
-                        if (guardarEquipo) {
-                            DatabaseAssistant.insertarEquipoTraslado("" + bitacora, "" + result.getContents(), nombreDeEquipo);
-
-                            if(guardar4Candelabros){
-                                for(int i=0; i<=3; i++){
-                                    int random = (int) Math.floor(Math.random()*247+1);
-                                    String randomString = String.valueOf(random);
-                                    String s = randomString.length() == 2 ? "CL00" : randomString.length() == 3 ? "CL0" : randomString.length() == 1 ? "CL000" : "CL000";
-                                    String serie = s + random;
-                                    DatabaseAssistant.insertarEquipoTraslado("" + bitacora, serie, "Candelabro");
-                                }
-                            }
-                            else
-                                Log.d(TAG, "onActivityResult: No se guardaran candelabros");
-
-                            consultarEquiposDeTraslado(bitacora);
-                            Toast.makeText(this, "Equipo guardado correctamente", Toast.LENGTH_SHORT).show();
-                            showAnimationFromSuccessRecord();
-
-                        } else {
-                            showErrorDialog("Código repetido o desconocido para articulos de Traslado, verifica nuevamente", "");
                         }*/
 
-                        if(!nombreDeEquipo.equals("DESCONOCIDO") && !((result.getContents().contains("CL") && nombreDeEquipo.equals("Candelabro")) || (result.getContents().contains("CB") && nombreDeEquipo.equals("Cristo y base")))    )
-                            guardarEquipo = !DatabaseAssistant.yaExisteInformacionDelArticuloDeVelacionDeTraslado("" + result.getContents(), "" + bitacora);
+                            //if (!nombreDeEquipo.equals("DESCONOCIDO") && !((result.getContents().contains("CL") && nombreDeEquipo.equals("Candelabro")) || (result.getContents().contains("CB") && nombreDeEquipo.equals("Cristo y base"))))
+                              //  guardarEquipo = !DatabaseAssistant.yaExisteInformacionDelArticuloDeVelacionDeTraslado("" + result.getContents(), "" + bitacora);
 
-
-
-                        if (guardarEquipo) {
-                            if (DatabaseAssistant.entradaSalidaTraslado("" + result.getContents(), "" + bitacora).equals("1")) {
-                                showErrorDialog("El código ya tiene un registro de salida y entrada de inventario.", "");
-                            } else {
-                                if (DatabaseAssistant.entradaSalidaTraslado("" + result.getContents(), "" + bitacora).equals("")) {
-                                    entradaOsalida = "0";
-                                } else if (DatabaseAssistant.entradaSalidaTraslado("" + result.getContents(), "" + bitacora).equals("0")) {
-                                    entradaOsalida = "1";
-                                }
-
-
-                                DatabaseAssistant.insertarEquipoTraslado(
-                                        "" + bitacora,
-                                        "" + result.getContents(),
-                                        nombreDeEquipo,
-                                        entradaOsalida,
-                                        "" + (Preferences.getPreferenceIsbunker(BitacoraDetalle.this, Preferences.PREFERENCE_ISBUNKER) ? "1" : "0")
-                                );
-                                if (guardar4Candelabros) {
-                                    for (int i = 0; i <= 3; i++) {
-                                        int random = (int) Math.floor(Math.random() * 247 + 1);
-                                        String randomString = String.valueOf(random);
-                                        String s = randomString.length() == 2 ? "CL00" : randomString.length() == 3 ? "CL0" : randomString.length() == 1 ? "CL000" : "CL000";
-                                        String serie = s + random;
-                                        DatabaseAssistant.insertarEquipoTraslado(
-                                                "" + bitacora,
-                                                serie,
-                                                "Candelabro",
-                                                entradaOsalida,
-                                                "" + (Preferences.getPreferenceIsbunker(BitacoraDetalle.this, Preferences.PREFERENCE_ISBUNKER) ? "1" : "0")
-                                        );
+                            if (guardarEquipo) {
+                                if (DatabaseAssistant.entradaSalidaTraslado("" + result.getContents(), "" + bitacora).equals("1")) {
+                                    showErrorDialog("El código ya tiene un registro de salida y entrada de inventario.", "");
+                                } else {
+                                    if (DatabaseAssistant.entradaSalidaTraslado("" + result.getContents(), "" + bitacora).equals("")) {
+                                        entradaOsalida = "0";
+                                    } else if (DatabaseAssistant.entradaSalidaTraslado("" + result.getContents(), "" + bitacora).equals("0")) {
+                                        entradaOsalida = "1";
                                     }
-                                } else
-                                    Log.d(TAG, "onActivityResult: No se guardaran candelabros");
 
-                                consultarEquiposDeTraslado(bitacora);
-                                Toast.makeText(this, "Equipo guardado correctamente", Toast.LENGTH_SHORT).show();
-                                showAnimationFromSuccessRecord();
 
-                            }
+                                    DatabaseAssistant.insertarEquipoTraslado(
+                                            "" + bitacora,
+                                            "" + result.getContents(),
+                                            nombreDeEquipo,
+                                            entradaOsalida,
+                                            "" + (Preferences.getPreferenceIsbunker(BitacoraDetalle.this, Preferences.PREFERENCE_ISBUNKER) ? "1" : "0"),
+                                            "0"
+                                    );
+                                    if (guardar4Candelabros) {
+                                        for (int i = 0; i <= 3; i++) {
+                                            int random = (int) Math.floor(Math.random() * 247 + 1);
+                                            String randomString = String.valueOf(random);
+                                            String s = randomString.length() == 2 ? "CL00" : randomString.length() == 3 ? "CL0" : randomString.length() == 1 ? "CL000" : "CL000";
+                                            String serie = s + random;
+                                            DatabaseAssistant.insertarEquipoTraslado(
+                                                    "" + bitacora,
+                                                    serie,
+                                                    "Candelabro",
+                                                    entradaOsalida,
+                                                    "" + (Preferences.getPreferenceIsbunker(BitacoraDetalle.this, Preferences.PREFERENCE_ISBUNKER) ? "1" : "0"),
+                                                    "0"
+                                            );
+                                        }
+                                    } else
+                                        Log.d(TAG, "onActivityResult: No se guardaran candelabros");
 
+                                    consultarEquiposDeTraslado(bitacora);
+                                    Toast.makeText(this, "Equipo guardado correctamente", Toast.LENGTH_SHORT).show();
+                                    showAnimationFromSuccessRecord();
+                                }
+                            } else
+                                showErrorDialog("Código repetido o desconocido para articulos de Traslado, verifica nuevamente", "");
 
                         } else
                             showErrorDialog("Código repetido o desconocido para articulos de Traslado, verifica nuevamente", "");
-
-
-
                     }
                     else {
                         showErrorDialog("El código no corresponde a un artículo de velación, verifica nuevamente.", "");
@@ -2056,7 +2133,33 @@ public class BitacoraDetalle extends BaseActivity implements CancelarArticuloEsc
                 }
                 else if(equipoRecoleccion){
                     if(result.getContents().length()<=6) {
+
+
                         boolean guardarEquipo = false, guardar4Candelabros = false;
+                        String nombreDeEquipo = "DESCONOCIDO", inicialesDeEquipo="", entradaOsalida="";
+
+                        inicialesDeEquipo = result.getContents().substring(0, 2);
+                        List<CatalogoArticulos> catalogoArticulosList = CatalogoArticulos.findWithQuery(CatalogoArticulos.class, "SELECT * FROM catalogo_Articulos WHERE letras ='"+ inicialesDeEquipo + "'");
+                        if(catalogoArticulosList.size() > 0 ){
+                            Log.d(TAG, "onActivityResult: Azael si encontre información de articulos con las letras: " + inicialesDeEquipo);
+                            nombreDeEquipo = catalogoArticulosList.get(0).getNombre();
+                            guardarEquipo = true;
+
+                            if(inicialesDeEquipo.equals("CB")){
+                                guardar4Candelabros = true;
+                            }
+                        }
+                        else{
+                            nombreDeEquipo = "DESCONOCIDO";
+                            guardarEquipo = false;
+                            guardar4Candelabros = false;
+                        }
+
+
+
+
+
+                        /*boolean guardarEquipo = false, guardar4Candelabros = false;
                         String nombreDeEquipo = "DESCONOCIDO", entradaOsalida="";
 
                         {
@@ -2110,11 +2213,15 @@ public class BitacoraDetalle extends BaseActivity implements CancelarArticuloEsc
                                 guardar4Candelabros = false;
                             }
 
-                        }
+                        }*/
 
-                        if(!nombreDeEquipo.equals("DESCONOCIDO") && !((result.getContents().contains("CL") && nombreDeEquipo.equals("Candelabro")) || (result.getContents().contains("CB") && nombreDeEquipo.equals("Cristo y base")))    )
-                            guardarEquipo = !DatabaseAssistant.yaExisteInformacionDelArticuloDeVelacionDeRecoleccion("" + result.getContents(), "" + bitacora);
-
+                        /* Esta validación sirve para no permitir agregar otro registro (entrada y salida) que no sea Candelabro o cristo base NO BORRAR*/
+                        //NO BORRAR
+                        //NO BORRAR
+                        //NO BORRAR
+                        //NO BORRAR
+                        //if(!nombreDeEquipo.equals("DESCONOCIDO") && !(   ( result.getContents().contains("CL") && nombreDeEquipo.equals("Candelabro") ) || (   result.getContents().contains("CB") && nombreDeEquipo.equals("Cristo y base")   )      ))
+                          //  guardarEquipo = !DatabaseAssistant.yaExisteInformacionDelArticuloDeVelacionDeRecoleccion("" + result.getContents(), "" + bitacora);
 
 
                         if (guardarEquipo) {
@@ -2133,7 +2240,8 @@ public class BitacoraDetalle extends BaseActivity implements CancelarArticuloEsc
                                         "" + result.getContents(),
                                         nombreDeEquipo,
                                         entradaOsalida,
-                                        "" + (Preferences.getPreferenceIsbunker(BitacoraDetalle.this, Preferences.PREFERENCE_ISBUNKER) ? "1" : "0")
+                                        "" + (Preferences.getPreferenceIsbunker(BitacoraDetalle.this, Preferences.PREFERENCE_ISBUNKER) ? "1" : "0"),
+                                        "0"
                                 );
 
                                 if (guardar4Candelabros) {
@@ -2147,7 +2255,8 @@ public class BitacoraDetalle extends BaseActivity implements CancelarArticuloEsc
                                                 serie,
                                                 "Candelabro",
                                                 entradaOsalida,
-                                                "" + (Preferences.getPreferenceIsbunker(BitacoraDetalle.this, Preferences.PREFERENCE_ISBUNKER) ? "1" : "0")
+                                                "" + (Preferences.getPreferenceIsbunker(BitacoraDetalle.this, Preferences.PREFERENCE_ISBUNKER) ? "1" : "0"),
+                                                "0"
                                         );
                                     }
                                 } else
@@ -2251,6 +2360,7 @@ public class BitacoraDetalle extends BaseActivity implements CancelarArticuloEsc
                         "" + documentosList.get(i).getNombre(),
                         "",
                         "",
+                        "",
                         ""
                 );
                 modelDocumentos.add(product);
@@ -2290,7 +2400,7 @@ public class BitacoraDetalle extends BaseActivity implements CancelarArticuloEsc
                         "" + documentosList.get(i).getNombre(),
                         "",
                         "",
-                        ""
+                        "",""
                 );
                 modelDocumentos.add(product);
             }
@@ -2333,7 +2443,7 @@ public class BitacoraDetalle extends BaseActivity implements CancelarArticuloEsc
                         "",
                         "",
                         "" + documentosList.get(i).getTipo(),
-                        ""
+                        "", ""
                 );
                 modelDocumentos.add(product);
             }
@@ -2375,7 +2485,7 @@ public class BitacoraDetalle extends BaseActivity implements CancelarArticuloEsc
                         "",
                         "",
                         documentosList.get(i).getTipo(),
-                        ""
+                        "", ""
                 );
                 modelDocumentos.add(product);
             }
@@ -3088,6 +3198,94 @@ public class BitacoraDetalle extends BaseActivity implements CancelarArticuloEsc
                         super.onTargetClick(view);      // This call is optional
                     }
                 });
+    }
+
+
+    private void getStatusBinaccle() {
+        JSONObject json = new JSONObject();
+        try {
+            json.put("bitacora", bitacora);
+            json.put("descripcion", descripcionPeticion);
+            json.put("usuario_peticion", DatabaseAssistant.getUserNameFromSesiones());
+            json.put("fecha_peticion", fechaEstatica);
+            requestStatusBinaccle(json);
+        } catch (Exception e) {
+            Log.d("TIMER", "getStatusBinaccle: error en creacion de json para status de bitacora");
+            hideLoadingDialog();
+            Toast.makeText(this, "Ocurrio un error: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private void requestStatusBinaccle(JSONObject jsonParams)
+    {
+        JsonObjectRequest postRequest = new JsonObjectRequest(Request.Method.POST, ConstantsBitacoras.WS_CHECK_STATUS_BINNACLE, jsonParams, new Response.Listener<JSONObject>() {
+            @Override
+            public void onResponse(JSONObject response) {
+                Log.v("TIMER", "onResponse: " + ConstantsBitacoras.WS_CHECK_STATUS_BINNACLE);
+                manage_GetStatusBinnacle(response);
+            }
+        },
+                new Response.ErrorListener() {
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+                        error.printStackTrace();
+                        status = -1;
+                        Log.e("TIMER", "onErrorResponse: Error: " + error.getMessage());
+                        hideLoadingDialog();
+                        Toast.makeText(BitacoraDetalle.this, "Ocurrio un error: " + error.getMessage(), Toast.LENGTH_SHORT).show();
+                    }
+                }) {
+
+        };
+        postRequest.setRetryPolicy(new DefaultRetryPolicy(90000, 2, DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
+        VolleySingleton.getIntanciaVolley(getApplicationContext()).addToRequestQueue(postRequest);
+    }
+
+
+    public void manage_GetStatusBinnacle(JSONObject json)
+    {
+        if (status != -1 && !requesterCanceled)
+        {
+            try
+            {
+                status = 0;
+                status = json.getInt("status");
+
+                if (status == 0) {
+                    //continue;
+                    Log.d("TIMER", "manage_GetStatusBinnacle: Continua con el ciclo de bitacora.");
+                }
+                
+                //accepted
+                else if (status == 1) {
+                    Toast.makeText(ApplicationResourcesProvider.getContext(), "Bitácora aceptada.", Toast.LENGTH_LONG).show();
+                    registrarBitacoraTerminada(json.getString("bitacora"));
+                    hideLoadingDialog();
+                }
+
+                //rechazado
+                else if (status == 2) {
+                    Toast.makeText(ApplicationResourcesProvider.getContext(), "Bitácora rechazada.", Toast.LENGTH_LONG).show();
+                    hideLoadingDialog();
+                }
+                else {
+                    status = -1;
+                    hideLoadingDialog();
+                    Toast.makeText(this, "La bitácora no fue aceptada.", Toast.LENGTH_SHORT).show();
+                    requesterCanceled = true;
+                }
+
+            } catch (JSONException e) {
+                status = 0;
+                e.printStackTrace();
+                Log.e("TIMER", "manage_GetStatusBinnacle: Error en obtener el dato de estatus: " + e.getMessage());
+                hideLoadingDialog();
+                Toast.makeText(this, "Ocurrio un error: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+            }
+        }
+        else
+            Log.d("TIMER", "manage_GetStatusBinnacle: el estatus es -1");
+
     }
 
 }

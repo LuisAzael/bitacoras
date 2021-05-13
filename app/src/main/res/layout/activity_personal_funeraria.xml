@@ -1,0 +1,581 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@color/white"
+    tools:context=".Activities.PersonalFuneraria">
+
+    <LinearLayout
+        android:padding="10dp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <androidx.core.widget.NestedScrollView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+
+
+            <!-- Layout de registro -->
+            <LinearLayout
+                android:visibility="visible"
+                android:id="@+id/frameRegistro"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="vertical">
+
+                <LinearLayout
+                    android:layout_margin="10dp"
+                    android:weightSum="12"
+                    android:orientation="horizontal"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content">
+
+                    <LinearLayout
+                        android:layout_gravity="center"
+                        android:layout_weight="2.3"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="center"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:layout_gravity="center"
+                            android:id="@+id/tvTextoNombre"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="Bienvenido"
+                            android:textStyle="bold"
+                            android:textColor="@color/textos_principal"
+                            android:textSize="14sp" />
+
+                        <TextView
+                            android:layout_gravity="center"
+                            android:id="@+id/tvDomicilio"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="Latinoamericana Recinto Funeral"
+                            android:textColor="@color/textos_general"
+                            android:textSize="11sp" />
+                    </LinearLayout>
+
+
+                    <ImageView
+                        android:padding="5dp"
+                        android:clickable="true"
+                        android:foreground="?android:attr/selectableItemBackground"
+                        android:id="@+id/btDescargarTodo"
+                        android:src="@drawable/ic_sync_green"
+                        android:layout_gravity="center"
+                        android:layout_weight="5"
+                        android:layout_width="match_parent"
+                        android:layout_height="fill_parent"/>
+
+
+                    <com.polyak.iconswitch.IconSwitch
+                        android:id="@+id/btCerrarAsistencia"
+                        android:layout_gravity="center"
+                        android:layout_weight="4.7"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        app:isw_icon_left="@drawable/ic_power_tutorial"
+                        app:isw_icon_right="@drawable/ic_power_on"
+                        app:isw_background_color="#eeeeee"
+                        app:isw_thumb_color_left="@color/red_color"
+                        app:isw_thumb_color_right="@android:color/holo_green_dark"
+                        app:isw_inactive_tint_icon_left="@color/white"
+                        app:isw_inactive_tint_icon_right="@color/white"
+                        app:isw_active_tint_icon_left="@color/white"
+                        app:isw_active_tint_icon_right="@color/white"/>
+
+                </LinearLayout>
+
+                <soup.neumorphism.NeumorphButton
+
+                    app:neumorph_backgroundColor="@color/white"
+                    style="@style/Widget.Neumorph.CardView"
+                    app:neumorph_shadowElevation="6dp"
+                    app:neumorph_shapeType="basin"
+                    app:neumorph_lightSource="leftTop"
+
+                    android:id="@+id/tvRegistroDeAsistencia"
+                    android:layout_marginTop="10dp"
+                    android:drawableTint="@color/textos_general"
+                    android:textSize="12sp"
+                    android:textColor="@color/textos_general"
+                    android:background="@drawable/gradiation_text"
+                    android:gravity="center"
+                    android:padding="25dp"
+                    android:drawablePadding="15dp"
+                    android:drawableEnd="@drawable/ic_asistencia"
+                    android:text="    Mi Registro de asistencia    "
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"/>
+
+
+                <LinearLayout
+                    android:layout_marginTop="10dp"
+                    android:visibility="visible"
+                    android:padding="16dp"
+                    android:orientation="vertical"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent">
+
+                    <TextView
+                        android:layout_marginTop="20dp"
+                        android:text="Número de bitácora"
+                        android:textStyle="bold"
+                        android:textSize="14sp"
+                        android:textColor="@color/textos_principal"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"/>
+
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:textColorHint="@color/textos_principal"
+                        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                        android:layout_marginTop="5dp"
+                        android:layout_width="match_parent"
+                        android:layout_height="55dp">
+
+                        <AutoCompleteTextView
+                            android:textAllCaps="true"
+                            android:inputType="textAutoComplete"
+                            android:paddingLeft="10dp"
+                            android:id="@+id/etBitacora"
+                            android:textColor="@color/textos_general"
+                            android:textSize="16sp"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:hint="No. Bitácora" />
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                    <LinearLayout
+                        android:weightSum="10"
+                        android:layout_marginTop="5dp"
+                        android:orientation="horizontal"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content">
+
+                        <androidx.appcompat.widget.AppCompatButton
+                            android:visibility="invisible"
+                            android:drawableTint="@color/black"
+                            android:drawableStart="@drawable/ic_scan"
+                            android:layout_weight="4"
+                            android:id="@+id/btScanner"
+                            android:text="Urna"
+                            android:layout_gravity="center"
+                            android:layout_width="match_parent"
+                            android:layout_height="55dp"/>
+
+                        <View
+                            android:visibility="invisible"
+                            android:layout_gravity="center"
+                            android:layout_weight="4"
+                            android:layout_width="match_parent"
+                            android:layout_height="55dp"/>
+
+                        <soup.neumorphism.NeumorphButton
+                            app:neumorph_backgroundColor="@color/white"
+                            style="@style/Widget.Neumorph.Button"
+                            app:neumorph_shapeType="flat"
+                            android:textAlignment="center"
+                            app:neumorph_shadowElevation="6dp"
+                            app:neumorph_lightSource="leftTop"
+                            android:padding="25dp"
+                            android:layout_gravity="center"
+                            android:layout_weight="2"
+                            android:id="@+id/btBuscarBitacora"
+                            android:text="Buscar bitácora..."
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"/>
+
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:visibility="gone"
+                        android:id="@+id/layoutBitacora"
+                        android:layout_marginTop="20dp"
+                        android:orientation="vertical"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content">
+
+                        <TextView
+                            android:text="Bitácora cargada correctamente"
+                            android:textStyle="bold"
+                            android:textSize="14sp"
+                            android:textColor="@color/textos_principal"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"/>
+
+                        <TextView
+                            android:textColor="@color/textos_general"
+                            android:id="@+id/tvBitacora"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="3dp"
+                            android:text="GDL21MAR015"
+                            android:textSize="14sp"
+                            tools:ignore="RtlSymmetry" />
+
+
+                    </LinearLayout>
+
+
+
+                    <LinearLayout
+                        android:layout_marginTop="20dp"
+                        android:visibility="gone"
+                        android:id="@+id/layoutUrna"
+                        android:orientation="vertical"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content">
+
+                        <TextView
+                            android:layout_marginTop="20dp"
+                            android:text="Urna escaneada"
+                            android:textStyle="bold"
+                            android:textSize="14sp"
+                            android:textColor="@color/textos_principal"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"/>
+
+                        <LinearLayout
+                            android:orientation="vertical"
+                            android:layout_marginTop="10dp"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content">
+
+                            <LinearLayout
+                                android:weightSum="10"
+                                android:orientation="horizontal"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content">
+
+                                <ImageView
+                                    android:layout_weight="9"
+                                    app:tint="@color/black"
+                                    android:layout_gravity="clip_horizontal"
+                                    android:src="@drawable/ic_urna"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="match_parent" />
+
+                                <TextView
+                                    android:layout_weight="1"
+                                    android:textColor="@color/textos_principal"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:text="Urna"
+                                    android:textStyle="bold"
+                                    android:textSize="14sp" />
+
+                            </LinearLayout>
+
+                            <TextView
+                                android:textColor="@color/textos_general"
+                                android:paddingStart="41dp"
+                                android:id="@+id/tvCodigoUrna"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="3dp"
+                                android:text="-----"
+                                android:textSize="14sp"
+                                tools:ignore="RtlSymmetry" />
+
+                            <LinearLayout
+                                android:layout_marginTop="5dp"
+                                android:orientation="vertical"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content">
+
+                                <LinearLayout
+                                    android:weightSum="10"
+                                    android:orientation="horizontal"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content">
+
+                                    <ImageView
+                                        android:paddingStart="20dp"
+                                        android:layout_gravity="center"
+                                        android:layout_weight="8"
+                                        android:src="@drawable/ic_arrow_down"
+                                        android:layout_width="match_parent"
+                                        android:layout_height="fill_parent"
+                                        app:tint="@color/textos_general"
+                                        tools:ignore="RtlSymmetry" />
+
+                                    <TextView
+                                        android:id="@+id/tvDescripcionUrna"
+                                        android:textColor="@color/textos_general"
+                                        android:textSize="14sp"
+                                        android:layout_gravity="center"
+                                        android:textAlignment="viewStart"
+                                        android:layout_weight="2"
+                                        android:gravity="center"
+                                        android:text="-----"
+                                        android:layout_width="match_parent"
+                                        android:layout_height="wrap_content"
+                                        tools:ignore="RtlCompat" />
+
+                                </LinearLayout>
+
+
+
+
+
+
+                                <LinearLayout
+                                    android:weightSum="10"
+                                    android:orientation="horizontal"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content">
+
+                                    <View
+                                        android:visibility="invisible"
+                                        android:paddingStart="20dp"
+                                        android:layout_gravity="center"
+                                        android:layout_weight="8"
+                                        android:layout_width="match_parent"
+                                        android:layout_height="fill_parent"
+                                        app:tint="@color/textos_general"
+                                        tools:ignore="RtlSymmetry" />
+
+                                    <TextView
+                                        android:id="@+id/tvSerieUrna"
+                                        android:textColor="@color/textos_general"
+                                        android:textSize="14sp"
+                                        android:layout_gravity="center"
+                                        android:textAlignment="viewStart"
+                                        android:layout_weight="2"
+                                        android:gravity="center"
+                                        android:text="-----"
+                                        android:layout_width="match_parent"
+                                        android:layout_height="wrap_content"
+                                        tools:ignore="RtlCompat" />
+
+                                </LinearLayout>
+
+
+
+                                <LinearLayout
+                                    android:weightSum="10"
+                                    android:orientation="horizontal"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content">
+
+                                    <View
+                                        android:visibility="invisible"
+                                        android:paddingStart="20dp"
+                                        android:layout_gravity="center"
+                                        android:layout_weight="8"
+                                        android:layout_width="match_parent"
+                                        android:layout_height="fill_parent"
+                                        app:tint="@color/textos_general"
+                                        tools:ignore="RtlSymmetry" />
+
+                                    <TextView
+                                        android:id="@+id/tvFechaUrna"
+                                        android:textColor="@color/textos_general"
+                                        android:textSize="14sp"
+                                        android:layout_gravity="center"
+                                        android:textAlignment="viewStart"
+                                        android:layout_weight="2"
+                                        android:gravity="center"
+                                        android:text="-----"
+                                        android:layout_width="match_parent"
+                                        android:layout_height="wrap_content"
+                                        tools:ignore="RtlCompat" />
+
+                                </LinearLayout>
+
+                                <LinearLayout
+                                    android:weightSum="10"
+                                    android:orientation="horizontal"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content">
+
+                                    <View
+                                        android:visibility="invisible"
+                                        android:paddingStart="20dp"
+                                        android:layout_gravity="center"
+                                        android:layout_weight="8"
+                                        android:layout_width="match_parent"
+                                        android:layout_height="fill_parent"
+                                        app:tint="@color/textos_general"
+                                        tools:ignore="RtlSymmetry" />
+
+                                    <TextView
+                                        android:id="@+id/tvProveedorUrna"
+                                        android:textColor="@color/textos_general"
+                                        android:textSize="14sp"
+                                        android:layout_gravity="center"
+                                        android:textAlignment="viewStart"
+                                        android:layout_weight="2"
+                                        android:gravity="center"
+                                        android:text="-----"
+                                        android:layout_width="match_parent"
+                                        android:layout_height="wrap_content"
+                                        tools:ignore="RtlCompat" />
+
+                                </LinearLayout>
+
+                            </LinearLayout>
+
+                            <TextView
+                                android:layout_marginTop="10dp"
+                                android:id="@+id/tvEliminarUrna"
+                                android:textColor="@color/white"
+                                android:paddingLeft="20dp"
+                                android:paddingRight="20dp"
+                                android:paddingTop="6dp"
+                                android:paddingBottom="6dp"
+                                android:background="@drawable/btn_warning"
+                                android:layout_gravity="right"
+                                android:gravity="right"
+                                android:textAlignment="textEnd"
+                                android:text="Eliminar Urna"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"/>
+
+                        </LinearLayout>
+
+
+                    </LinearLayout>
+
+
+
+
+
+
+
+
+                </LinearLayout>
+
+
+
+
+
+
+
+                <TextView
+                    android:layout_marginEnd="20dp"
+                    android:layout_marginStart="20dp"
+                    android:layout_marginTop="40dp"
+                    android:text="Venta directa"
+                    android:textStyle="bold"
+                    android:textSize="14sp"
+                    android:textColor="@color/textos_principal"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"/>
+
+                <soup.neumorphism.NeumorphButton
+                    app:neumorph_backgroundColor="@color/white"
+                    style="@style/Widget.Neumorph.Button"
+                    app:neumorph_shapeType="flat"
+                    android:textAlignment="center"
+                    app:neumorph_shadowElevation="6dp"
+                    app:neumorph_lightSource="leftTop"
+                    android:padding="25dp"
+
+                    android:layout_marginEnd="20dp"
+                    android:layout_marginStart="20dp"
+                    android:visibility="visible"
+                    android:drawableTint="@color/black"
+                    android:drawableStart="@drawable/ic_scan"
+                    android:layout_weight="3.5"
+                    android:id="@+id/btScannerDirecta"
+                    android:text="Escanear para venta directa"
+                    android:layout_gravity="center"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"/>
+
+
+                <LinearLayout
+                    android:visibility="gone"
+                    android:id="@+id/layoutUrnaEscaneada"
+                    android:layout_marginStart="20dp"
+                    android:layout_marginEnd="20dp"
+                    android:layout_marginTop="10dp"
+                    android:weightSum="10"
+                    android:orientation="horizontal"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content">
+
+                    <TextView
+                        android:layout_gravity="center"
+                        android:layout_weight="3"
+                        android:text="------------"
+                        android:id="@+id/tvUrnaVendida"
+                        android:textSize="14sp"
+                        android:textColor="@color/textos_principal"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"/>
+
+                    <androidx.appcompat.widget.AppCompatButton
+                        android:id="@+id/btEliminarUrna"
+                        android:layout_gravity="bottom"
+                        android:background="@drawable/btn_warning"
+                        android:layout_weight="7"
+                        android:textSize="10sp"
+                        android:text="Eliminar urna"
+                        android:textColor="@color/white"
+                        android:layout_width="match_parent"
+                        android:layout_height="30dp"/>
+
+                </LinearLayout>
+
+
+
+            </LinearLayout>
+
+
+        </androidx.core.widget.NestedScrollView>
+
+
+        </LinearLayout>
+
+
+
+
+
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:id="@+id/layoutCargando"
+        android:background="#AA000000"
+        android:clickable="true"
+        android:visibility="gone">
+
+        <TextView
+            android:id="@+id/tvMensajeLoading"
+            android:layout_marginTop="60dp"
+            android:layout_gravity="center"
+            android:textSize="12sp"
+            android:textColor="@color/white"
+            android:text="Cargando"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"/>
+
+        <ImageView
+            android:src="@drawable/btn_loading"
+            android:layout_width="85dp"
+            android:layout_height="85dp"
+            android:id="@+id/ivLoadingBackground"
+            android:layout_gravity="center"
+            android:visibility="visible" />
+
+        <ProgressBar
+            android:id="@+id/progressBar"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:visibility="visible" />
+
+    </FrameLayout>
+
+
+
+</FrameLayout>

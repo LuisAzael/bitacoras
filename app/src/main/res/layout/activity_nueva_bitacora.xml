@@ -50,10 +50,11 @@
                         android:paddingStart="20dp"
                         android:textSize="16sp"
                         android:layout_weight="1.5"
-                        android:text=" Nueva bitácora"
+                        android:text=" Gestoría nueva bitácora"
                         android:layout_gravity="center"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"/>
+
                 </LinearLayout>
 
 
@@ -101,7 +102,6 @@
                         android:layout_height="wrap_content"/>
 
                     <com.google.android.material.textfield.TextInputLayout
-                        android:background="@drawable/rounded_style_black"
                         android:textColorHint="@color/textos_principal"
                         style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
 
@@ -110,6 +110,7 @@
                         android:layout_height="55dp">
 
                         <AutoCompleteTextView
+                            android:textAllCaps="true"
                             android:inputType="textAutoComplete"
                             android:paddingLeft="10dp"
                             android:id="@+id/etBitacora"
@@ -119,6 +120,22 @@
                             android:layout_height="match_parent"
                             android:hint="No. Bitácora" />
                     </com.google.android.material.textfield.TextInputLayout>
+
+
+                    <soup.neumorphism.NeumorphButton
+                        app:neumorph_backgroundColor="@color/white"
+                        style="@style/Widget.Neumorph.Button"
+                        app:neumorph_shapeType="flat"
+                        android:textAlignment="center"
+                        app:neumorph_shadowElevation="6dp"
+                        app:neumorph_lightSource="leftTop"
+                        android:padding="25dp"
+                        android:textColor="@color/textos_general"
+                        android:id="@+id/btBuscarBitacora"
+                        android:layout_gravity="end"
+                        android:text="Buscar bitácora..."
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"/>
 
 
 
@@ -424,6 +441,367 @@
                         </com.google.android.material.textfield.TextInputLayout>
 
 
+
+                        <View
+                            android:layout_marginTop="20dp"
+                            android:layout_marginBottom="20dp"
+                            android:alpha="0.5"
+                            android:background="@color/textos_general"
+                            android:layout_width="match_parent"
+                            android:layout_height="2dp"/>
+
+
+
+
+
+
+
+                        <LinearLayout
+                            android:layout_marginBottom="50dp"
+                            android:id="@+id/tvInformacionAdicional"
+                            android:visibility="visible"
+                            android:orientation="vertical"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content">
+
+
+
+                            <LinearLayout
+                                android:orientation="vertical"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content">
+
+                                <FrameLayout
+                                    android:id="@+id/card_container"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="match_parent">
+
+
+
+                                    <!-- COMPONENTES expandibles -->
+                                    <LinearLayout
+                                        android:id="@+id/expand_view"
+                                        android:layout_width="match_parent"
+                                        android:layout_height="wrap_content"
+                                        android:orientation="vertical"
+                                        android:visibility="visible"
+                                        tools:visibility="visible">
+
+
+                                        <TextView
+                                            android:id="@+id/tvasdads"
+                                            android:layout_gravity="center"
+                                            android:layout_width="match_parent"
+                                            android:layout_height="wrap_content"
+                                            android:text="Articulos de velación"
+                                            android:textStyle="bold"
+                                            android:textColor="@color/textos_principal"
+                                            android:textSize="22sp" />
+
+                                        <TextView
+                                            android:id="@+id/tvAyuda"
+                                            android:layout_marginBottom="10dp"
+                                            android:textColor="@color/purple_200"
+                                            android:layout_marginTop="5dp"
+                                            android:text="¿Necesitas ayuda para escanear los articulos de velación?, presiona aquí..."
+                                            android:layout_width="match_parent"
+                                            android:layout_height="wrap_content"/>
+
+                                        <!-- Instalacion -->
+                                        <LinearLayout
+                                            android:background="@color/white"
+                                            android:id="@+id/layoutInstalacion"
+                                            android:visibility="visible"
+                                            android:layout_marginTop="20dp"
+                                            android:layout_width="match_parent"
+                                            android:layout_height="wrap_content"
+                                            android:orientation="vertical">
+
+                                            <TextView
+                                                android:layout_weight="1"
+                                                android:layout_gravity="center"
+                                                android:layout_width="match_parent"
+                                                android:layout_height="wrap_content"
+                                                android:text="Instalación"
+                                                android:textStyle="bold"
+                                                android:textColor="@color/textos_principal"
+                                                android:textSize="16sp" />
+
+
+                                            <LinearLayout
+                                                android:layout_marginTop="7dp"
+                                                android:orientation="vertical"
+                                                android:layout_width="match_parent"
+                                                android:layout_height="wrap_content">
+
+                                                <TextView
+                                                    android:padding="2dp"
+                                                    android:layout_gravity="center"
+                                                    android:layout_width="match_parent"
+                                                    android:layout_height="wrap_content"
+                                                    android:text="Presiona Añadir +  para escanear el equipo"
+                                                    android:textStyle="bold"
+                                                    android:textColor="@color/textos_principal"
+                                                    android:textSize="12sp" />
+
+                                                <TextView
+                                                    android:id="@+id/btAnadirEquipo"
+                                                    android:layout_marginTop="5dp"
+                                                    android:layout_marginBottom="5dp"
+                                                    android:foreground="?android:attr/selectableItemBackground"
+                                                    android:clickable="true"
+                                                    android:gravity="center"
+                                                    android:layout_gravity="center_vertical"
+                                                    android:paddingTop="5dp"
+                                                    android:paddingBottom="5dp"
+                                                    android:paddingStart="15dp"
+                                                    android:paddingEnd="15dp"
+                                                    android:textAlignment="center"
+                                                    android:layout_weight="8"
+                                                    android:textColor="@color/white"
+                                                    android:background="@drawable/ic_pill"
+                                                    android:backgroundTint="@color/filter_icon_color"
+                                                    android:text="+ Añadir equipo de Instalación"
+                                                    android:layout_width="match_parent"
+                                                    android:layout_height="wrap_content"
+                                                    android:focusable="true"
+                                                    tools:targetApi="m" />
+
+
+                                                <LinearLayout
+                                                    android:layout_marginTop="15dp"
+                                                    android:orientation="vertical"
+                                                    android:layout_width="match_parent"
+                                                    android:layout_height="wrap_content">
+
+                                                    <TextView
+                                                        android:textColor="@color/textos_principal"
+                                                        android:textSize="12sp"
+                                                        android:text="Equipos escaneados"
+                                                        android:layout_width="match_parent"
+                                                        android:layout_height="wrap_content"
+                                                        tools:ignore="RtlSymmetry" />
+
+                                                    <androidx.recyclerview.widget.RecyclerView
+                                                        android:layout_marginTop="5dp"
+                                                        android:id="@+id/rvEquiposEscaneadosInstalacion"
+                                                        android:orientation="vertical"
+                                                        android:layout_width="match_parent"
+                                                        android:layout_height="wrap_content"/>
+
+                                                </LinearLayout>
+
+
+
+
+                                            </LinearLayout>
+
+
+                                        </LinearLayout>
+
+                                        <!-- Recoleccion -->
+                                        <LinearLayout
+                                            android:visibility="visible"
+                                            android:layout_marginTop="70dp"
+                                            android:layout_width="match_parent"
+                                            android:layout_height="wrap_content"
+                                            android:orientation="vertical">
+
+                                            <TextView
+                                                android:layout_weight="1"
+                                                android:layout_gravity="center"
+                                                android:layout_width="match_parent"
+                                                android:layout_height="wrap_content"
+                                                android:text="Recolección"
+                                                android:textStyle="bold"
+                                                android:textColor="@color/textos_principal"
+                                                android:textSize="16sp" />
+
+
+                                            <LinearLayout
+                                                android:layout_marginTop="7dp"
+                                                android:orientation="vertical"
+                                                android:layout_width="match_parent"
+                                                android:layout_height="wrap_content">
+
+                                                <TextView
+                                                    android:padding="2dp"
+                                                    android:layout_gravity="center"
+                                                    android:layout_width="match_parent"
+                                                    android:layout_height="wrap_content"
+                                                    android:text="Presiona Añadir +  para escanear el equipo de recolección"
+                                                    android:textStyle="bold"
+                                                    android:textColor="@color/textos_principal"
+                                                    android:textSize="12sp" />
+
+                                                <TextView
+                                                    android:id="@+id/btAnadirEquipoRecoleccion"
+                                                    android:layout_marginTop="5dp"
+                                                    android:layout_marginBottom="5dp"
+                                                    android:foreground="?android:attr/selectableItemBackground"
+                                                    android:clickable="true"
+                                                    android:gravity="center"
+                                                    android:layout_gravity="center_vertical"
+                                                    android:paddingTop="5dp"
+                                                    android:paddingBottom="5dp"
+                                                    android:paddingStart="15dp"
+                                                    android:paddingEnd="15dp"
+                                                    android:textAlignment="center"
+                                                    android:layout_weight="8"
+                                                    android:textColor="@color/white"
+                                                    android:background="@drawable/ic_pill"
+                                                    android:backgroundTint="@color/filter_icon_color"
+                                                    android:text="+ Añadir equipo de Recolección"
+                                                    android:layout_width="match_parent"
+                                                    android:layout_height="wrap_content"
+                                                    android:focusable="true"
+                                                    tools:targetApi="m" />
+
+
+                                                <LinearLayout
+                                                    android:layout_marginTop="15dp"
+                                                    android:orientation="vertical"
+                                                    android:layout_width="match_parent"
+                                                    android:layout_height="wrap_content">
+
+                                                    <TextView
+                                                        android:textColor="@color/textos_principal"
+                                                        android:textSize="12sp"
+                                                        android:text="Equipos escaneados"
+                                                        android:layout_width="match_parent"
+                                                        android:layout_height="wrap_content"
+                                                        tools:ignore="RtlSymmetry" />
+
+                                                    <androidx.recyclerview.widget.RecyclerView
+                                                        android:layout_marginTop="5dp"
+                                                        android:id="@+id/rvEquiposEscaneadosRecoleccion"
+                                                        android:orientation="vertical"
+                                                        android:layout_width="match_parent"
+                                                        android:layout_height="wrap_content"/>
+
+                                                </LinearLayout>
+
+
+                                            </LinearLayout>
+
+                                        </LinearLayout>
+
+
+                                        <!--Traslado-->
+                                        <LinearLayout
+                                            android:visibility="visible"
+                                            android:layout_marginTop="70dp"
+                                            android:layout_width="match_parent"
+                                            android:layout_height="wrap_content"
+                                            android:orientation="vertical">
+
+                                            <TextView
+                                                android:layout_weight="1"
+                                                android:layout_gravity="center"
+                                                android:layout_width="match_parent"
+                                                android:layout_height="wrap_content"
+                                                android:text="Traslado"
+                                                android:textStyle="bold"
+                                                android:textColor="@color/textos_principal"
+                                                android:textSize="16sp" />
+
+
+                                            <LinearLayout
+                                                android:layout_marginTop="7dp"
+                                                android:orientation="vertical"
+                                                android:layout_width="match_parent"
+                                                android:layout_height="wrap_content">
+
+                                                <TextView
+                                                    android:padding="2dp"
+                                                    android:layout_gravity="center"
+                                                    android:layout_width="match_parent"
+                                                    android:layout_height="wrap_content"
+                                                    android:text="Presiona Añadir +  para escanear el equipo"
+                                                    android:textStyle="bold"
+                                                    android:textColor="@color/textos_principal"
+                                                    android:textSize="12sp" />
+
+                                                <TextView
+                                                    android:id="@+id/btAnadirEquipoTraslado"
+                                                    android:layout_marginTop="5dp"
+                                                    android:layout_marginBottom="5dp"
+                                                    android:foreground="?android:attr/selectableItemBackground"
+                                                    android:clickable="true"
+                                                    android:gravity="center"
+                                                    android:layout_gravity="center_vertical"
+                                                    android:paddingTop="5dp"
+                                                    android:paddingBottom="5dp"
+                                                    android:paddingStart="15dp"
+                                                    android:paddingEnd="15dp"
+                                                    android:textAlignment="center"
+                                                    android:layout_weight="8"
+                                                    android:textColor="@color/white"
+                                                    android:background="@drawable/ic_pill"
+                                                    android:backgroundTint="@color/filter_icon_color"
+                                                    android:text="+ Añadir equipo de Traslado"
+                                                    android:layout_width="match_parent"
+                                                    android:layout_height="wrap_content"
+                                                    android:focusable="true"
+                                                    tools:targetApi="m" />
+
+
+                                                <LinearLayout
+                                                    android:layout_marginTop="15dp"
+                                                    android:orientation="vertical"
+                                                    android:layout_width="match_parent"
+                                                    android:layout_height="wrap_content">
+
+                                                    <TextView
+                                                        android:textColor="@color/textos_principal"
+                                                        android:textSize="12sp"
+                                                        android:text="Equipos escaneados"
+                                                        android:layout_width="match_parent"
+                                                        android:layout_height="wrap_content"
+                                                        tools:ignore="RtlSymmetry" />
+
+                                                    <androidx.recyclerview.widget.RecyclerView
+                                                        android:layout_marginTop="5dp"
+                                                        android:id="@+id/rvEquiposEscaneadosTraslado"
+                                                        android:orientation="vertical"
+                                                        android:layout_width="match_parent"
+                                                        android:layout_height="wrap_content"/>
+
+                                                </LinearLayout>
+
+
+                                            </LinearLayout>
+
+                                        </LinearLayout>
+
+                                    </LinearLayout>
+
+                                    <View
+                                        android:id="@+id/list_item_fg"
+                                        android:layout_width="match_parent"
+                                        android:layout_height="match_parent"
+                                        android:alpha="0"
+                                        android:background="@color/list_item_fg"
+                                        android:visibility="visible"
+                                        tools:visibility="gone" />
+                                </FrameLayout>
+                            </LinearLayout>
+
+                        </LinearLayout>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
                         <LinearLayout
                             android:layout_marginTop="50dp"
                             android:layout_marginBottom="100dp"
@@ -433,40 +811,56 @@
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content">
 
-                            <androidx.appcompat.widget.AppCompatButton
+                            <soup.neumorphism.NeumorphButton
+                                app:neumorph_backgroundColor="@color/white"
+                                style="@style/Widget.Neumorph.Button"
+                                app:neumorph_shapeType="pressed"
+                                android:textAlignment="center"
+                                app:neumorph_shadowElevation="6dp"
+                                app:neumorph_lightSource="leftTop"
+                                android:padding="25dp"
                                 android:drawableStart="@drawable/ic_close"
-                                android:drawableTint="@color/white"
+                                android:drawableTint="@color/red_color"
                                 android:layout_weight="5"
-                                android:background="@drawable/btn_warning"
                                 android:id="@+id/btCancelar"
-                                android:textColor="@color/white"
-                                android:padding="15dp"
+                                android:textColor="@color/textos_general"
                                 android:textSize="12sp"
                                 android:textStyle="bold"
-                                android:layout_margin="10dp"
+
                                 android:text="Cancelar"
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content" />
 
-                            <androidx.appcompat.widget.AppCompatButton
+                            <soup.neumorphism.NeumorphButton
+                                app:neumorph_backgroundColor="@color/white"
+                                style="@style/Widget.Neumorph.Button"
+                                app:neumorph_shapeType="basin"
+                                android:textAlignment="center"
+                                app:neumorph_shadowElevation="6dp"
+                                app:neumorph_lightSource="leftTop"
+                                android:padding="25dp"
+
                                 android:drawableEnd="@drawable/ic_chekk"
-                                android:drawableTint="@color/white"
-                                android:layout_margin="10dp"
+                                android:drawableTint="@android:color/holo_green_dark"
+
                                 android:layout_weight="5"
                                 android:background="@drawable/btn_ok"
                                 android:id="@+id/btGuardar"
                                 android:textSize="12sp"
                                 android:textStyle="bold"
-                                android:textColor="@color/white"
-                                android:padding="15dp"
+                                android:textColor="@color/textos_general"
+
                                 android:text="Aceptar"
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content" />
 
                         </LinearLayout>
 
+
+
                         <!-- TERMINA -->
                     </LinearLayout>
+
 
                 </LinearLayout>
 
@@ -497,7 +891,18 @@
         android:clickable="true"
         android:visibility="gone">
 
+        <TextView
+            android:id="@+id/tvMensajeLoading"
+            android:layout_marginTop="60dp"
+            android:layout_gravity="center"
+            android:textSize="12sp"
+            android:textColor="@color/white"
+            android:text="Cargando"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"/>
+
         <ImageView
+            android:src="@drawable/btn_loading"
             android:layout_width="85dp"
             android:layout_height="85dp"
             android:id="@+id/ivLoadingBackground"

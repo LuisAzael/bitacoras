@@ -270,12 +270,19 @@
         </LinearLayout>
 
 
-        <androidx.appcompat.widget.AppCompatButton
+        <soup.neumorphism.NeumorphButton
+            app:neumorph_backgroundColor="@color/white"
+            style="@style/Widget.Neumorph.Button"
+            app:neumorph_shapeType="flat"
+            android:textAlignment="center"
+            app:neumorph_shadowElevation="6dp"
+            app:neumorph_lightSource="leftTop"
+            android:padding="25dp"
             android:id="@+id/btGuardarAsistencia"
-            android:background="@drawable/degradado_dos"
             android:layout_marginTop="20dp"
             android:text="Guardar asistencia"
-            android:textColor="@color/white"
+            android:textAllCaps="true"
+            android:textColor="@color/textos_general"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"/>
 

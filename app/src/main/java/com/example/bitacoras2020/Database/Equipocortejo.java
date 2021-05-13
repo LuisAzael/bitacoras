@@ -3,12 +3,12 @@ package com.example.bitacoras2020.Database;
 import com.orm.SugarRecord;
 
 public class Equipocortejo extends SugarRecord {
-    String bitacora ="", serie="", fecha="", sync="", nombre="", latitud="", longitud="", isBunker="";
+    String bitacora ="", serie="", fecha="", sync="", nombre="", latitud="", longitud="", isBunker="", usuario="";
 
     public Equipocortejo() {
     }
 
-    public Equipocortejo(String bitacora, String serie, String fecha, String sync, String nombre, String latitud, String longitud, String isBunker) {
+    public Equipocortejo(String bitacora, String serie, String fecha, String sync, String nombre, String latitud, String longitud, String isBunker, String usuario) {
         this.bitacora = bitacora;
         this.serie = serie;
         this.fecha = fecha;
@@ -17,6 +17,15 @@ public class Equipocortejo extends SugarRecord {
         this.latitud = latitud;
         this.longitud = longitud;
         this.isBunker = isBunker;
+        this.usuario = usuario;
+    }
+
+    public String getUsuario() {
+        return usuario;
+    }
+
+    public void setUsuario(String usuario) {
+        this.usuario = usuario;
     }
 
     public String getLatitud() {

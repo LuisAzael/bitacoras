@@ -8,7 +8,7 @@
     <color name="black">#FF000000</color>
     <color name="transparent_black">#D8000000</color>
     <color name="transparent_black_25">#99000000</color>
-    <color name="white">#FFFFFFFF</color>
+    <color name="white">#efefef</color>
     <color name="textos_principal">#1b1b1b</color>
     <color name="textos_general">#969da9</color>
     <color name="red_color">#9a0007</color>

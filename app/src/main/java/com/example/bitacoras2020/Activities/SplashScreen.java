@@ -51,8 +51,6 @@ public class SplashScreen extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
-
         try {
             if (getIntent().getExtras() != null) {
                 try {
@@ -163,7 +161,16 @@ public class SplashScreen extends AppCompatActivity {
                         public void run() {
                             boolean checkInAlDia = Preferences.getPreferenceCheckinCheckoutAssistant(SplashScreen.this, Preferences.PREFERENCE_CHECKIN_CHECKOUT_ASSISTANT);
                             if (checkInAlDia) {
-                                Intent intent = new Intent(getBaseContext(), MainActivity.class);
+
+                                Intent intent = null;
+
+                                if(DatabaseAssistant.getLastIsFuneraria().equals("1"))
+                                    intent = new Intent(getApplicationContext(), PersonalFuneraria.class);
+                                else if (DatabaseAssistant.getLastIsFuneraria().equals("0"))
+                                    intent = new Intent(getApplicationContext(), MainActivity.class);
+                                else
+                                    intent = new Intent(getApplicationContext(), MainActivity.class);
+
                                 intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
                                 startActivity(intent);
                                 finish();

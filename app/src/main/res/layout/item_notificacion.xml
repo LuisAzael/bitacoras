@@ -5,10 +5,12 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content">
 
-    <androidx.cardview.widget.CardView
-        app:cardCornerRadius="5dp"
-        app:cardElevation="3dp"
-        android:layout_margin="6dp"
+    <soup.neumorphism.NeumorphCardView
+        app:neumorph_backgroundColor="@color/white"
+        style="@style/Widget.Neumorph.CardView"
+        app:neumorph_shadowElevation="6dp"
+        app:neumorph_shapeType="pressed"
+        app:neumorph_lightSource="leftTop"
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
 
@@ -120,5 +122,5 @@
 
         </LinearLayout>
 
-    </androidx.cardview.widget.CardView>
+    </soup.neumorphism.NeumorphCardView>
 </FrameLayout>

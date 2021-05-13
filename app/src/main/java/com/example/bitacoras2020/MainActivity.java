@@ -56,16 +56,20 @@ import com.example.bitacoras2020.Database.Activos;
 import com.example.bitacoras2020.Database.Adicional;
 import com.example.bitacoras2020.Database.Bitacoras;
 import com.example.bitacoras2020.Database.Carros;
+import com.example.bitacoras2020.Database.CatalogoArticulos;
 import com.example.bitacoras2020.Database.Choferes;
 import com.example.bitacoras2020.Database.Codigos;
 import com.example.bitacoras2020.Database.Comentarios;
 import com.example.bitacoras2020.Database.DatabaseAssistant;
 import com.example.bitacoras2020.Database.Documentos;
+import com.example.bitacoras2020.Database.EquipoRecoleccion;
+import com.example.bitacoras2020.Database.EquipoTraslado;
 import com.example.bitacoras2020.Database.Equipocortejo;
 import com.example.bitacoras2020.Database.Equipoinstalacion;
 import com.example.bitacoras2020.Database.Eventos;
 import com.example.bitacoras2020.Database.Inventario;
 import com.example.bitacoras2020.Database.Laboratorios;
+import com.example.bitacoras2020.Database.LoginZone;
 import com.example.bitacoras2020.Database.Lugares;
 import com.example.bitacoras2020.Models.ModelBitacorasActivas;
 import com.example.bitacoras2020.Utils.ApplicationResourcesProvider;
@@ -108,6 +112,7 @@ import com.google.firebase.iid.FirebaseInstanceId;
 import com.google.firebase.messaging.FirebaseMessaging;
 import com.google.gson.Gson;
 import com.karan.churi.PermissionManager.PermissionManager;
+import com.orm.SugarRecord;
 import com.polyak.iconswitch.IconSwitch;
 
 import androidx.annotation.NonNull;
@@ -153,11 +158,13 @@ import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.RadioButton;
+import android.widget.RelativeLayout;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -190,6 +197,11 @@ import javax.crypto.KeyGenerator;
 import javax.crypto.NoSuchPaddingException;
 import javax.crypto.SecretKey;
 
+import soup.neumorphism.NeumorphButton;
+import soup.neumorphism.NeumorphCardView;
+import soup.neumorphism.NeumorphFloatingActionButton;
+import soup.neumorphism.NeumorphImageButton;
+
 public class MainActivity extends BaseActivity implements OnMapReadyCallback, TerminarBitacoraCallback, ShowDetailsBitacoraCallback, RequerirEventoDeSalidaCallback,
         RegistrarSalidaCallback {
 
@@ -198,14 +210,15 @@ public class MainActivity extends BaseActivity implements OnMapReadyCallback, Te
     NestedScrollView layoutGeneral;
     //FrameLayout layoutCargando;
     SimpleDateFormat dateFormat;
-    Dialog dialogoError, dialogoSalidas;
+    Dialog dialogoSalidas;
     BottomSheetDialog dialogoFingerPrint;
     public TextView tvnumeroBitacora, tvChofer, tvAyudante, tvVehiculo, tvSecondName, tvAddress, tvPhone, textoSinBitacora, tvContador;
     CardView cardBitacoraActiva, expandable_data;
-    ImageView btExpandir, btDescargarTodo;
+    ImageView btExpandir;
+    NeumorphImageButton btDescargarTodo;
     IconSwitch btCerrarAsistencia;
     CoordinatorLayout rootLayout;
-    FloatingActionButton fabb;
+    NeumorphFloatingActionButton fabb;
     boolean errorStackTraceBitacoras = false;
     boolean errorStackTraceChoferes = false;
     boolean errorStackTraceCarrosas = false;
@@ -213,7 +226,7 @@ public class MainActivity extends BaseActivity implements OnMapReadyCallback, Te
     String codigoErrorStackTraceBitacoras = "", bitacoraDesdeNotifiacion = "";
     String codigoErrorStackTraceChoferes = "";
     String codigoErrorStackTraceCarrosas = "";
-    String codigoErrorStackTracePlaces = "";
+    String codigoErrorStackTracePlaces = "", fechaEstatica="";
     TextView etBitacoraLayout;
     BottomSheetDialog mBottomSheetDialog;
 
@@ -251,7 +264,11 @@ public class MainActivity extends BaseActivity implements OnMapReadyCallback, Te
     Button btAceptar;
     MediaPlayer mediaPlayer;
     String bitacora = "", isProveedor= "0";
-    TextView tvCheckVersionApp;
+    TextView tvCheckVersionApp, tvNada;
+    int status = 0;
+    boolean requesterCanceled = false;
+    String descripcionPeticion ="";
+    NeumorphCardView cardBtacoras;
 
     @SuppressLint("SimpleDateFormat")
     @Override
@@ -263,6 +280,10 @@ public class MainActivity extends BaseActivity implements OnMapReadyCallback, Te
         btCerrarAsistencia = (IconSwitch) findViewById(R.id.btCerrarAsistencia);
         if (Preferences.getPreferenceCheckinCheckoutAssistant(MainActivity.this, Preferences.PREFERENCE_CHECKIN_CHECKOUT_ASSISTANT))
             btCerrarAsistencia.setChecked(IconSwitch.Checked.RIGHT);
+
+        tvNada =(TextView) findViewById(R.id.tvNada);
+        cardBtacoras =(NeumorphCardView) findViewById(R.id.cardBtacoras);
+
 
         TextView tvTextoNombre =(TextView) findViewById(R.id.tvTextoNombre);
         tvTextoNombre.setTypeface(ApplicationResourcesProvider.bold);
@@ -289,8 +310,10 @@ public class MainActivity extends BaseActivity implements OnMapReadyCallback, Te
         textoSinBitacora.setTypeface(ApplicationResourcesProvider.regular);
 
 
-        TextView tvRegistroDeAsistencia =(TextView) findViewById(R.id.tvRegistroDeAsistencia);
+        NeumorphButton tvRegistroDeAsistencia =(NeumorphButton) findViewById(R.id.tvRegistroDeAsistencia);
         tvRegistroDeAsistencia.setTypeface(ApplicationResourcesProvider.regular);
+
+
         tvRegistroDeAsistencia.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -412,8 +435,10 @@ public class MainActivity extends BaseActivity implements OnMapReadyCallback, Te
         frameLayout = (FrameLayout) findViewById(R.id.frameLayout);
         rootLayout = (CoordinatorLayout) findViewById(R.id.rootLayout);
         dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        fechaEstatica = dateFormat.format(new Date());
+
         //dialogoError = new Dialog(this);
-        //dialogoSalidas = new Dialog(MainActivity.this);
+        dialogoSalidas = new Dialog(MainActivity.this);
         dialogoFingerPrint = new BottomSheetDialog(MainActivity.this);
         layoutGeneral = (NestedScrollView) findViewById(R.id.layoutGeneral);
         etBitacoraLayout = (TextView) findViewById(R.id.etBitacoraLayout);
@@ -431,10 +456,10 @@ public class MainActivity extends BaseActivity implements OnMapReadyCallback, Te
         cardBitacoraActiva = (CardView) findViewById(R.id.cardBitacoraActiva);
         expandable_data = (CardView) findViewById(R.id.expandable_data);
         btExpandir = (ImageView) findViewById(R.id.btExpandir);
-        btDescargarTodo = (ImageView) findViewById(R.id.btDescargarTodo);
+        btDescargarTodo = (NeumorphImageButton) findViewById(R.id.btDescargarTodo);
 
         tvCheckVersionApp = (TextView) findViewById(R.id.tvCheckVersionApp);
-        fabb = (FloatingActionButton) findViewById(R.id.fab);
+        fabb = (NeumorphFloatingActionButton) findViewById(R.id.fab);
         startService();
         textoSinBitacora.setText(DatabaseAssistant.getLastestTimeSesion());
 
@@ -542,6 +567,16 @@ public class MainActivity extends BaseActivity implements OnMapReadyCallback, Te
             }
         });
 
+        Button btCancelarPeticion =(Button) findViewById(R.id.btCancelarPeticion);
+        btCancelarPeticion.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                status = -1;
+                requesterCanceled = true;
+                hideLoadingDialog();
+            }
+        });
+
         btAceptar.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -592,14 +627,17 @@ public class MainActivity extends BaseActivity implements OnMapReadyCallback, Te
         btDescargarTodo.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Snackbar.make(v, "Cargando...", Snackbar.LENGTH_SHORT).show(); //Snackbar es necesario para crear la vista
-                cargarDatos();
-
+                if(ApplicationResourcesProvider.checkInternetConnection()){
+                    Snackbar.make(v, "Cargando...", Snackbar.LENGTH_SHORT).show(); //Snackbar es necesario para crear la vista
+                    loadRequests();
+                }else{
+                    showErrorDialog("No hay conexión a internet", "");
+                }
             }
         });
 
 
-        @SuppressLint("CutPasteId") FloatingActionButton fab = findViewById(R.id.fab);
+        @SuppressLint("CutPasteId") NeumorphFloatingActionButton fab = findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -649,7 +687,7 @@ public class MainActivity extends BaseActivity implements OnMapReadyCallback, Te
         });
 
 
-        CardView cardEnviar = findViewById(R.id.cardEnviar);
+        NeumorphCardView cardEnviar = findViewById(R.id.cardEnviar);
         cardEnviar.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -665,7 +703,7 @@ public class MainActivity extends BaseActivity implements OnMapReadyCallback, Te
             }
         });
 
-        CardView cardScanner = findViewById(R.id.cardScanner);
+        NeumorphCardView cardScanner = findViewById(R.id.cardScanner);
         cardScanner.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -674,7 +712,6 @@ public class MainActivity extends BaseActivity implements OnMapReadyCallback, Te
                 startActivity(intent);
             }
         });
-
 
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
@@ -871,6 +908,8 @@ public class MainActivity extends BaseActivity implements OnMapReadyCallback, Te
             TextView tvBitacorasActivas = (TextView) findViewById(R.id.tvBitacorasActivas);
             tvBitacorasActivas.setText("Bitácoras activas");
             tvBitacorasActivas.setTextColor(Color.parseColor("#1b1b1b"));
+            tvNada.setVisibility(View.GONE);
+            cardBtacoras.setVisibility(View.VISIBLE);
 
             for (int i = 0; i <= categorias.size() - 1; i++) {
                 ModelBitacorasActivas product = new ModelBitacorasActivas(
@@ -909,6 +948,8 @@ public class MainActivity extends BaseActivity implements OnMapReadyCallback, Te
             TextView tvBitacorasActivas = (TextView) findViewById(R.id.tvBitacorasActivas);
             tvBitacorasActivas.setText("No tienes bitácoras activas");
             tvBitacorasActivas.setTextColor(Color.parseColor("#9a0007"));
+            tvNada.setVisibility(View.VISIBLE);
+            cardBtacoras.setVisibility(View.GONE);
         }
 
 
@@ -1026,66 +1067,6 @@ public class MainActivity extends BaseActivity implements OnMapReadyCallback, Te
 
     private void cargarDatos() {
         if (ApplicationResourcesProvider.checkInternetConnection()) {
-            showMyCustomDialog();
-            Thread thread = new Thread() {
-                @Override
-                public void run() {
-                    try {
-
-                        runOnUiThread(new Runnable() {
-                            @Override
-                            public void run() {
-
-                                downloadBitacoras();
-                                downloadBitacorasDetails();
-                                downloadCarrosas();
-                                downloadChoferesAndAyudantes();
-                                downloadPlaces();
-                                getComentariosFromWeb();
-                                //e downloadNotifications();
-                            }
-                        });
-
-
-                        /*downloadBitacoras();
-                        downloadBitacorasDetails();
-                        downloadCarrosas();
-                        downloadChoferesAndAyudantes();
-                        downloadPlaces();
-                        getComentariosFromWeb();*/
-                        synchronized (this) {
-                            wait(4000);
-
-                            runOnUiThread(new Runnable() {
-                                @Override
-                                public void run() {
-                                    dismissMyCustomDialog();
-
-                                    if (errorStackTraceBitacoras)
-                                        Toast.makeText(getApplicationContext(), "Ocurrio un error en Bitacoras WS:\n" + codigoErrorStackTraceBitacoras, Toast.LENGTH_LONG).show();
-                                    if (errorStackTraceCarrosas)
-                                        Toast.makeText(getApplicationContext(), "Ocurrio un error en Carrosas WS:\n" + codigoErrorStackTraceCarrosas, Toast.LENGTH_LONG).show();
-                                    if (errorStackTraceChoferes)
-                                        Toast.makeText(getApplicationContext(), "Ocurrio un error en Choferes WS:\n" + codigoErrorStackTraceChoferes, Toast.LENGTH_LONG).show();
-                                    if (errorStackTracePlaces)
-                                        Toast.makeText(getApplicationContext(), "Ocurrio un error en Places WS:\n" + codigoErrorStackTracePlaces, Toast.LENGTH_LONG).show();
-                                    if (!errorStackTraceBitacoras && !errorStackTraceCarrosas && !errorStackTraceChoferes && !errorStackTracePlaces)
-                                        Toast.makeText(getApplicationContext(), "Actualizado correctamente", Toast.LENGTH_SHORT).show();
-
-                                    ApplicationResourcesProvider.insertarMovimiento("", "", "ACTUALIZACIÓN DE BITÁCORAS");
-                                }
-                            });
-
-                        }
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                        Toast.makeText(getApplicationContext(), "Ocurrio un error, intenta de nuevo", Toast.LENGTH_SHORT).show();
-                    }
-                }
-
-                ;
-            };
-            thread.start();
         } else
             showErrorDialog("No hay conexión a internet", "");
     }
@@ -1093,40 +1074,40 @@ public class MainActivity extends BaseActivity implements OnMapReadyCallback, Te
 
 
     private void lanzarDeNuevoElTutorial() {
-            showMyCustomDialog();
-            Thread thread = new Thread() {
-                @Override
-                public void run() {
-                    try {
+        showMyCustomDialog();
+        Thread thread = new Thread() {
+            @Override
+            public void run() {
+                try {
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            Preferences.setPreferenceTutorialHome(MainActivity.this, false, Preferences.PREFERENCE_TUTORIAL_HOME);
+                            Preferences.setPreferenceTutorialDetails(MainActivity.this, false, Preferences.PREFERENCE_TUTORIAL_DETALLES);
+                            startsTutorial();
+                        }
+                    });
+
+                    synchronized (this) {
+                        wait(3000);
+
                         runOnUiThread(new Runnable() {
                             @Override
                             public void run() {
-                                Preferences.setPreferenceTutorialHome(MainActivity.this, false, Preferences.PREFERENCE_TUTORIAL_HOME);
-                                Preferences.setPreferenceTutorialDetails(MainActivity.this, false, Preferences.PREFERENCE_TUTORIAL_DETALLES);
-                                startsTutorial();
+                                dismissMyCustomDialog();
                             }
                         });
-                      
-                        synchronized (this) {
-                            wait(3000);
 
-                            runOnUiThread(new Runnable() {
-                                @Override
-                                public void run() {
-                                    dismissMyCustomDialog();
-                                }
-                            });
-
-                        }
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                        Toast.makeText(getApplicationContext(), "Ocurrio un error, intenta de nuevo", Toast.LENGTH_SHORT).show();
                     }
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                    Toast.makeText(getApplicationContext(), "Ocurrio un error, intenta de nuevo", Toast.LENGTH_SHORT).show();
                 }
+            }
 
-                ;
-            };
-            thread.start();
+            ;
+        };
+        thread.start();
     }
 
     private void downloadBitacoras()
@@ -1211,7 +1192,7 @@ public class MainActivity extends BaseActivity implements OnMapReadyCallback, Te
 
         };
 
-       // postRequest.setRetryPolicy(new DefaultRetryPolicy(90000, 1, DefaultRetryPolicy.DEFAULT_TIMEOUT_MS));
+        // postRequest.setRetryPolicy(new DefaultRetryPolicy(90000, 1, DefaultRetryPolicy.DEFAULT_TIMEOUT_MS));
         VolleySingleton.getIntanciaVolley(getApplicationContext()).addToRequestQueue(postRequest);
     }
 
@@ -1319,7 +1300,7 @@ public class MainActivity extends BaseActivity implements OnMapReadyCallback, Te
                                     Comentarios.deleteAll(Comentarios.class);
                                 }
                                 for(int i =0; i<=arrayResult.length()-1;i++){
-                                   //Guarda aqui los comentarios
+                                    //Guarda aqui los comentarios
                                     DatabaseAssistant.insertarComentarios(
                                             "" + arrayResult.getJSONObject(i).getString("bitacora"),
                                             "" + arrayResult.getJSONObject(i).getString("comentario"),
@@ -1547,11 +1528,13 @@ public class MainActivity extends BaseActivity implements OnMapReadyCallback, Te
 
     private void downloadNotifications()
     {
+        showMyCustomDialog();
         JSONObject params = new JSONObject();
         try {
             params.put("usuario", DatabaseAssistant.getUserNameFromSesiones() );
             params.put("token_device", DatabaseAssistant.getTokenDeUsuario());
             params.put("isProveedor", DatabaseAssistant.getIsProveedor());
+            params.put("pagina", "1");
         } catch (JSONException e) {
             e.printStackTrace();
         }
@@ -1560,20 +1543,25 @@ public class MainActivity extends BaseActivity implements OnMapReadyCallback, Te
             @Override
             public void onResponse(JSONObject response)
             {
-                JSONArray jsonArrayPlaces = new JSONArray();
+                JSONArray jsonArrayNotifications = new JSONArray();
                 try {
-                    jsonArrayPlaces = response.getJSONArray("notificaciones");
-                    for (int i = 0; i <= jsonArrayPlaces.length() - 1; i++) {
+                    jsonArrayNotifications = response.getJSONArray("notifications");
+                    for (int i = 0; i <= jsonArrayNotifications.length() - 1; i++) {
+                        String[] title = jsonArrayNotifications.getJSONObject(i).getString("title").split("-");
                         DatabaseAssistant.insertarNotificacion(
-                                "" + jsonArrayPlaces.getJSONObject(i).getString("titulo"),
-                                "" + jsonArrayPlaces.getJSONObject(i).getString("body"),
-                                "" + jsonArrayPlaces.getJSONObject(i).getString("action"),
-                                "" + jsonArrayPlaces.getJSONObject(i).getString("bitacora"),
-                                "" + jsonArrayPlaces.getJSONObject(i).getString("fecha")
+                                "" + jsonArrayNotifications.getJSONObject(i).getString("title"),
+                                "" + jsonArrayNotifications.getJSONObject(i).getString("message"),
+                                "",
+                                "" + title[0],
+                                "" + jsonArrayNotifications.getJSONObject(i).getString("fecha")
                         );
                     }
+                    dismissMyCustomDialog();
                 } catch (Exception e) {
                     e.printStackTrace();
+                    Log.e(TAG, "onResponse: Error al descargar notificaciones: " + e.getMessage());
+                    Toast.makeText(getApplicationContext(), "Ocurrio un error en descargar notificaciones", Toast.LENGTH_SHORT).show();
+                    dismissMyCustomDialog();
                 }
             }
         },
@@ -1581,6 +1569,9 @@ public class MainActivity extends BaseActivity implements OnMapReadyCallback, Te
                     @Override
                     public void onErrorResponse(VolleyError error) {
                         error.printStackTrace();
+                        Log.e(TAG, "onResponse: Error al descargar notificaciones: " + error.getMessage());
+                        Toast.makeText(getApplicationContext(), "Ocurrio un error en descargar notificaciones", Toast.LENGTH_SHORT).show();
+                        dismissMyCustomDialog();
                     }
                 }) {
         };
@@ -1634,27 +1625,37 @@ public class MainActivity extends BaseActivity implements OnMapReadyCallback, Te
                     }
                 }) {
         };
-       //postRequest.setRetryPolicy(new DefaultRetryPolicy(90000, 1, DefaultRetryPolicy.DEFAULT_TIMEOUT_MS));
+        //postRequest.setRetryPolicy(new DefaultRetryPolicy(90000, 1, DefaultRetryPolicy.DEFAULT_TIMEOUT_MS));
         VolleySingleton.getIntanciaVolley(getApplicationContext()).addToRequestQueue(postRequest);
     }
 
 
     public void showErrorDialog(final String codeError, String bitacora) {
-        final Button btNo, btSi;
+        final NeumorphButton btNo, btSi;
         TextView tvCodeError, tvBitacora;
-        dialogoError = new Dialog(MainActivity.this);
+        EditText etDescripcionPeticion;
+        Dialog dialogoError = new Dialog(MainActivity.this);
         dialogoError.setContentView(R.layout.layout_error);
         dialogoError.setCancelable(true);
-        btNo = (Button) dialogoError.findViewById(R.id.btNo);
-        btSi = (Button) dialogoError.findViewById(R.id.btSi);
+        etDescripcionPeticion = (EditText) dialogoError.findViewById(R.id.etDescripcionPeticion);
+        btNo = (NeumorphButton) dialogoError.findViewById(R.id.btNo);
+        btSi = (NeumorphButton) dialogoError.findViewById(R.id.btSi);
         tvCodeError = (TextView) dialogoError.findViewById(R.id.tvCodeError);
         tvBitacora = (TextView) dialogoError.findViewById(R.id.tvBitacora);
         tvCodeError.setText(codeError);
 
+
+
         if (codeError.equals("Estas a punto de terminar la bitácora\n¿Estás de acuerdo?")) {
             tvBitacora.setText(bitacora);
             tvBitacora.setVisibility(View.VISIBLE);
-        } else {
+        } else if( codeError.equals("Parece que los articulos de velación no estan completos, necesitas autorización para terminar la bitácora.") ){
+            etDescripcionPeticion.setVisibility(View.VISIBLE);
+
+            btSi.setText("Solicitar autorización");
+            btNo.setText("Cancelar");
+        }
+        else {
             tvBitacora.setText("");
             tvBitacora.setVisibility(View.GONE);
         }
@@ -1686,20 +1687,33 @@ public class MainActivity extends BaseActivity implements OnMapReadyCallback, Te
                 if (codeError.equals("Estas a punto de terminar la bitácora\n¿Estás de acuerdo?")) {
                     registrarBitacoraTerminada(bitacora);
                     dialogoError.dismiss();
-                } else {
+                } else if (codeError.equals("Parece que los articulos de velación no estan completos, necesitas autorización para terminar la bitácora.")){
+                    dialogoError.dismiss();
+                    descripcionPeticion = etDescripcionPeticion.getText().toString();
+                    doRequestForEndBinnacle();
+                    requesterCanceled = false;
+                    status = 0;
+                }
+                else {
                     if (codeError.equals("¿Cerrar sesión?")) {
+
                         if (DatabaseAssistant.cerrarSesionEnUnLugarEspecifico()) {
+
                             if (Preferences.getEndLoginTheZone(MainActivity.this, Preferences.PREFERENCE_END_SESION_THE_ZONE_TO_LOGIN)) {
+
                                 @SuppressLint("SimpleDateFormat") SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
                                 @SuppressLint("SimpleDateFormat") SimpleDateFormat timeFormat = new SimpleDateFormat("HH:mm:ss");
                                 Calendar cal = Calendar.getInstance();
+
                                 Preferences.setPreferenceCheckinCheckoutAssistant(MainActivity.this, false, Preferences.PREFERENCE_CHECKIN_CHECKOUT_ASSISTANT);
                                 String[] coordenadasFromApplication = ApplicationResourcesProvider.getCoordenadasFromApplication();
+
+
                                 String[] dataSessions = DatabaseAssistant.getLastedDataFromSessions();
 
                                 if (coordenadasFromApplication.length > 0 && dataSessions.length > 0) {
                                     DatabaseAssistant.insertarSesiones(
-                                            "" + dataSessions[0],
+                                            "" + DatabaseAssistant.getUserNameFromSesiones(),
                                             "" + dataSessions[1],
                                             "" + dateFormat.format(new Date()),
                                             "" + coordenadasFromApplication[0],
@@ -1709,12 +1723,13 @@ public class MainActivity extends BaseActivity implements OnMapReadyCallback, Te
                                             "0",
                                             "0",
                                             isProveedor,
-                                            Preferences.getGeofenceActual(getApplicationContext(), Preferences.PREFERENCE_GEOFENCE_ACTUAL)
+                                            Preferences.getGeofenceActual(getApplicationContext(), Preferences.PREFERENCE_GEOFENCE_ACTUAL),
+                                            "" + DatabaseAssistant.getLastIsFuneraria()
                                     );
+
                                     dialogoError.dismiss();
                                     Toast.makeText(getApplicationContext(), "Hasta luego", Toast.LENGTH_SHORT).show();
                                     finishAffinity();
-
                                 } else
                                     Toast.makeText(MainActivity.this, "Ocurrio un error al cerrar tu sesión, intenta nuevamente", Toast.LENGTH_SHORT).show();
                             } else
@@ -1729,7 +1744,7 @@ public class MainActivity extends BaseActivity implements OnMapReadyCallback, Te
 
                             if (coordenadasFromApplication.length > 0 && dataSessions.length > 0) {
                                 DatabaseAssistant.insertarSesiones(
-                                        "" + dataSessions[0],
+                                        "" +DatabaseAssistant.getUserNameFromSesiones(),
                                         "" + dataSessions[1],
                                         "" + dateFormat.format(new Date()),
                                         "" + coordenadasFromApplication[0],
@@ -1739,7 +1754,8 @@ public class MainActivity extends BaseActivity implements OnMapReadyCallback, Te
                                         "0",
                                         "0",
                                         isProveedor,
-                                        Preferences.getGeofenceActual(getApplicationContext(), Preferences.PREFERENCE_GEOFENCE_ACTUAL)
+                                        Preferences.getGeofenceActual(getApplicationContext(), Preferences.PREFERENCE_GEOFENCE_ACTUAL),
+                                        "" + DatabaseAssistant.getLastIsFuneraria()
                                 );
                                 dialogoError.dismiss();
                                 Toast.makeText(getApplicationContext(), "Hasta luego", Toast.LENGTH_SHORT).show();
@@ -1833,11 +1849,11 @@ public class MainActivity extends BaseActivity implements OnMapReadyCallback, Te
         }
     }
 
-    public void showSalidaLlegada(int tipo, boolean pedirDestino, String bitacora, String destinoAnterior) {
+    public void showSalidaLlegada(int tipo, boolean pedirDestino, String bitacora, String destinoAnterior, boolean actualizarDestino) {
         TextView etTitulo, etSalidaLlegada, etDestino, etBitacora;
         Spinner spLugares, spDestino;
-        Button btCancelar, btGuardar;
-        dialogoSalidas = new Dialog(MainActivity.this);
+        NeumorphButton btCancelar, btGuardar;
+
         dialogoSalidas.setContentView(R.layout.layout_entrada_salida);
         dialogoSalidas.setCancelable(false);
         etTitulo = (TextView) dialogoSalidas.findViewById(R.id.etTitulo);
@@ -1845,8 +1861,8 @@ public class MainActivity extends BaseActivity implements OnMapReadyCallback, Te
         etDestino = (TextView) dialogoSalidas.findViewById(R.id.etDestino);
         spLugares = (Spinner) dialogoSalidas.findViewById(R.id.spLugares);
         spDestino = (Spinner) dialogoSalidas.findViewById(R.id.spDestino);
-        btGuardar = (Button) dialogoSalidas.findViewById(R.id.btGuardar);
-        btCancelar = (Button) dialogoSalidas.findViewById(R.id.btCancelar);
+        btGuardar = (NeumorphButton) dialogoSalidas.findViewById(R.id.btGuardar);
+        btCancelar = (NeumorphButton) dialogoSalidas.findViewById(R.id.btCancelar);
         etBitacora = (TextView) dialogoSalidas.findViewById(R.id.etBitacora);
         etBitacora.setText(bitacora);
 
@@ -1892,63 +1908,80 @@ public class MainActivity extends BaseActivity implements OnMapReadyCallback, Te
             @Override
             public void onClick(View v) {
 
-                if (!spDestino.getSelectedItem().toString().equals(destinoAnterior)) {
-                    try {
-                        Calendar cal = Calendar.getInstance();
-                        SimpleDateFormat horaFormat = new SimpleDateFormat("HH:mm:ss", Locale.US);
-                        String hora = horaFormat.format(cal.getTime());
+                if (!spDestino.getSelectedItem().toString().equals(destinoAnterior))
+                {
+                    if(actualizarDestino){
+
+                        DatabaseAssistant.updateDestinoDeBitacoraPorSalidaAutomatica(bitacora, spDestino.getSelectedItem().toString());
+
                         String[] datosBitacoraActiva = DatabaseAssistant.getDatosDeBitacoraActiva(bitacora);
-                        String[] arregloCoordenadas = ApplicationResourcesProvider.getCoordenadasFromApplication();
+                        ApplicationResourcesProvider.insertarMovimiento(datosBitacoraActiva[1], datosBitacoraActiva[2], "ACTUALIZACION DE DESTINO DE SALIDA AUTOMATICA: " + datosBitacoraActiva[0]);
 
-                        if (datosBitacoraActiva.length > 0) {
-                            DatabaseAssistant.insertarEventos(
-                                    "" + datosBitacoraActiva[0],
-                                    "" + datosBitacoraActiva[1],
-                                    "" + datosBitacoraActiva[2],
-                                    "" + datosBitacoraActiva[3],
-                                    pedirDestino ? datosBitacoraActiva[11] : spLugares.getSelectedItem().toString(),
-                                    "" + dateFormat.format(new Date()),
-                                    "" + hora,
-                                    "" + datosBitacoraActiva[4],
-                                    "" + Double.parseDouble(arregloCoordenadas[0]),
-                                    "" + Double.parseDouble(arregloCoordenadas[1]),
-                                    "" + datosBitacoraActiva[5],
-                                    "" + (tipo == 1 ? "Salida" : tipo == 2 ? "Llegada" : ""),
-                                    "" + datosBitacoraActiva[6],
-                                    "" + datosBitacoraActiva[7],
-                                    "" + datosBitacoraActiva[8],
-                                    pedirDestino ? spDestino.getSelectedItem().toString() : datosBitacoraActiva[10],
-                                    "0",
-                                    "" + datosBitacoraActiva[12]
-                            );
+                        LayoutInflater inflater = getLayoutInflater();
+                        View view = inflater.inflate(R.layout.custom_toast_layout, (ViewGroup) findViewById(R.id.relativeLayout1));
+                        LottieAnimationView lottieAnimationView = view.findViewById(R.id.imageView1);
+                        lottieAnimationView.setAnimation("success_toast.json");
+                        lottieAnimationView.loop(false);
+                        lottieAnimationView.playAnimation();
+                        Toast toast = new Toast(getApplicationContext());
+                        toast.setGravity(Gravity.CENTER, 0, 0);
+                        toast.setDuration(Toast.LENGTH_LONG);
+                        toast.setView(view);
+                        toast.show();
+                        consultarBitacorasActivas();
+                        dialogoSalidas.dismiss();
+                    }else {
+                        try {
+                            Calendar cal = Calendar.getInstance();
+                            SimpleDateFormat horaFormat = new SimpleDateFormat("HH:mm:ss", Locale.US);
+                            String hora = horaFormat.format(cal.getTime());
+                            String[] datosBitacoraActiva = DatabaseAssistant.getDatosDeBitacoraActiva(bitacora);
+                            String[] arregloCoordenadas = ApplicationResourcesProvider.getCoordenadasFromApplication();
 
-                            ApplicationResourcesProvider.insertarMovimiento(datosBitacoraActiva[1],  datosBitacoraActiva[2], "REGISTRO DE SALIDA: "  + datosBitacoraActiva[0]);
-                            /*LayoutInflater inflater = getLayoutInflater();
-                            View view = inflater.inflate(R.layout.custom_toast_layout, (ViewGroup) findViewById(R.id.relativeLayout1));
-                            Toast toast = new Toast(getApplicationContext());
-                            toast.setGravity(Gravity.CENTER, 0, 0);
-                            toast.setDuration(Toast.LENGTH_LONG);
-                            toast.setView(view);
-                            toast.show();*/
+                            if (datosBitacoraActiva.length > 0) {
+                                DatabaseAssistant.insertarEventos(
+                                        "" + datosBitacoraActiva[0],
+                                        "" + datosBitacoraActiva[1],
+                                        "" + datosBitacoraActiva[2],
+                                        "" + datosBitacoraActiva[3],
+                                        pedirDestino ? datosBitacoraActiva[11] : spLugares.getSelectedItem().toString(),
+                                        "" + dateFormat.format(new Date()),
+                                        "" + hora,
+                                        "" + datosBitacoraActiva[4],
+                                        "" + Double.parseDouble(arregloCoordenadas[0]),
+                                        "" + Double.parseDouble(arregloCoordenadas[1]),
+                                        "" + datosBitacoraActiva[5],
+                                        "" + (tipo == 1 ? "Salida" : tipo == 2 ? "Llegada" : ""),
+                                        "" + datosBitacoraActiva[6],
+                                        "" + datosBitacoraActiva[7],
+                                        "" + datosBitacoraActiva[8],
+                                        pedirDestino ? spDestino.getSelectedItem().toString() : datosBitacoraActiva[10],
+                                        "0",
+                                        "" + datosBitacoraActiva[12]
+                                );
 
-                            LayoutInflater inflater = getLayoutInflater();
-                            View view = inflater.inflate(R.layout.custom_toast_layout, (ViewGroup)findViewById(R.id.relativeLayout1));
-                            LottieAnimationView lottieAnimationView = view.findViewById(R.id.imageView1);
-                            lottieAnimationView.setAnimation("success_toast.json");
-                            lottieAnimationView.loop(false);
-                            lottieAnimationView.playAnimation();
-                            Toast toast = new Toast(getApplicationContext());
-                            toast.setGravity(Gravity.CENTER, 0, 0);
-                            toast.setDuration(Toast.LENGTH_LONG);
-                            toast.setView(view);
-                            toast.show();
+                                ApplicationResourcesProvider.insertarMovimiento(datosBitacoraActiva[1], datosBitacoraActiva[2], "REGISTRO DE SALIDA: " + datosBitacoraActiva[0]);
 
-                            consultarBitacorasActivas();
-                            dialogoSalidas.dismiss();
+                                LayoutInflater inflater = getLayoutInflater();
+                                View view = inflater.inflate(R.layout.custom_toast_layout, (ViewGroup) findViewById(R.id.relativeLayout1));
+                                LottieAnimationView lottieAnimationView = view.findViewById(R.id.imageView1);
+                                lottieAnimationView.setAnimation("success_toast.json");
+                                lottieAnimationView.loop(false);
+                                lottieAnimationView.playAnimation();
+                                Toast toast = new Toast(getApplicationContext());
+                                toast.setGravity(Gravity.CENTER, 0, 0);
+                                toast.setDuration(Toast.LENGTH_LONG);
+                                toast.setView(view);
+                                toast.show();
+                                consultarBitacorasActivas();
+                                dialogoSalidas.dismiss();
+
+
+                            }
+
+                        } catch (Throwable e) {
+                            Log.e(TAG, "Error en click de salidas y llegadas: " + e.getMessage());
                         }
-
-                    } catch (Throwable e) {
-                        Log.e(TAG, "Error en click de salidas y llegadas: " + e.getMessage());
                     }
                 } else
                     showErrorDialog("Salida invalida, tienes que seleccionar el destino diferente a tu llegada.", "");
@@ -2040,33 +2073,21 @@ public class MainActivity extends BaseActivity implements OnMapReadyCallback, Te
         handler.removeMessages(0);
     }
 
+
+    @Override
+    protected void onRestart() {
+        super.onRestart();
+    }
+
     @Override
     public void onResume() {
         super.onResume();
-        DatabaseAssistant.insertarCatalogoArticulos("Biombo", "BM");
 
-        //int random = (int) Math.floor(Math.random()*240+1);
-        //String randomString = String.valueOf(random);
-        //String serie = (randomString.length() == 2 ? "CL00" : randomString.length() == 3 ? "CL0" : "CL") + random;
-
+        Equipoinstalacion.executeQuery("DELETE FROM EQUIPOINSTALACION WHERE sync ='4'");
+        Equipocortejo.executeQuery("DELETE FROM EQUIPOCORTEJO WHERE sync ='4'");
+        EquipoRecoleccion.executeQuery("DELETE FROM EQUIPO_RECOLECCION WHERE sync ='4'");
+        EquipoTraslado.executeQuery("DELETE FROM EQUIPO_TRASLADO WHERE sync ='4'");
         consultarBitacorasActivas();
-
-        /*try {
-            String jsonLugares = new Gson().toJson(Lugares.listAll(Lugares.class));
-            JSONArray json = new JSONArray(jsonLugares);
-            for (int i = 0; i <= json.length() - 1; i++) {
-                LatLng place = new LatLng(
-                        Double.parseDouble(json.getJSONObject(i).getString("latitud")),
-                        Double.parseDouble(json.getJSONObject(i).getString("longitud")));
-
-                addGeofence(
-                        place,
-                        Float.parseFloat(json.getJSONObject(i).getString("perimetro")),
-                        json.getJSONObject(i).getString("nombre"));
-            }
-        }catch (Throwable e){
-            Log.e(TAG, "onResume: Error en addGeoFence de onResume: " + e.getMessage());
-        }*/
 
         goToBitacoraDetalle = false;
         goToNuevaBitacora = false;
@@ -2074,7 +2095,6 @@ public class MainActivity extends BaseActivity implements OnMapReadyCallback, Te
             if (handler != null) {
                 timerUpdateBitacorasActivas();
             }
-
         } catch (Throwable e) {
             Log.e(TAG, "onResume: Error " + e.getMessage());
         }
@@ -2456,7 +2476,7 @@ public class MainActivity extends BaseActivity implements OnMapReadyCallback, Te
 
                 //Callback desde Adapter
 
-                /*Log.d(TAG, "onRequeriedEventoSalida: Entro a salida");
+                Log.d("GeofenceBroadcastReceiv", "onRequeriedEventoSalida: Entro a salida automatica, requiere que se ingrese una salida.");
                 try {
                     String[] evento = DatabaseAssistant.getUltimoEvento(bitacora);
                     String destino = evento[1];
@@ -2465,10 +2485,10 @@ public class MainActivity extends BaseActivity implements OnMapReadyCallback, Te
                         //registrarLlegadaSinPedirDestino("" + destinoOriginal, 2, bitacora);
                         Log.d(TAG, "onRequeriedEventoSalida: Registra la llegada sin pedir destino");
                     else
-                        showSalidaLlegada(1, true, bitacora, evento[0]);
+                        showSalidaLlegada(1, true, bitacora, evento[0], true);
                 }catch (Throwable e){
                     Log.e(TAG, "onRequeriedEventoSalida: Error " + e.getMessage());
-                }*/
+                }
             }
         }catch (Throwable e){
             Log.e(TAG, "onRequeriedEventoSalida: " + e.getMessage());
@@ -2486,7 +2506,7 @@ public class MainActivity extends BaseActivity implements OnMapReadyCallback, Te
         if (!destino.equals("") || !destino.isEmpty())
             registrarLlegadaSinPedirDestino("" + destinoOriginal, 2, bitacora);
         else
-            showSalidaLlegada(1, true, bitacora, evento[0]);
+            showSalidaLlegada(1, true, bitacora, evento[0], false);
     }
 
 
@@ -2620,7 +2640,17 @@ public class MainActivity extends BaseActivity implements OnMapReadyCallback, Te
 
     @Override
     public void onClickTerminarBitacora(int position, String bitacora) {
-        showErrorDialog("Estas a punto de terminar la bitácora\n¿Estás de acuerdo?", bitacora);
+        //showErrorDialog("Estas a punto de terminar la bitácora\n¿Estás de acuerdo?", bitacora);
+        this.bitacora = bitacora;
+
+        if(DatabaseAssistant.articulosDeVelacionYCortejoEstanCompletos(bitacora)
+                && DatabaseAssistant.articulosDeRecoleccionEstanCompletos(bitacora)
+                && DatabaseAssistant.articulosDeTrasladoEstanCompletos(bitacora)) {
+            showErrorDialog("Estas a punto de terminar la bitácora\n¿Estás de acuerdo?", bitacora);
+        }
+        else
+            showErrorDialog("Parece que los articulos de velación no estan completos, necesitas autorización para terminar la bitácora.", bitacora);
+
     }
 
     private void requestForCheckUpdateApp() {
@@ -2713,13 +2743,17 @@ public class MainActivity extends BaseActivity implements OnMapReadyCallback, Te
                                 if (manager != null) {
                                     final long downloadId = manager.enqueue(downloadRequest);
 
-                                    BroadcastReceiver onComplete = new BroadcastReceiver() {
+                                    BroadcastReceiver onComplete = new BroadcastReceiver()
+                                    {
                                         @Override
-                                        public void onReceive(Context context, Intent intent) {
-                                            if (file.exists()) {
+                                        public void onReceive(Context context, Intent intent)
+                                        {
+                                            if (file.exists())
+                                            {
                                                 Uri apkUri = Uri.fromFile(file);
                                                 Intent update = new Intent();
-                                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N)
+                                                {
                                                     apkUri = FileProvider.getUriForFile(getApplicationContext(), com.example.bitacoras2020.BuildConfig.APPLICATION_ID + ".provider", file);
                                                     update.setAction(Intent.ACTION_INSTALL_PACKAGE);
                                                     update.setDataAndType(apkUri, "application/vnd.android.package-archive");
@@ -2735,7 +2769,8 @@ public class MainActivity extends BaseActivity implements OnMapReadyCallback, Te
                                                 Log.i("ApkUpdate", manager.getMimeTypeForDownloadedFile(downloadId));
 
                                                 getApplicationContext().unregisterReceiver(this);
-                                                MainActivity.this.finish();
+                                                finish();
+
                                             } else {
                                                 dismissMyCustomDialog();
                                                 timerUpdate = new Timer();
@@ -2904,6 +2939,37 @@ public class MainActivity extends BaseActivity implements OnMapReadyCallback, Te
     @Override
     protected void onStart() {
         super.onStart();
+
+        CatalogoArticulos.deleteAll(CatalogoArticulos.class);
+        DatabaseAssistant.insertarCatalogoArticulos("Cafetera", "CF");
+        DatabaseAssistant.insertarCatalogoArticulos("Candelabro", "CL");
+        DatabaseAssistant.insertarCatalogoArticulos("Cristo y base", "CB");
+        DatabaseAssistant.insertarCatalogoArticulos("Pedestal", "PD");
+        DatabaseAssistant.insertarCatalogoArticulos("Biombo", "BM");
+        DatabaseAssistant.insertarCatalogoArticulos("Ataúd de traslado", "AT");
+        DatabaseAssistant.insertarCatalogoArticulos("Carrito pedestal", "CP");
+        DatabaseAssistant.insertarCatalogoArticulos("Carrito infantil", "CI");
+        DatabaseAssistant.insertarCatalogoArticulos("Candelero infantil", "CN");
+        DatabaseAssistant.insertarCatalogoArticulos("Pedestal infantil", "PI");
+        DatabaseAssistant.insertarCatalogoArticulos("Kit de Cafetería", "KC");
+        DatabaseAssistant.insertarCatalogoArticulos("Camilla rueda", "CU");
+        DatabaseAssistant.insertarCatalogoArticulos("Camilla de rescate", "CR");
+        DatabaseAssistant.insertarCatalogoArticulos("Ataúd de recolección", "AA");
+
+
+        /*try {
+            String queryJSON ="UPDATE ASISTENCIA asist inner join (select * from SESIONES where usuario != '' ORDER BY id desc limit 1) as ses on asist.usuario = ses.usuario SET asist.usuario = ses.usuario where asist.usuario = ''";
+            Log.i("ServerQuery", "from ApplicationResourcesProvider " + queryJSON);
+            if (!queryJSON.equals("") && !queryJSON.equals("null")) {
+                SugarRecord.executeQuery(queryJSON);
+                Log.d("SESIONES", "onResponse: Query ejecutado correctamente.");
+            }
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }*/
+
+
+
         LocationRequest locationRequest = LocationRequest.create();
         locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
         LocationSettingsRequest.Builder builder = new LocationSettingsRequest.Builder().addLocationRequest(locationRequest);
@@ -2936,6 +3002,9 @@ public class MainActivity extends BaseActivity implements OnMapReadyCallback, Te
                 }
             }
         });
+
+
+        //downloadNotifications();
     }
 
 
@@ -2943,7 +3012,7 @@ public class MainActivity extends BaseActivity implements OnMapReadyCallback, Te
         try {
             String tipoDEntrada="";
             RadioButton bt7am, bt8am, bt9am, bt19, bt20, bt7amm, bt199, bt19a9;
-            Button btGuardarAsistencia;
+            NeumorphButton btGuardarAsistencia;
             TextView tvMensaje, tvOrigen, tvDestino;
             mBottomSheetDialog = new BottomSheetDialog(MainActivity.this);
             mBottomSheetDialog.setContentView(R.layout.bottom_layout_horarios);
@@ -2955,7 +3024,7 @@ public class MainActivity extends BaseActivity implements OnMapReadyCallback, Te
             bt20 = (RadioButton) mBottomSheetDialog.findViewById(R.id.bt20);
             bt199 = (RadioButton) mBottomSheetDialog.findViewById(R.id.bt199);
             bt19a9 = (RadioButton) mBottomSheetDialog.findViewById(R.id.bt19a9);
-            btGuardarAsistencia =(Button) mBottomSheetDialog.findViewById(R.id.btGuardarAsistencia);
+            btGuardarAsistencia =(NeumorphButton) mBottomSheetDialog.findViewById(R.id.btGuardarAsistencia);
             tvMensaje =(TextView) mBottomSheetDialog.findViewById(R.id.tvMensaje);
             tvOrigen =(TextView) mBottomSheetDialog.findViewById(R.id.tvOrigen);
             tvDestino =(TextView) mBottomSheetDialog.findViewById(R.id.tvDestino);
@@ -3142,4 +3211,304 @@ public class MainActivity extends BaseActivity implements OnMapReadyCallback, Te
         } else
             showErrorDialog("No hay conexión a internet", "");
     }
+
+
+
+    private void loadRequests() {
+
+        //***************************** descarga de carrosas
+        showMyCustomDialog();
+
+        JSONObject params = new JSONObject();
+        try {
+            params.put("usuario", DatabaseAssistant.getUserNameFromSesiones());
+            params.put("token_device", DatabaseAssistant.getTokenDeUsuario());
+            params.put("isProveedor", DatabaseAssistant.getIsProveedor());
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+
+        JsonObjectRequest postRequest = new JsonObjectRequest(Request.Method.POST, ConstantsBitacoras.WS_VEHICLES_URL, params, new Response.Listener<JSONObject>() {
+            @Override
+            public void onResponse(JSONObject response) {
+                Carros.deleteAll(Carros.class);
+                JSONArray jsonArrayCarrosas = new JSONArray();
+                try {
+                    jsonArrayCarrosas = response.getJSONArray("vehicles");
+                    for (int i = 0; i <= jsonArrayCarrosas.length() - 1; i++) {
+                        DatabaseAssistant.insertarCarrosas(
+                                "" + jsonArrayCarrosas.getJSONObject(i).getString("name"),
+                                "" + jsonArrayCarrosas.getJSONObject(i).getString("status"),
+                                "" + jsonArrayCarrosas.getJSONObject(i).getString("id")
+                        );
+                    }
+                    errorStackTraceCarrosas = false;
+
+                    JsonObjectRequest postRequestDrivers = new JsonObjectRequest(Request.Method.POST, ConstantsBitacoras.WS_DRIVERS_URL, params, new Response.Listener<JSONObject>() {
+                        @Override
+                        public void onResponse(JSONObject response) {
+                            Choferes.deleteAll(Choferes.class);
+                            JSONArray jsonArrayChoferes = new JSONArray();
+                            try {
+                                jsonArrayChoferes = response.getJSONArray("drivers");
+
+                                for (int i = 0; i <= jsonArrayChoferes.length() - 1; i++) {
+                                    DatabaseAssistant.insertarChoferes(
+                                            "" + jsonArrayChoferes.getJSONObject(i).getString("name"),
+                                            "" + jsonArrayChoferes.getJSONObject(i).getString("status"),
+                                            "" + jsonArrayChoferes.getJSONObject(i).getString("id")
+                                    );
+                                }
+                                errorStackTraceChoferes = false;
+                                JsonObjectRequest postRequestPlaces = new JsonObjectRequest(Request.Method.POST, ConstantsBitacoras.WS_PLACES_URL, params, new Response.Listener<JSONObject>() {
+                                    @Override
+                                    public void onResponse(JSONObject response)
+                                    {
+                                        Lugares.deleteAll(Lugares.class);
+                                        JSONArray jsonArrayPlaces = new JSONArray();
+                                        try {
+                                            jsonArrayPlaces = response.getJSONArray("places");
+
+                                            for (int i = 0; i <= jsonArrayPlaces.length() - 1; i++) {
+                                                DatabaseAssistant.insertarLugares(
+                                                        "" + jsonArrayPlaces.getJSONObject(i).getString("name"),
+                                                        "" + jsonArrayPlaces.getJSONObject(i).getString("status"),
+                                                        "" + jsonArrayPlaces.getJSONObject(i).getString("latitud"),
+                                                        "" + jsonArrayPlaces.getJSONObject(i).getString("longitud"),
+                                                        "" + jsonArrayPlaces.getJSONObject(i).getString("perimetro"),
+                                                        "" + jsonArrayPlaces.getJSONObject(i).getString("id")
+                                                );
+                                            }
+                                            errorStackTracePlaces = false;
+                                            dismissMyCustomDialog();
+                                            Toast.makeText(MainActivity.this, "Actualizado correctamente", Toast.LENGTH_SHORT).show();
+                                        } catch (Exception e) {
+                                            e.printStackTrace();
+                                            errorStackTracePlaces = true;
+                                            codigoErrorStackTracePlaces = e.getMessage();
+                                            dismissMyCustomDialog();
+                                            Toast.makeText(MainActivity.this, "Ocurrio un error: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                                        }
+
+                                    }
+                                },
+                                        new Response.ErrorListener() {
+                                            @Override
+                                            public void onErrorResponse(VolleyError error) {
+                                                error.printStackTrace();
+                                                errorStackTracePlaces = true;
+                                                codigoErrorStackTracePlaces = error.getMessage();
+                                                dismissMyCustomDialog();
+                                                Toast.makeText(MainActivity.this, "Ocurrio un error: " + error.getMessage(), Toast.LENGTH_SHORT).show();
+                                            }
+                                        }) {
+                                };
+                                postRequestPlaces.setRetryPolicy(new DefaultRetryPolicy(90000, 1, DefaultRetryPolicy.DEFAULT_TIMEOUT_MS));
+                                VolleySingleton.getIntanciaVolley(getApplicationContext()).addToRequestQueue(postRequestPlaces);
+
+                            } catch (Exception e) {
+                                e.printStackTrace();
+                                errorStackTraceChoferes = true;
+                                codigoErrorStackTraceChoferes = e.getMessage();
+                                dismissMyCustomDialog();
+                                Toast.makeText(MainActivity.this, "Ocurrio un error: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                            }
+                        }
+                    },
+                            new Response.ErrorListener() {
+                                @Override
+                                public void onErrorResponse(VolleyError error) {
+                                    error.printStackTrace();
+                                    errorStackTraceChoferes = true;
+                                    codigoErrorStackTraceChoferes = error.getMessage();
+                                    dismissMyCustomDialog();
+                                    Toast.makeText(MainActivity.this, "Ocurrio un error: " + error.getMessage(), Toast.LENGTH_SHORT).show();
+                                }
+                            }) {
+                    };
+                    postRequestDrivers.setRetryPolicy(new DefaultRetryPolicy(90000, 1, DefaultRetryPolicy.DEFAULT_TIMEOUT_MS));
+                    VolleySingleton.getIntanciaVolley(getApplicationContext()).addToRequestQueue(postRequestDrivers);
+
+
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    errorStackTraceCarrosas = true;
+                    codigoErrorStackTraceCarrosas = e.getMessage();
+                    dismissMyCustomDialog();
+                    Toast.makeText(MainActivity.this, "Ocurrio un error: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                }
+            }
+        },
+                new Response.ErrorListener() {
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+                        error.printStackTrace();
+                        errorStackTraceCarrosas = true;
+                        codigoErrorStackTraceCarrosas = error.getMessage();
+                        dismissMyCustomDialog();
+                        Toast.makeText(MainActivity.this, "Ocurrio un error: " + error.getMessage(), Toast.LENGTH_SHORT).show();
+                    }
+                }) {
+        };
+        postRequest.setRetryPolicy(new DefaultRetryPolicy(90000, 1, DefaultRetryPolicy.DEFAULT_TIMEOUT_MS));
+        VolleySingleton.getIntanciaVolley(getApplicationContext()).addToRequestQueue(postRequest);
+
+        //********************** FIN DESCARGA DE CARROSAS*********************************
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        // pasar aqui todos los request normales, para hacer la validacion del loading
+    }
+
+
+    void doRequestForEndBinnacle()
+    {
+        try {
+            status = 0;
+            showLoadingDialog();
+            new Thread(() -> {
+                while (status == 0)
+                {
+                    Log.d("TIMER", "doRequestForEndBinnacle: Iteracion de ciclo para saber si la bitacora fue autorizada a terminar");
+                    if (ApplicationResourcesProvider.checkInternetConnection() && getApplicationContext() != null) {
+                        runOnUiThread(this::getStatusBinaccle);
+                    } else {
+                        runOnUiThread(() -> {
+                            if (getApplicationContext() != null) {
+                                Toast toast = Toast.makeText(getApplicationContext(), "Verifica tu conexión a internet", Toast.LENGTH_SHORT);toast.show();
+                                hideLoadingDialog();
+                            }
+                        });
+                        runOnUiThread(this::showLoadingDialog);
+                    }
+                    Log.d("TIMER", "doRequestForEndBinnacle: Esperando 5 segundos...");
+                    try {
+                        Thread.sleep(5000);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                        hideLoadingDialog();
+                        Toast.makeText(this, "Error: " +e.getMessage(), Toast.LENGTH_SHORT).show();
+                        Log.e("TIMER", "doRequestForEndBinnacle: Error: " + e.getMessage());
+                    }
+                }
+                Log.d("TIMER" ,"while(status == 0) -> status = " + status);
+            }).start();
+        }catch (Throwable e){
+            Log.e("TIMER", "registrarBitacoraTerminada: " + e.getMessage());
+            hideLoadingDialog();
+            Toast.makeText(this, "Error: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    void hideLoadingDialog(){
+        RelativeLayout frameLoading = (RelativeLayout) findViewById(R.id.frameLoading);
+        frameLoading.setVisibility(View.GONE);
+    }
+
+    void showLoadingDialog(){
+        RelativeLayout frameLoading = (RelativeLayout) findViewById(R.id.frameLoading);
+        frameLoading.setVisibility(View.VISIBLE);
+    }
+
+
+
+    private void getStatusBinaccle() {
+        JSONObject json = new JSONObject();
+
+        try {
+            json.put("bitacora", bitacora);
+            json.put("descripcion", descripcionPeticion);
+            json.put("usuario_peticion", DatabaseAssistant.getUserNameFromSesiones());
+            json.put("fecha_peticion", fechaEstatica);
+            requestStatusBinaccle(json);
+        } catch (Exception e) {
+            Log.d("TIMER", "getStatusBinaccle: error en creacion de json para status de bitacora");
+            hideLoadingDialog();
+            Toast.makeText(this, "Ocurrio un error: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+        }
+
+    }
+
+    private void requestStatusBinaccle(JSONObject jsonParams)
+    {
+        JsonObjectRequest postRequest = new JsonObjectRequest(Request.Method.POST, ConstantsBitacoras.WS_CHECK_STATUS_BINNACLE, jsonParams, new Response.Listener<JSONObject>() {
+            @Override
+            public void onResponse(JSONObject response) {
+                Log.v("TIMER", "onResponse: " + ConstantsBitacoras.WS_CHECK_STATUS_BINNACLE);
+                manage_GetStatusBinnacle(response);
+            }
+        },
+                new Response.ErrorListener() {
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+                        error.printStackTrace();
+                        status = -1;
+                        Log.e("TIMER", "onErrorResponse: Error: " + error.getMessage());
+                        hideLoadingDialog();
+                        Toast.makeText(getApplicationContext(), "Ocurrio un error: " + error.getMessage(), Toast.LENGTH_SHORT).show();
+                    }
+                }) {
+
+        };
+        postRequest.setRetryPolicy(new DefaultRetryPolicy(90000, 2, DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
+        VolleySingleton.getIntanciaVolley(getApplicationContext()).addToRequestQueue(postRequest);
+    }
+
+    public void manage_GetStatusBinnacle(JSONObject json)
+    {
+        if (status != -1 && !requesterCanceled)
+        {
+            try
+            {
+                status = 0;
+                status = json.getInt("status");
+
+                if (status == 0) {
+                    //continue;
+                    Log.d("TIMER", "manage_GetStatusBinnacle: Continua con el ciclo de bitacora.");
+                }
+
+                //accepted
+                else if (status == 1) {
+                    Toast.makeText(ApplicationResourcesProvider.getContext(), "Bitácora aceptada.", Toast.LENGTH_LONG).show();
+                    registrarBitacoraTerminada(json.getString("bitacora"));
+                    hideLoadingDialog();
+                }
+
+                //rechazado
+                else if (status == 2) {
+                    Toast.makeText(ApplicationResourcesProvider.getContext(), "Bitácora rechazada.", Toast.LENGTH_LONG).show();
+                    hideLoadingDialog();
+                }
+                else {
+                    status = -1;
+                    hideLoadingDialog();
+                    Toast.makeText(this, "La bitácora no fue aceptada.", Toast.LENGTH_SHORT).show();
+                    requesterCanceled = true;
+                }
+
+            } catch (JSONException e) {
+                status = -1;
+                e.printStackTrace();
+                Log.e("TIMER", "manage_GetStatusBinnacle: Error en obtener el dato de estatus: " + e.getMessage());
+                hideLoadingDialog();
+                Toast.makeText(this, "Ocurrio un error: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+            }
+        }
+        else
+            Log.d("TIMER", "manage_GetStatusBinnacle: el estatus es -1");
+
+    }
+
 }

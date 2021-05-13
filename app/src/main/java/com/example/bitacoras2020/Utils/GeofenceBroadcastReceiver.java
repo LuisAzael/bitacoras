@@ -91,6 +91,7 @@ public class GeofenceBroadcastReceiver extends BroadcastReceiver {
                     tipoEvento = "Llegada";
                     registrarEvento("" +lugar, 2 , context);
                 }
+                Preferences.setSalidaAutomatica(context, false, Preferences.PREFERENCE_AUTOMATICA);
                 break;
 
             case Geofence.GEOFENCE_TRANSITION_DWELL:
@@ -114,6 +115,8 @@ public class GeofenceBroadcastReceiver extends BroadcastReceiver {
                     notificationHelper.sendHighPriorityNotification("Actividad", "Dentro de "+ lugar);
                     tipoEvento = "Dentro";
                 }
+
+                Preferences.setSalidaAutomatica(context, false, Preferences.PREFERENCE_AUTOMATICA);
                 break;
 
             case Geofence.GEOFENCE_TRANSITION_EXIT:
@@ -121,21 +124,25 @@ public class GeofenceBroadcastReceiver extends BroadcastReceiver {
                 Log.i(TAG, "onReceive: Se borro la GeofenceActual al salir de: " + lugar);
 
                 Preferences.setPreferenceIsbunker(context, false, Preferences.PREFERENCE_ISBUNKER);
-
+                Preferences.setSalidaAutomatica(context, true, Preferences.PREFERENCE_AUTOMATICA);
 
                 if(lugar.equals("LOGIN_ZONE")){
                     Preferences.setWithinTheZone(context, false, Preferences.PREFERENCE_WITHIN_THE_ZONE_TO_LOGIN);
                     notificationHelper.sendHighPriorityNotification("Actividad", "Salida de "+ lugar);
+                   //Preferences.setSalidaAutomatica(context, false, Preferences.PREFERENCE_AUTOMATICA);
                 }
                 else if(lugar.equals("CHECK_OUT_LOGIN_ZONE") || lugar.equals(lugarEndSession)){
                     Preferences.setEndLoginTheZone(context, false, Preferences.PREFERENCE_END_SESION_THE_ZONE_TO_LOGIN);
                     notificationHelper.sendHighPriorityNotification("Actividad", "Salida de "+ lugar);
                     tipoEvento = "Salida";
+                    //Preferences.setSalidaAutomatica(context, false, Preferences.PREFERENCE_AUTOMATICA);
                 }
                 else{
                     notificationHelper.sendHighPriorityNotification("Actividad", "Salida de "+ lugar);
                     tipoEvento = "Salida";
-                    //registrarEvento("" +lugar, 1, context );
+                    registrarEvento("" +lugar, 1, context );
+                    //Preferences.setSalidaAutomatica(context, true, Preferences.PREFERENCE_AUTOMATICA);
+                    Log.d(TAG, "onReceive: Registro de salida en: " + lugar);
                 }
                 break;
 

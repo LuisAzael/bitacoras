@@ -23,6 +23,7 @@ import androidx.core.app.ActivityOptionsCompat;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.bitacoras2020.Activities.BitacoraDetalle;
+import com.example.bitacoras2020.Activities.SplashScreen;
 import com.example.bitacoras2020.Callbacks.RegistrarSalidaCallback;
 import com.example.bitacoras2020.Callbacks.RequerirEventoDeSalidaCallback;
 import com.example.bitacoras2020.Callbacks.ShowDetailsBitacoraCallback;
@@ -31,10 +32,13 @@ import com.example.bitacoras2020.Database.DatabaseAssistant;
 import com.example.bitacoras2020.Models.ModelBitacorasActivas;
 import com.example.bitacoras2020.R;
 import com.example.bitacoras2020.Utils.ApplicationResourcesProvider;
+import com.example.bitacoras2020.Utils.Preferences;
 
 import org.json.JSONArray;
 
 import java.util.List;
+
+import soup.neumorphism.NeumorphButton;
 
 public class AdapterBitacorasActivas extends RecyclerView.Adapter<AdapterBitacorasActivas.ProductViewHolder> {
     private static final String TAG = "AdapterBitacorasActivas";
@@ -70,10 +74,19 @@ public class AdapterBitacorasActivas extends RecyclerView.Adapter<AdapterBitacor
     public void onBindViewHolder(final ProductViewHolder holder, final int position)
     {
         final ModelBitacorasActivas product= productList.get(position);
-        if(position % 2 == 0)
-            holder.layoutGeneral.setBackgroundColor(Color.parseColor("#eeeeee"));
-        else
-            holder.layoutGeneral.setBackgroundColor(Color.parseColor("#ffffff"));
+        if(position % 2 == 0) {
+
+            if(productList.size() == 1)
+                holder.viewBajo.setVisibility(View.GONE);
+            else
+                holder.viewBajo.setVisibility(View.VISIBLE);
+
+            holder.layoutGeneral.setBackgroundColor(Color.parseColor("#efefef"));
+        }
+        else {
+            holder.layoutGeneral.setBackgroundColor(Color.parseColor("#efefef"));//#ffffff
+            holder.viewBajo.setVisibility(View.GONE);
+        }
 
 
         holder.tvNumeroBitacora.setTypeface(ApplicationResourcesProvider.bold);
@@ -119,9 +132,10 @@ public class AdapterBitacorasActivas extends RecyclerView.Adapter<AdapterBitacor
                 holder.indicadorDestino.setVisibility(View.GONE);
                 holder.tvDestino.setVisibility(View.GONE);
                 holder.viewLateral.setBackgroundColor(Color.parseColor("#9a0007"));
+                holder.layoutGeneral.setBackgroundColor(Color.parseColor("#ffdee2"));
             }
 
-            if(product.getDestino().equals("") && product.getTipo().equals("Salida")) {
+            if(product.getDestino().equals("") && product.getTipo().equals("Salida") && Preferences.getSalidaAutomatica(mCtx, Preferences.PREFERENCE_AUTOMATICA)) {
                 holder.layoutGeneral.setBackgroundColor(Color.parseColor("#ffdee2"));
                 requerirEventoDeSalidaCallback.onRequeriedEventoSalida(position, product.getBitacora());
                 holder.btRegistrarSalida.setVisibility(View.VISIBLE);
@@ -167,6 +181,8 @@ public class AdapterBitacorasActivas extends RecyclerView.Adapter<AdapterBitacor
                 }
 
 
+
+
             }
         });
 
@@ -184,6 +200,9 @@ public class AdapterBitacorasActivas extends RecyclerView.Adapter<AdapterBitacor
                 else{
                     Toast.makeText(mCtx, "Debes registrar una salida.", Toast.LENGTH_LONG).show();
                 }
+
+                Preferences.setSalidaAutomatica(mCtx, false, Preferences.PREFERENCE_AUTOMATICA);
+
             }
         });
 
@@ -254,7 +273,8 @@ public class AdapterBitacorasActivas extends RecyclerView.Adapter<AdapterBitacor
         View vistaSeparador, indicadorDestino, viewLateral;
         ImageView imgTerminarBitacora, imgShowDetails;
         LinearLayout layoutGeneral;
-        Button btRegistrarSalida, btRegistrarllegada;
+        NeumorphButton btRegistrarSalida, btRegistrarllegada;
+        View viewBajo;
 
         public ProductViewHolder(View itemView)
         {
@@ -277,6 +297,7 @@ public class AdapterBitacorasActivas extends RecyclerView.Adapter<AdapterBitacor
             btRegistrarllegada=itemView.findViewById(R.id.btRegistrarllegada);
             tvFechaUltimoEventoRegistrado=itemView.findViewById(R.id.tvFechaUltimoEventoRegistrado);
             tvTipoBitacora=itemView.findViewById(R.id.tvTipoBitacora);
+            viewBajo=itemView.findViewById(R.id.viewBajo);
         }
     }
 

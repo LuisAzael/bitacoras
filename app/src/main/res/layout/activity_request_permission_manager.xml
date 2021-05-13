@@ -45,10 +45,16 @@
         android:textSize="14sp"/>
 
 
-    <Button
+    <soup.neumorphism.NeumorphButton
+        app:neumorph_backgroundColor="@color/white"
+        style="@style/Widget.Neumorph.Button"
+        app:neumorph_shapeType="basin"
+        android:textAlignment="center"
+        app:neumorph_shadowElevation="6dp"
+        app:neumorph_lightSource="leftTop"
+        android:padding="30dp"
         android:layout_gravity="center"
         android:id="@+id/btPermisos"
-        android:padding="15dp"
         android:layout_marginTop="100dp"
         android:gravity="center"
         android:text="Agregar permisos"

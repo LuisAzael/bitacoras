@@ -2,7 +2,7 @@ package com.example.bitacoras2020.Database;
 import com.orm.SugarRecord;
 
 public class Sesiones extends SugarRecord {
-    String usuario="", contrasena="", fecha="", latitud="", longitud="", estatus="", hora="", statos="", isBunker="", isProveedor="", geofence="";
+    String usuario="", contrasena="", fecha="", latitud="", longitud="", estatus="", hora="", statos="", isBunker="", isProveedor="", geofence="", isFuneraria="";
     /**
      * estatus 1 = checkin
      * estatus 2 = checkout
@@ -12,7 +12,8 @@ public class Sesiones extends SugarRecord {
         super();
     }
 
-    public Sesiones(String usuario, String contrasena, String fecha, String latitud, String longitud, String estatus, String hora, String statos, String isBunker, String isProveedor, String geofecne) {
+    public Sesiones(String usuario, String contrasena, String fecha, String latitud,
+                    String longitud, String estatus, String hora, String statos, String isBunker, String isProveedor, String geofecne, String isFuneraria) {
         this.usuario = usuario;
         this.contrasena = contrasena;
         this.fecha = fecha;
@@ -24,6 +25,15 @@ public class Sesiones extends SugarRecord {
         this.isBunker = isBunker;
         this.isProveedor = isProveedor;
         this.geofence = geofecne;
+        this.isFuneraria = isFuneraria;
+    }
+
+    public String getIsFuneraria() {
+        return isFuneraria;
+    }
+
+    public void setIsFuneraria(String isFuneraria) {
+        this.isFuneraria = isFuneraria;
     }
 
     public String getGeofence() {

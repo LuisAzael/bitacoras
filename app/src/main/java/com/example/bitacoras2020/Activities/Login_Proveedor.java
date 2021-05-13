@@ -45,11 +45,14 @@ import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 
+import soup.neumorphism.NeumorphButton;
+
 public class Login_Proveedor extends AppCompatActivity {
 
     private static final String TAG = "Login_Proveedor";
     TextInputEditText etUsuario, etContrasena;
-    Button btInicarSesion, btActualizar;
+    NeumorphButton btInicarSesion;
+    Button btActualizar;
     TextView tvVersion;
     FrameLayout layoutCargando;
     Dialog dialogoError;
@@ -60,7 +63,7 @@ public class Login_Proveedor extends AppCompatActivity {
         setContentView(R.layout.activity_login__proveedor);
         etUsuario =( TextInputEditText) findViewById(R.id.etUsuario);
         etContrasena =( TextInputEditText) findViewById(R.id.etContrasena);
-        btInicarSesion =( Button) findViewById(R.id.btInicarSesion);
+        btInicarSesion =( NeumorphButton) findViewById(R.id.btInicarSesion);
         btActualizar =( Button) findViewById(R.id.btActualizar);
         tvVersion =( TextView) findViewById(R.id.tvVersion);
         dialogoError = new Dialog(Login_Proveedor.this);
@@ -109,12 +112,12 @@ public class Login_Proveedor extends AppCompatActivity {
     }
 
     public void showErrorDialog(final String codeError) {
-        final Button btNo, btSi;
+        final NeumorphButton btNo, btSi;
         TextView tvCodeError;
         dialogoError.setContentView(R.layout.layout_error);
         dialogoError.setCancelable(false);
-        btNo = (Button) dialogoError.findViewById(R.id.btNo);
-        btSi = (Button) dialogoError.findViewById(R.id.btSi);
+        btNo = (NeumorphButton) dialogoError.findViewById(R.id.btNo);
+        btSi = (NeumorphButton) dialogoError.findViewById(R.id.btSi);
         tvCodeError = (TextView) dialogoError.findViewById(R.id.tvCodeError);
         tvCodeError.setText(codeError);
 
@@ -196,7 +199,8 @@ public class Login_Proveedor extends AppCompatActivity {
                         "0",
                         "0",
                         "1",
-                        Preferences.getGeofenceActual(getApplicationContext(), Preferences.PREFERENCE_GEOFENCE_ACTUAL)
+                        Preferences.getGeofenceActual(getApplicationContext(), Preferences.PREFERENCE_GEOFENCE_ACTUAL),
+                        "" + DatabaseAssistant.getLastIsFuneraria()
                 );
             }
             Preferences.setIsProveedor(getApplicationContext(), true, Preferences.PREFERENCE_IS_PROVEEDOR);
@@ -333,7 +337,8 @@ public class Login_Proveedor extends AppCompatActivity {
                                                         "1",
                                                         jsonParams.getString("isBunker"),
                                                         "1",
-                                                        Preferences.getGeofenceActual(getApplicationContext(), Preferences.PREFERENCE_GEOFENCE_ACTUAL)
+                                                        Preferences.getGeofenceActual(getApplicationContext(), Preferences.PREFERENCE_GEOFENCE_ACTUAL),
+                                                        "0"
                                                 );
                                                 success = true;
                                             } catch (Throwable e) {

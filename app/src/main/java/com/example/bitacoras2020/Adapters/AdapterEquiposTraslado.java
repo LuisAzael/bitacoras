@@ -5,6 +5,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageButton;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import androidx.recyclerview.widget.RecyclerView;
@@ -57,18 +58,26 @@ public class AdapterEquiposTraslado extends RecyclerView.Adapter<AdapterEquiposT
         holder.tvNumeroDeDocumento.setText(String.valueOf(position + 1));
         holder.tvNombre.setText(product.getNombre());
         holder.tvSerie.setText(product.getSerie());
+
         holder.btBorrarArticulo.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 cancelarArticuloTraslado.onClickCancelarArticuloTraslado(position, "" + product.getSerie(), "" + product.getFecha(), product.getBitacora());
             }
         });
+        holder.layoutGeneral.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                cancelarArticuloTraslado.onClickCancelarArticuloTraslado(position, "" + product.getSerie(), "" + product.getFecha(), product.getBitacora());
+            }
+        });
 
-        if(product.getSerie().contains("CL") ||product.getSerie().contains("CB") )
+        /*if(product.getSerie().contains("CL") ||product.getSerie().contains("CB") )
             holder.tvEntradaSalida.setVisibility(View.VISIBLE);
         else
-            holder.tvEntradaSalida.setVisibility(View.GONE);
+            holder.tvEntradaSalida.setVisibility(View.GONE);*/
 
+        holder.tvEntradaSalida.setVisibility(View.VISIBLE);
         if (product.getTipo().equals("0")){
             holder.tvEntradaSalida.setTextColor(Color.parseColor("#9a0007"));
             holder.tvEntradaSalida.setText("Salida de inventario");}
@@ -91,6 +100,7 @@ public class AdapterEquiposTraslado extends RecyclerView.Adapter<AdapterEquiposT
     {
         TextView tvNumeroDeDocumento, tvNombre, tvSerie, tvEntradaSalida;
         ImageButton btBorrarArticulo;
+        LinearLayout layoutGeneral;
         public ProductViewHolder(View itemView)
         {
             super(itemView);
@@ -99,6 +109,7 @@ public class AdapterEquiposTraslado extends RecyclerView.Adapter<AdapterEquiposT
             tvSerie = itemView.findViewById(R.id.tvSerie);
             btBorrarArticulo = itemView.findViewById(R.id.btBorrarArticulo);
             tvEntradaSalida = itemView.findViewById(R.id.tvEntradaSalida);
+            layoutGeneral = itemView.findViewById(R.id.layoutGeneral);
         }
     }
 

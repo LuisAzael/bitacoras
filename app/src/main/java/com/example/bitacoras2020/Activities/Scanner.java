@@ -30,6 +30,8 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.Locale;
 
+import soup.neumorphism.NeumorphButton;
+
 
 public class Scanner extends AppCompatActivity{
 
@@ -108,12 +110,12 @@ public class Scanner extends AppCompatActivity{
     }
 
     public void showErrorDialog(final String codeError) {
-        final Button btNo, btSi;
+        final NeumorphButton btNo, btSi;
         TextView tvCodeError;
         dialogoError.setContentView(R.layout.layout_error);
         dialogoError.setCancelable(false);
-        btNo = (Button) dialogoError.findViewById(R.id.btNo);
-        btSi = (Button) dialogoError.findViewById(R.id.btSi);
+        btNo = (NeumorphButton) dialogoError.findViewById(R.id.btNo);
+        btSi = (NeumorphButton) dialogoError.findViewById(R.id.btSi);
         tvCodeError = (TextView) dialogoError.findViewById(R.id.tvCodeError);
         tvCodeError.setText(codeError);
         btSi.setVisibility(View.GONE);

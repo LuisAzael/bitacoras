@@ -29,6 +29,8 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
+import android.provider.Settings;
+import android.telephony.TelephonyManager;
 import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
@@ -53,6 +55,7 @@ import com.example.bitacoras2020.Database.DatabaseAssistant;
 import com.example.bitacoras2020.Database.Laboratorios;
 import com.example.bitacoras2020.Database.LoginZone;
 import com.example.bitacoras2020.Database.Lugares;
+import com.example.bitacoras2020.Database.Movimientos;
 import com.example.bitacoras2020.Database.Sesiones;
 import com.example.bitacoras2020.MainActivity;
 import com.example.bitacoras2020.R;
@@ -88,8 +91,12 @@ import java.io.File;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.List;
+import java.util.Locale;
 import java.util.Timer;
 import java.util.TimerTask;
+
+import soup.neumorphism.NeumorphButton;
 
 public class Login extends AppCompatActivity {
 
@@ -109,27 +116,30 @@ public class Login extends AppCompatActivity {
     private Timer timerUpdate;
     private Boolean downloadingApp = false;
     ProgressDialog pDialog;
-    Button btIniciar, btActualizar;
+    NeumorphButton btIniciar;
+    Button btActualizar;
     TextInputLayout T2;
     boolean success = false;
     String updatee="";
     ImageView btDescargarTodo;
+    TextView tvMensajeLoading;
 
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
-        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+
         dialogoError = new Dialog(Login.this);
         etUsuario =(Spinner) findViewById(R.id.etUsuario);
         etContrasena =(TextInputEditText) findViewById(R.id.etContrasena);
-        btIniciar = (Button) findViewById(R.id.btInicarSesion);
+        btIniciar = (NeumorphButton) findViewById(R.id.btInicarSesion);
         btActualizar = (Button) findViewById(R.id.btActualizar);
         T2 = (TextInputLayout) findViewById(R.id.T2);
         TextView etVersion = (TextView) findViewById(R.id.tvVersion);
         etVersion.setText(BuildConfig.VERSION_NAME);
         btDescargarTodo =(ImageView) findViewById(R.id.btDescargarTodo);
+        tvMensajeLoading =(TextView) findViewById(R.id.tvMensajeLoading);
 
 
         btDescargarTodo.setOnLongClickListener(new View.OnLongClickListener() {
@@ -144,7 +154,7 @@ public class Login extends AppCompatActivity {
             }
         });
 
-        requestPlaceAndGeofenceZoneToLogin();
+        //requestPlaceAndGeofenceZoneToLogin();
 
         //Verificar si la lista de choferes se cargo correctamente
         if(DatabaseAssistant.isThereDataChoferes()){
@@ -214,30 +224,68 @@ public class Login extends AppCompatActivity {
                     Toast.makeText(getApplicationContext(), "La base de datos fue reseteada con éxito", Toast.LENGTH_SHORT).show();
                 }
                 else {
-                    if (checkFullFields()) {
-                        try {
-                            if (DatabaseAssistant.iniciarSesionSoloEnBunker()){
-                                if (Preferences.getWithinTheZone(Login.this, Preferences.PREFERENCE_WITHIN_THE_ZONE_TO_LOGIN)){
-                                    if (ApplicationResourcesProvider.checkInternetConnection())
-                                        loginOnline(true);
-                                    else
-                                        loginOffline("1");
-                                } else if (ApplicationResourcesProvider.checkInternetConnection())
-                                    showErrorDialog("No puedes hacer tu CKECK_IN en esta zona, necesitas estar en la zona indicada por tu coordinador");
-                                else
-                                    showErrorDialog("No hay conexión a internet");
-                            } else {
-                                if (ApplicationResourcesProvider.checkInternetConnection())
-                                    loginOnline(false);
-                                else
-                                    loginOffline("0");
-                            }
-                        } catch (Throwable e) {
-                            Log.e(TAG, "onClick: " + e.getMessage());
+                    if (checkFullFields() && etUsuario.getSelectedItem() != "Selecciona tu nombre...")
+                    {
+                        Preferences.setWithinTheZone(getApplicationContext(), false, Preferences.PREFERENCE_WITHIN_THE_ZONE_TO_LOGIN);
+
+                        if(ApplicationResourcesProvider.checkInternetConnection()) {
+                            showMyCustomDialog();
+                            tvMensajeLoading.setText("Cargando zonas...");
+                            Thread thread = new Thread() {
+                                @Override
+                                public void run() {
+                                    try {
+
+                                        if(checkGPSConnection())
+                                            requestPlaceAndGeofenceZoneToLogin();
+
+                                        synchronized (this) {
+                                            wait(4000);
+
+                                            runOnUiThread(new Runnable() {
+                                                @Override
+                                                public void run() {
+                                                    try {
+                                                        tvMensajeLoading.setText("Cangando datos de inicio...");
+                                                        if (DatabaseAssistant.iniciarSesionSoloEnBunker())
+                                                        {
+                                                            if (Preferences.getWithinTheZone(Login.this, Preferences.PREFERENCE_WITHIN_THE_ZONE_TO_LOGIN)){
+                                                                loginOnline(true);
+                                                            } else {
+                                                                showErrorDialog("No puedes hacer tu CKECK_IN en esta zona, necesitas estar en la zona indicada por tu coordinador");
+                                                                dismissMyCustomDialog();
+                                                            }
+                                                        } else {
+                                                            loginOnline(false);
+                                                        }
+
+                                                    } catch (Throwable e) {
+                                                        Log.e(TAG, "onClick: " + e.getMessage());
+                                                        Toast.makeText(getApplicationContext(), "Ocurrio un error al iniciar sesión, intenta nuevamente." + e.getMessage(), Toast.LENGTH_SHORT).show();
+                                                        dismissMyCustomDialog();
+                                                    }
+
+
+                                                }
+                                            });
+
+                                        }
+                                    } catch (InterruptedException e) {
+                                        e.printStackTrace();
+                                        Log.e(TAG, "onClick: " + e.getMessage());
+                                        Toast.makeText(getApplicationContext(), "Ocurrio un error al iniciar sesión, intenta nuevamente." + e.getMessage(), Toast.LENGTH_SHORT).show();
+                                        dismissMyCustomDialog();
+                                    }
+                                };
+                            };
+                            thread.start();
+                        }else {
+                            loginOffline("0");
+                            dismissMyCustomDialog();
                         }
                     }
                     else
-                        Toast.makeText(getApplicationContext(), "Completa los campos", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(getApplicationContext(), "Verifica los campos", Toast.LENGTH_SHORT).show();
                 }
             }
         });
@@ -417,20 +465,23 @@ public class Login extends AppCompatActivity {
     }
 
 
-    private void validarLoginOffline(String isBunker) {
+    private void validarLoginOffline(String isBunker)
+    {
         if(DatabaseAssistant.isThereLastedDataFromSessions(choferSeleccionado, etContrasena.getText().toString()))
         {
             @SuppressLint("SimpleDateFormat") SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
             @SuppressLint("SimpleDateFormat") SimpleDateFormat timeFormat = new SimpleDateFormat("HH:mm:ss");
             Calendar cal = Calendar.getInstance();
             Preferences.setPreferenceCheckinCheckoutAssistant(getApplicationContext(), true, Preferences.PREFERENCE_CHECKIN_CHECKOUT_ASSISTANT);
-            Intent intent = new Intent(getApplicationContext(), MainActivity.class);
+            Preferences.setIsProveedor(getApplicationContext(), false, Preferences.PREFERENCE_IS_PROVEEDOR);
+            Intent intent = null;
             String[] coordenadasFromApplication = ApplicationResourcesProvider.getCoordenadasFromApplication();
 
-            if (coordenadasFromApplication.length > 0) {
+            if (coordenadasFromApplication.length > 0 && coordenadasFromApplication != null) {
+
                 DatabaseAssistant.insertarSesiones(
                         ""+ choferSeleccionado,
-                        ""+ etContrasena.getText().toString(),
+                        "" + etContrasena.getText().toString(),
                         ""+ dateFormat.format(new Date()),
                         ""+ coordenadasFromApplication[0],
                         ""+ coordenadasFromApplication[1],
@@ -439,15 +490,26 @@ public class Login extends AppCompatActivity {
                         "0",
                         isBunker,
                         "0",
-                        Preferences.getGeofenceActual(getApplicationContext(), Preferences.PREFERENCE_GEOFENCE_ACTUAL)
+                        Preferences.getGeofenceActual(getApplicationContext(), Preferences.PREFERENCE_GEOFENCE_ACTUAL),
+                        "" + DatabaseAssistant.getLastIsFuneraria()
                 );
-            }
-            Preferences.setIsProveedor(getApplicationContext(), false, Preferences.PREFERENCE_IS_PROVEEDOR);
-            startActivity(intent);
-            if(geofencingClient!=null)
-                geofencingClient.removeGeofences(pendingIntent);
-            finish();
 
+                if(DatabaseAssistant.getLastIsFuneraria().equals("1"))
+                    intent = new Intent(getApplicationContext(), PersonalFuneraria.class);
+                else if (DatabaseAssistant.getLastIsFuneraria().equals("0"))
+                    intent = new Intent(getApplicationContext(), MainActivity.class);
+                else
+                    intent = new Intent(getApplicationContext(), MainActivity.class);
+
+                startActivity(intent);
+                if(geofencingClient!=null)
+                    geofencingClient.removeGeofences(pendingIntent);
+
+                finish();
+
+            }else{
+                Toast.makeText(getApplicationContext(), "Verifica que tu GPS este encendido o reinicia la aplicación", Toast.LENGTH_SHORT).show();
+            }
         }
         else
             showErrorDialog("Usuario o contraseña incorrectos, por favor verifica nuevamente.");
@@ -481,6 +543,7 @@ public class Login extends AppCompatActivity {
 
 
 
+    @SuppressLint("HardwareIds")
     public void createJsonParametersForLoginOnline(String codigo, String password, boolean isBunker) {
         JSONObject jsonParams = new JSONObject();
         String[] arregloCoordenadas = ApplicationResourcesProvider.getCoordenadasFromApplication();
@@ -498,85 +561,113 @@ public class Login extends AppCompatActivity {
             jsonParams.put("isBunker", isBunker ? "1": "0");
             jsonParams.put("geoFenceActual", Preferences.getGeofenceActual(Login.this, Preferences.PREFERENCE_GEOFENCE_ACTUAL));
             jsonParams.put("token_device", DatabaseAssistant.getTokenDeUsuario());
+
             requestLoginOnline(jsonParams);
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
+
+
     public void requestLoginOnline(JSONObject jsonParams)
     {
-
         btIniciar.setEnabled(false);
         JsonObjectRequest postRequest = new JsonObjectRequest(Request.Method.POST, ConstantsBitacoras.WS_LOGIN, jsonParams, new Response.Listener<JSONObject>() {
             @Override
             public void onResponse(JSONObject response) {
-                showMyCustomDialog();
+
                 Thread thread = new Thread() {
                     @Override
                     public void run() {
                         try {
-                            try {
-                                if (response.getBoolean("Success")) {
+                            runOnUiThread(new Runnable() {
+                                @Override
+                                public void run() {
                                     try {
-                                        @SuppressLint("SimpleDateFormat") SimpleDateFormat timeFormat = new SimpleDateFormat("HH:mm:ss");
-                                        Calendar cal = Calendar.getInstance();
+                                        if (response.getBoolean("Success")) {
 
-                                        DatabaseAssistant.insertarSesiones(
-                                                "" + jsonParams.getString("usuario"),
-                                                "" + jsonParams.getString("pass"),
-                                                "" + jsonParams.getString("fecha"),
-                                                "" + jsonParams.getString("lat"),
-                                                "" + jsonParams.getString("lng"),
-                                                "1",
-                                                "" + timeFormat.format(cal.getTime()),
-                                                "1",
-                                                jsonParams.getString("isBunker"),
-                                                "0",
-                                                Preferences.getGeofenceActual(getApplicationContext(), Preferences.PREFERENCE_GEOFENCE_ACTUAL)
-                                        );
-                                        success = true;
-                                    } catch (Throwable e) {
-                                        Log.e(TAG, "createJsonParametersForLoginOnline: " + e.getMessage());
-                                        success = false;
-                                    }
+                                            try {
 
-                                } else {
-                                    success = false;
-                                    Log.e(TAG, "run: no es success");
-                                }
+                                                DatabaseAssistant.insertarSesiones(
+                                                        "" + response.getJSONObject("login").getString("usuario"),
+                                                        "" + response.getJSONObject("login").getString("pass"),
+                                                        "" + response.getJSONObject("login").getString("fecha"),
+                                                        "" + response.getJSONObject("login").getString("lat"),
+                                                        "" + response.getJSONObject("login").getString("lng"),
+                                                        "" + response.getJSONObject("login").getString("tipo"),
+                                                        "" + response.getJSONObject("login").getString("hora"),
+                                                        "1",
+                                                        "" + response.getJSONObject("login").getString("isBunker"),
+                                                        "0",
+                                                        "" + response.getJSONObject("login").getString("geoFenceActual"),
+                                                        "0" //+ response.getJSONObject("login").getString("isFuneraria")
+                                                );
 
-                                if (response.has("laboratorios")) {
-                                    try {
-                                        Laboratorios.deleteAll(Laboratorios.class);
-                                        JSONArray jsonArrayLaboratorios = new JSONArray();
-                                        jsonArrayLaboratorios = response.getJSONArray("laboratorios");
-                                        for(int i =0; i<=jsonArrayLaboratorios.length()-1;i++){
-                                            DatabaseAssistant.insertarLaboratorios(
-                                                    "" + jsonArrayLaboratorios.getJSONObject(i).getString("name"),
-                                                    "" + jsonArrayLaboratorios.getJSONObject(i).getString("status"),
-                                                    "" + jsonArrayLaboratorios.getJSONObject(i).getString("id")
-                                            );
+                                                success = true;
+
+                                                //******************* LABORATORIOS **************************
+                                                if (response.has("laboratorios")) {
+                                                    try {
+                                                        Laboratorios.deleteAll(Laboratorios.class);
+                                                        JSONArray jsonArrayLaboratorios = new JSONArray();
+                                                        jsonArrayLaboratorios = response.getJSONArray("laboratorios");
+                                                        for(int i =0; i<=jsonArrayLaboratorios.length()-1;i++){
+                                                            DatabaseAssistant.insertarLaboratorios(
+                                                                    "" + jsonArrayLaboratorios.getJSONObject(i).getString("name"),
+                                                                    "" + jsonArrayLaboratorios.getJSONObject(i).getString("status"),
+                                                                    "" + jsonArrayLaboratorios.getJSONObject(i).getString("id")
+                                                            );
+                                                        }
+                                                        success = true;
+                                                    } catch (Throwable e) {
+                                                        Log.e(TAG, "createJsonParametersForLoginOnline: " + e.getMessage());
+                                                        success = false;
+                                                        dismissMyCustomDialog();
+                                                        Toast.makeText(getApplicationContext(), "Ocurrio un error al iniciar sesión, intenta nuevamente.", Toast.LENGTH_SHORT).show();
+                                                    }
+
+                                                } else {
+                                                    success = false;
+                                                    Log.e(TAG, "run: no es success");
+                                                    dismissMyCustomDialog();
+                                                    Toast.makeText(getApplicationContext(), "Ocurrio un error al iniciar sesión, intenta nuevamente.", Toast.LENGTH_SHORT).show();
+                                                }
+                                                //******************************************************
+
+
+
+
+                                            } catch (Throwable e) {
+                                                Log.e(TAG, "createJsonParametersForLoginOnline: " + e.getMessage());
+                                                success = false;
+                                                dismissMyCustomDialog();
+                                                Toast.makeText(getApplicationContext(), "Ocurrio un error al iniciar sesión, intenta nuevamente.", Toast.LENGTH_SHORT).show();
+                                            }
+
+
+
+
+                                        } else {
+                                            success = false;
+                                            Log.e(TAG, "run: no es success");
+                                            dismissMyCustomDialog();
+                                            Toast.makeText(getApplicationContext(), "Ocurrio un error al iniciar sesión, intenta nuevamente.", Toast.LENGTH_SHORT).show();
                                         }
-                                        success = true;
-                                    } catch (Throwable e) {
-                                        Log.e(TAG, "createJsonParametersForLoginOnline: " + e.getMessage());
+
+
+                                    } catch (JSONException e) {
+                                        e.printStackTrace();
+                                        Log.e(TAG, "onResponse: " + e.getMessage());
                                         success = false;
+                                        dismissMyCustomDialog();
+                                        Toast.makeText(getApplicationContext(), "Ocurrio un error al iniciar sesión, intenta nuevamente.", Toast.LENGTH_SHORT).show();
                                     }
-
-                                } else {
-                                    success = false;
-                                    Log.e(TAG, "run: no es success");
                                 }
+                            });
 
-
-                            } catch (JSONException e) {
-                                e.printStackTrace();
-                                Log.e(TAG, "onResponse: " + e.getMessage());
-                                success = false;
-                            }
                             synchronized (this) {
-                                wait(1000);
+                                wait(2000);
 
                                 runOnUiThread(new Runnable() {
                                     @Override
@@ -584,34 +675,52 @@ public class Login extends AppCompatActivity {
                                         if (success) {
                                             try {
                                                 Preferences.setPreferenceCheckinCheckoutAssistant(Login.this, true, Preferences.PREFERENCE_CHECKIN_CHECKOUT_ASSISTANT);
-                                                Intent intent = new Intent(getBaseContext(), MainActivity.class);
-                                                intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
-                                                startActivity(intent);
+                                                Intent intent = null;
+
+                                                if(DatabaseAssistant.getLastIsFuneraria().equals("1"))
+                                                    intent = new Intent(getApplicationContext(), PersonalFuneraria.class);
+                                                else if (DatabaseAssistant.getLastIsFuneraria().equals("0"))
+                                                    intent = new Intent(getApplicationContext(), MainActivity.class);
+                                                else
+                                                    intent = new Intent(getApplicationContext(), MainActivity.class);
+
 
                                                 if (geofencingClient != null)
                                                     geofencingClient.removeGeofences(pendingIntent);
 
                                                 Preferences.setNombreChoferInLogin(Login.this, jsonParams.getString("usuario"), Preferences.PREFERENCE_NOMBRE_CHOFER);
                                                 Preferences.setIsProveedor(getApplicationContext(), false, Preferences.PREFERENCE_IS_PROVEEDOR);
+
+                                                intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
+                                                startActivity(intent);
                                                 finish();
                                                 Log.v(TAG, "onResponse: Inicio de sesion correcto");
 
                                             } catch (JSONException e) {
-                                                Log.e(TAG, "run: Error en inicio: " + e.getMessage());
+                                                Log.e(TAG, "run: Error en inicio1: " + e.getMessage());
+                                                Log.e(TAG, "run: Error en inicio2: " + e.getLocalizedMessage());
                                                 btIniciar.setEnabled(true);
+                                                dismissMyCustomDialog();
+                                                Toast.makeText(getApplicationContext(), "Ocurrio un error al iniciar sesión, intenta nuevamente.", Toast.LENGTH_SHORT).show();
                                             }
                                         } else {
                                             showErrorDialog("Usuario o contraseña incorrectos, por favor verifica nuevamente.");
                                             btIniciar.setEnabled(true);
+                                            dismissMyCustomDialog();
+                                            Toast.makeText(getApplicationContext(), "Ocurrio un error al iniciar sesión, intenta nuevamente.", Toast.LENGTH_SHORT).show();
                                         }
 
-                                        dismissMyCustomDialog();
                                     }
                                 });
 
                             }
                         } catch (InterruptedException e) {
                             e.printStackTrace();
+                            Log.e(TAG, "run: Error en inicio3: " + e.getMessage());
+                            Log.e(TAG, "run: Error en inicio4: " + e.getLocalizedMessage());
+                            btIniciar.setEnabled(true);
+                            dismissMyCustomDialog();
+                            Toast.makeText(getApplicationContext(), "Ocurrio un error al iniciar sesión, intenta nuevamente.", Toast.LENGTH_SHORT).show();
                         }
                     }
 
@@ -625,8 +734,11 @@ public class Login extends AppCompatActivity {
                 @Override
                 public void onErrorResponse(VolleyError error) {
                     error.printStackTrace();
+                    Log.e(TAG, "run: Error en inicio5: " + error.getMessage());
+                    Log.e(TAG, "run: Error en inicio6: " + error.getLocalizedMessage());
                     btIniciar.setEnabled(true);
-                    Toast.makeText(getApplicationContext(), "Ocurrio un error al iniciar sesión, por favor vuelve a intentarlo", Toast.LENGTH_LONG).show();
+                    dismissMyCustomDialog();
+                    Toast.makeText(getApplicationContext(), "Ocurrio un error al iniciar sesión, intenta nuevamente.", Toast.LENGTH_SHORT).show();
                 }
             }) {
 
@@ -637,12 +749,12 @@ public class Login extends AppCompatActivity {
 
 
     public void showErrorDialog(final String codeError) {
-        final Button btNo, btSi;
+        final NeumorphButton btNo, btSi;
         TextView tvCodeError;
         dialogoError.setContentView(R.layout.layout_error);
         dialogoError.setCancelable(false);
-        btNo = (Button) dialogoError.findViewById(R.id.btNo);
-        btSi = (Button) dialogoError.findViewById(R.id.btSi);
+        btNo = (NeumorphButton) dialogoError.findViewById(R.id.btNo);
+        btSi = (NeumorphButton) dialogoError.findViewById(R.id.btSi);
         tvCodeError = (TextView) dialogoError.findViewById(R.id.tvCodeError);
         tvCodeError.setText(codeError);
 
@@ -1101,9 +1213,9 @@ public class Login extends AppCompatActivity {
                     try {
                         downloadChoferesAndAyudantes();
                         downloadPlaces();
-                        requestPlaceAndGeofenceZoneToLogin();
+                        //requestPlaceAndGeofenceZoneToLogin();
                         synchronized (this) {
-                            wait(8000);
+                            wait(4000);
 
                             runOnUiThread(new Runnable() {
                                 @Override
@@ -1188,7 +1300,7 @@ public class Login extends AppCompatActivity {
                     try {
                         downloadChoferesAndAyudantes();
                         downloadPlaces();
-                        requestPlaceAndGeofenceZoneToLogin();
+                        //requestPlaceAndGeofenceZoneToLogin();
                         synchronized (this) {
                             wait(8000);
 
@@ -1245,6 +1357,9 @@ public class Login extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
         //requestForCheckUpdateApp();
+
+        //if(checkGPSConnection() && ApplicationResourcesProvider.checkInternetConnection())
+          //  requestPlaceAndGeofenceZoneToLogin();
     }
 
 
@@ -1257,12 +1372,11 @@ public class Login extends AppCompatActivity {
     @Override
     protected void onStart() {
         super.onStart();
+
         LocationRequest locationRequest = LocationRequest.create();
         locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
         LocationSettingsRequest.Builder builder = new LocationSettingsRequest.Builder().addLocationRequest(locationRequest);
-
         Task<LocationSettingsResponse> result = LocationServices.getSettingsClient(getApplicationContext()).checkLocationSettings(builder.build());
-
         result.addOnCompleteListener(new OnCompleteListener<LocationSettingsResponse>() {
             @Override
             public void onComplete(@NonNull Task<LocationSettingsResponse> task) {
@@ -1289,5 +1403,6 @@ public class Login extends AppCompatActivity {
                 }
             }
         });
+
     }
 }

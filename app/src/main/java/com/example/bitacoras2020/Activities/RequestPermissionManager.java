@@ -47,16 +47,18 @@ import org.json.JSONObject;
 
 import java.util.List;
 
+import soup.neumorphism.NeumorphButton;
+
 public class RequestPermissionManager extends AppCompatActivity {
     private static final String TAG = "PERMISION_MANAGER";
     private PermissionManager permissionManager;
-    Button btPermisos;
+    NeumorphButton btPermisos;
     Dialog dialogoError;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_request_permission_manager);
-        btPermisos = (Button) findViewById(R.id.btPermisos);
+        btPermisos = (NeumorphButton) findViewById(R.id.btPermisos);
         dialogoError = new Dialog(RequestPermissionManager.this);
 
         permissionManager = new PermissionManager(){};
@@ -120,12 +122,12 @@ public class RequestPermissionManager extends AppCompatActivity {
     }
 
     public void showErrorDialog(final String codeError) {
-        final Button btNo, btSi;
+        final NeumorphButton btNo, btSi;
         TextView tvCodeError;
         dialogoError.setContentView(R.layout.layout_error);
         dialogoError.setCancelable(false);
-        btNo = (Button) dialogoError.findViewById(R.id.btNo);
-        btSi = (Button) dialogoError.findViewById(R.id.btSi);
+        btNo = (NeumorphButton) dialogoError.findViewById(R.id.btNo);
+        btSi = (NeumorphButton) dialogoError.findViewById(R.id.btSi);
         tvCodeError = (TextView) dialogoError.findViewById(R.id.tvCodeError);
         tvCodeError.setText(codeError);
 

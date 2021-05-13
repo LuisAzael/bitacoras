@@ -5,7 +5,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:orientation="vertical"
-    android:background="@color/white"
+
     android:layout_width="match_parent"
     android:layout_height="wrap_content">
 
@@ -17,6 +17,7 @@
         android:layout_height="wrap_content">
 
         <View
+            android:visibility="gone"
             android:id="@+id/viewLateral"
             android:layout_weight="9.9"
             android:background="@color/purple_200"
@@ -29,23 +30,6 @@
             android:orientation="vertical"
             android:layout_width="match_parent"
             android:layout_height="wrap_content">
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
                 <LinearLayout
@@ -293,16 +277,22 @@
                 android:layout_height="0dp">
 
 
-                <androidx.appcompat.widget.AppCompatButton
-                    android:drawableTint="@color/white"
-                    android:layout_margin="5dp"
-                    android:paddingStart="10dp"
-                    android:paddingEnd="10dp"
+                <soup.neumorphism.NeumorphButton
+
+                    app:neumorph_backgroundColor="@color/white"
+                    style="@style/Widget.Neumorph.CardView"
+                    app:neumorph_shapeType="flat"
+                    android:textAlignment="center"
+                    app:neumorph_shadowElevation="6dp"
+                    app:neumorph_lightSource="leftTop"
+                    android:padding="25dp"
+
+                    android:drawableTint="@color/purple_200"
                     android:drawableStart="@drawable/ic_salida"
                     android:layout_weight="5"
                     android:visibility="visible"
                     android:id="@+id/btRegistrarSalida"
-                    android:textColor="@color/white"
+                    android:textColor="@color/textos_general"
                     android:text="Salida"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -310,17 +300,22 @@
                     tools:targetApi="m"
                     tools:ignore="NestedWeights" />
 
-                <androidx.appcompat.widget.AppCompatButton
+                <soup.neumorphism.NeumorphButton
 
-                    android:drawableTint="@color/white"
-                    android:layout_margin="5dp"
-                    android:paddingStart="10dp"
-                    android:paddingEnd="10dp"
+                    app:neumorph_backgroundColor="@color/white"
+                    style="@style/Widget.Neumorph.CardView"
+                    app:neumorph_shapeType="flat"
+                    android:textAlignment="center"
+                    app:neumorph_shadowElevation="6dp"
+                    app:neumorph_lightSource="leftTop"
+                    android:padding="25dp"
+
+                    android:drawableTint="@color/purple_200"
                     android:drawableEnd="@drawable/ic_llegada"
                     android:layout_weight="5"
                     android:visibility="visible"
                     android:id="@+id/btRegistrarllegada"
-                    android:textColor="@color/white"
+                    android:textColor="@color/textos_general"
                     android:text="Llegada"
                     android:background="@drawable/degradado_dos"
                     android:layout_width="match_parent"
@@ -349,5 +344,13 @@
 
     </LinearLayout>
 
+    <View
+        android:id="@+id/viewBajo"
+        android:layout_marginLeft="15dp"
+        android:layout_marginRight="15dp"
+        android:alpha="0.1"
+        android:background="@color/transparent_black_25"
+        android:layout_width="wrap_content"
+        android:layout_height="2dp"/>
 
 </LinearLayout>

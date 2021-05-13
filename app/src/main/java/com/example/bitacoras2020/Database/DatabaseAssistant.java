@@ -150,7 +150,7 @@ public class DatabaseAssistant
         cancelados.save();
     }
 
-    public static void insertarEquipoInstalacion(String bitacora, String serie, String nombre, String isBunker)
+    public static void insertarEquipoInstalacion(String bitacora, String serie, String nombre, String isBunker, String sync)
     {
         @SuppressLint("SimpleDateFormat") SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         String[] arregloCoordenadas = ApplicationResourcesProvider.getCoordenadasFromApplication();
@@ -158,11 +158,12 @@ public class DatabaseAssistant
                 "" + bitacora,
                 "" + serie,
                 "" + dateFormat.format(new Date()),
-                "0",
+                ""+ sync,
                 "" + nombre,
                 "" + arregloCoordenadas[0],
                 "" + arregloCoordenadas[1],
-                isBunker
+                isBunker,
+                DatabaseAssistant.getUserNameFromSesiones()
         );
         documentos.save();
     }
@@ -181,7 +182,8 @@ public class DatabaseAssistant
                 "" + nombre,
                 "" + arregloCoordenadas[0],
                 "" + arregloCoordenadas[1],
-                isBunker
+                isBunker,
+                DatabaseAssistant.getUserNameFromSesiones()
         );
         documentos.save();
     }
@@ -199,13 +201,14 @@ public class DatabaseAssistant
                 "" + nombre,
                 "" + arregloCoordenadas[0],
                 "" + arregloCoordenadas[1],
-                ""+ isBunker
+                ""+ isBunker,
+                DatabaseAssistant.getUserNameFromSesiones()
         );
         documentos.save();
     }
 
 
-    public static void insertarEquipoTraslado(String bitacora, String serie, String nombre, String tipo, String isBunker)
+    public static void insertarEquipoTraslado(String bitacora, String serie, String nombre, String tipo, String isBunker, String sync)
     {
         @SuppressLint("SimpleDateFormat") SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         String[] arregloCoordenadas = ApplicationResourcesProvider.getCoordenadasFromApplication();
@@ -213,17 +216,18 @@ public class DatabaseAssistant
                 "" + bitacora,
                 "" + serie,
                 "" + dateFormat.format(new Date()),
-                "0",
+                "" + sync,
                 "" + nombre,
                 "" + arregloCoordenadas[0],
                 "" + arregloCoordenadas[1],
                 "" + tipo,
-                "" +  isBunker
+                "" +  isBunker,
+                DatabaseAssistant.getUserNameFromSesiones()
         );
         documentos.save();
     }
 
-    public static void insertarEquipoRecoleccion(String bitacora, String serie, String nombre, String tipo, String isBunker)
+    public static void insertarEquipoRecoleccion(String bitacora, String serie, String nombre, String tipo, String isBunker, String sync)
     {
         @SuppressLint("SimpleDateFormat") SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         String[] arregloCoordenadas = ApplicationResourcesProvider.getCoordenadasFromApplication();
@@ -231,12 +235,13 @@ public class DatabaseAssistant
                 "" + bitacora,
                 "" + serie,
                 "" + dateFormat.format(new Date()),
-                "0",
+                "" + sync,
                 "" + nombre,
                 "" + arregloCoordenadas[0],
                 "" + arregloCoordenadas[1],
                 "" + tipo,
-                ""+ isBunker
+                ""+ isBunker,
+                DatabaseAssistant.getUserNameFromSesiones()
         );
         documentos.save();
     }
@@ -253,7 +258,8 @@ public class DatabaseAssistant
                 "" + nombre,
                 "" + arregloCoordenadas[0],
                 "" + arregloCoordenadas[1],
-                "" + isBunker
+                "" + isBunker,
+                DatabaseAssistant.getUserNameFromSesiones()
         );
         documentos.save();
     }
@@ -302,6 +308,7 @@ public class DatabaseAssistant
         eventos.save();
         Activos.executeQuery("UPDATE ACTIVOS set lugar = '" + lugar + "' where bitacora ='" + bitacora + "'");
         updateBitacoraParaNoVolverAUtilizar(bitacora);
+
     }
 
     public static void insertarUbicaciones(String latitud, String longitud, String fecha, String hora){
@@ -313,11 +320,16 @@ public class DatabaseAssistant
         @SuppressLint("SimpleDateFormat") SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         String[] arregloCoordenadas = ApplicationResourcesProvider.getCoordenadasFromApplication();
 
-        Inventario inventario = new Inventario(codigo, descripcion, serie, fecha,
-                proveedor, "0", bitacora, borrado,
-                dateFormat.format(new Date()),
+        Inventario inventario = new Inventario(
+                "" + codigo,
+                "" + descripcion,
+                "" + serie,
+                "" + fecha,
+                "" + proveedor, "0", bitacora, borrado,
+                "" + dateFormat.format(new Date()),
                 "" + arregloCoordenadas[0],
-                "" + arregloCoordenadas[1]);
+                "" + arregloCoordenadas[1]
+        );
         inventario.save();
     }
 
@@ -338,8 +350,9 @@ public class DatabaseAssistant
     }
 
     public static void insertarSesiones(String codigo, String contrasena, String fecha, String latitud, String longitud, String estatus,
-                                        String hora, String sync, String isBunker, String isProveedor, String geofence){
-        Sesiones sesiones = new Sesiones(codigo, contrasena, fecha, latitud, longitud, estatus, hora, sync, isBunker, isProveedor, geofence);
+                                        String hora, String sync, String isBunker, String isProveedor, String geofence, String isFuneraria){
+        Sesiones sesiones = new Sesiones(codigo, contrasena, fecha, latitud, longitud, estatus,
+                hora, sync, isBunker, isProveedor, geofence, isFuneraria);
         sesiones.save();
     }
 
@@ -596,7 +609,7 @@ public class DatabaseAssistant
 
     public static String getUserNameFromSesiones() {
         List<Sesiones> lista = Sesiones.findWithQuery(Sesiones.class, "SELECT * FROM SESIONES ORDER BY id DESC LIMIT 1");
-        return lista.size() > 0 ? lista.get(0).getUsuario() : "";
+        return lista.size() > 0 ? lista.get(0).getUsuario() : "x";
     }
 
     public  static String[] getLastedDataFromSessions() {
@@ -971,6 +984,11 @@ public class DatabaseAssistant
         return lista.size() > 0 ? lista.get(0).getIsProveedor() : "0" ;
     }
 
+    public static String getLastIsFuneraria() {
+        List<Sesiones> lista = Sesiones.findWithQuery(Sesiones.class, "SELECT * FROM SESIONES ORDER BY id DESC LIMIT 1");
+        return lista.size() > 0 ? lista.get(0).getIsFuneraria() : "" ;
+    }
+
 
     public static String getDatosDeAtaurnasEnLaBitacora(String bitacora) {
         List<Inventario> lista = Inventario.findWithQuery(Inventario.class, "SELECT * FROM INVENTARIO WHERE bitacora = '" + bitacora + "' ORDER BY id DESC LIMIT 1");
@@ -1025,6 +1043,7 @@ public class DatabaseAssistant
     }
 
 
+
     public static String didTheDriverCheckIn(String nombreChofer, String nombreAyudante) {
         if(getUserNameFromSesiones().equals(nombreChofer))
             return "1";
@@ -1035,10 +1054,217 @@ public class DatabaseAssistant
     }
 
     public static void insertarCatalogoArticulos(String nombre, String letra){
-        CatalogoArticulos.deleteAll(CatalogoArticulos.class);
         CatalogoArticulos catalogoArticulos = new CatalogoArticulos(nombre, letra);
         catalogoArticulos.save();
     }
+
+    public static boolean articulosDeVelacionYCortejoEstanCompletos(String bitacora)
+    {
+        boolean completo = false;
+        List<Equipocortejo> listaEquiposCortejo = Equipocortejo.findWithQuery(Equipocortejo.class, "SELECT * FROM EQUIPOCORTEJO WHERE bitacora = '" + bitacora + "'");
+        List<Equipoinstalacion> listaEquiposInstalacion = Equipoinstalacion.findWithQuery(Equipoinstalacion.class, "SELECT * FROM EQUIPOINSTALACION WHERE bitacora = '" + bitacora + "'");
+
+        if(listaEquiposCortejo.size()>0 && listaEquiposInstalacion.size()>0)
+        {
+            int cantidadDeItemsCortejo = listaEquiposCortejo.size();
+            int cantidadDeItemsInstalacion = listaEquiposInstalacion.size();
+
+            if(cantidadDeItemsCortejo == cantidadDeItemsInstalacion)
+            {
+                completo = true;
+                for (int x = 0; x <= listaEquiposCortejo.size()-1; x++)
+                {
+                    Log.v("METODO", "articulosDeVelacionYCortejoEstanCompletos: --------- NUEVO CICLO --------");
+                    Log.d("METODO", "articulosDeVelacionYCortejoEstanCompletos: position for X: " + x);
+
+                    if(!completo)
+                    {
+                        break;
+                    }
+                    else {
+                        for (int i = 0; i <= listaEquiposInstalacion.size() - 1; i++)
+                        {
+                            Log.d("METODO", "articulosDeVelacionYCortejoEstanCompletos: position for I: " + i);
+                            Log.d("METODO", "articulosDeVelacionYCortejoEstanCompletos: " + listaEquiposCortejo.get(x).getSerie() + " es igual a " + listaEquiposInstalacion.get(i).getSerie());
+
+                            if (listaEquiposCortejo.get(x).getSerie().equals(listaEquiposInstalacion.get(i).getSerie())) {
+                                completo = true;
+                                Log.d("METODO", "articulosDeVelacionYCortejoEstanCompletos: Si es igual");
+                                break;
+                            } else {
+                                completo = false;
+                                Log.d("METODO", "articulosDeVelacionYCortejoEstanCompletos: No es igual");
+                            }
+                        }
+                    }
+
+                }
+            }else {
+                completo = false;
+                Log.d(TAG, "articulosDeVelacionYCortejoEstanCompletos: La cantidad de items no es igual.");
+            }
+        }
+        else {
+            
+            if(listaEquiposCortejo.size()==0 && listaEquiposInstalacion.size()==0){
+                completo = true;
+                Log.d(TAG, "articulosDeVelacionYCortejoEstanCompletos: Instalacion y cortejo estan iguales");
+            }else {
+                completo = false;
+                Log.d("METODO", "articulosDeVelacionYCortejoEstanCompletos: No hay datos de Equipos de cortejo");
+            }
+        }
+
+        Log.d("METODO", "articulosDeVelacionYCortejoEstanCompletos: Fin: " + completo);
+
+        return completo;
+    }
+
+
+
+
+    public static boolean articulosDeRecoleccionEstanCompletos(String bitacora) {
+        boolean completo = false;
+        List<EquipoRecoleccion> equipoRecoleccionListEntrada = EquipoRecoleccion.findWithQuery(EquipoRecoleccion.class, "SELECT * FROM EQUIPO_RECOLECCION WHERE bitacora = '" + bitacora + "' and tipo ='0'");
+        List<EquipoRecoleccion> equipoRecoleccionListSalida = EquipoRecoleccion.findWithQuery(EquipoRecoleccion.class, "SELECT * FROM EQUIPO_RECOLECCION WHERE bitacora = '" + bitacora + "' and tipo ='1'");
+
+        if(equipoRecoleccionListEntrada.size()>0 && equipoRecoleccionListSalida.size()>0)
+        {
+
+            int cantidadDeItemsEntrada = equipoRecoleccionListEntrada.size();
+            int cantidadDeItemsSalida = equipoRecoleccionListSalida.size();
+
+            if(cantidadDeItemsEntrada == cantidadDeItemsSalida)
+            {
+                completo = true;
+                for (int x = 0; x <= equipoRecoleccionListSalida.size()-1; x++)
+                {
+                    Log.v("RECOLECCIONN", "--------- NUEVO CICLO --------");
+                    Log.d("RECOLECCIONN", "position for X: " + x);
+
+                    if(!completo)
+                    {
+                        break;
+                    }
+                    else {
+                        for (int i = 0; i <= equipoRecoleccionListEntrada.size() - 1; i++)
+                        {
+                            Log.d("RECOLECCIONN", "position for I: " + i);
+                            Log.d("RECOLECCIONN", "" + equipoRecoleccionListSalida.get(x).getSerie() + " es igual a " + equipoRecoleccionListEntrada.get(i).getSerie());
+
+                            if (equipoRecoleccionListSalida.get(x).getNombre().equals(   equipoRecoleccionListEntrada.get(i).getNombre() )  &&
+                                    !equipoRecoleccionListSalida.get(x).getTipo().equals(   equipoRecoleccionListEntrada.get(i).getTipo() )) {
+                                completo = true;
+                                Log.d("RECOLECCIONN", "Si es igual");
+                                break;
+                            } else {
+                                completo = false;
+                                Log.d("RECOLECCIONN", "No es igual");
+                            }
+                        }
+                    }
+
+                }
+            }else {
+                completo = false;
+                Log.d("RECOLECCIONN", "La cantidad de items no es igual.");
+            }
+
+
+
+
+        }
+        else {
+            if(equipoRecoleccionListEntrada.size()==0 && equipoRecoleccionListSalida.size()==0){
+                completo = true;
+                Log.d("RECOLECCIONN", "Salidas y entradas estan vacios");
+            }else {
+                completo = false;
+                Log.d("RECOLECCIONN", "Equipos de recoleccion con diferente cantidad: Entrada: "+  equipoRecoleccionListEntrada.size() +", Salida: " + equipoRecoleccionListSalida.size());
+            }
+        }
+
+        Log.d("RECOLECCIONN", "Fin de los ciclos con completo = " + completo);
+
+        return completo;
+    }
+
+
+
+
+    public static boolean articulosDeTrasladoEstanCompletos(String bitacora) {
+        boolean completo = false;
+        List<EquipoTraslado> equipoTrasladoListEntrada = EquipoTraslado.findWithQuery(EquipoTraslado.class, "SELECT * FROM EQUIPO_TRASLADO WHERE bitacora = '" + bitacora + "' and tipo ='0'");
+        List<EquipoTraslado> equipoTrasladoListSalida = EquipoTraslado.findWithQuery(EquipoTraslado.class, "SELECT * FROM EQUIPO_TRASLADO WHERE bitacora = '" + bitacora + "' and tipo ='1'");
+
+        if(equipoTrasladoListEntrada.size()>0 && equipoTrasladoListSalida.size()>0)
+        {
+
+            int cantidadDeItemsEntrada = equipoTrasladoListEntrada.size();
+            int cantidadDeItemsSalida = equipoTrasladoListSalida.size();
+
+            if(cantidadDeItemsEntrada == cantidadDeItemsSalida)
+            {
+                completo = true;
+                for (int x = 0; x <= equipoTrasladoListSalida.size()-1; x++)
+                {
+                    Log.v("TRASLADOSS", "--------- NUEVO CICLO --------");
+                    Log.d("TRASLADOSS", "position for X: " + x);
+
+                    if(!completo)
+                    {
+                        break;
+                    }
+                    else {
+                        for (int i = 0; i <= equipoTrasladoListEntrada.size() - 1; i++)
+                        {
+                            Log.d("TRASLADOSS", "position for I: " + i);
+                            Log.d("TRASLADOSS", "" + equipoTrasladoListSalida.get(x).getSerie() + " es igual a " + equipoTrasladoListEntrada.get(i).getSerie());
+
+                            if (equipoTrasladoListSalida.get(x).getNombre().equals(   equipoTrasladoListEntrada.get(i).getNombre() )  &&
+                                    !equipoTrasladoListSalida.get(x).getTipo().equals(   equipoTrasladoListEntrada.get(i).getTipo() )) {
+                                completo = true;
+                                Log.d("TRASLADOSS", "Si es igual");
+                                break;
+                            } else {
+                                completo = false;
+                                Log.d("TRASLADOSS", "No es igual");
+                            }
+                        }
+                    }
+
+                }
+            }else {
+                completo = false;
+                Log.d("TRASLADOSS", "La cantidad de items no es igual.");
+            }
+
+
+
+
+        }
+        else {
+            if(equipoTrasladoListEntrada.size()==0 && equipoTrasladoListSalida.size()==0){
+                completo = true;
+                Log.d("TRASLADOSS", "Salidas y entradas estan vacios");
+            }else {
+                completo = false;
+                Log.d("TRASLADOSS", "Equipos de traslados con diferente cantidad: Entrada: "+  equipoTrasladoListEntrada.size() +", Salida: " + equipoTrasladoListSalida.size());
+            }
+        }
+
+        Log.d("TRASLADOSS", "Fin de los ciclos con completo = " + completo);
+
+        return completo;
+    }
+
+
+    public static void updateDestinoDeBitacoraPorSalidaAutomatica(String bitacora, String destinoSeleccionado){
+        //Eventos.executeQuery("UPDATE EVENTOS set destino = '" + destinoSeleccionado +"' where bitacora='" + bitacora + "' and id max(id)");
+        Eventos.executeQuery("UPDATE EVENTOS set destino = '" + destinoSeleccionado +"' where bitacora='" + bitacora + "' and id = (SELECT id FROM EVENTOS where bitacora = '" + bitacora +"' order by id desc limit 1)");
+    }
+
+
 
 }
 

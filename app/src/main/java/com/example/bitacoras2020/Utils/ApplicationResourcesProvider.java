@@ -158,6 +158,8 @@ public class ApplicationResourcesProvider extends com.orm.SugarApp {
 
         if(checkInternetConnection())
             createJsonForSync();
+
+        Preferences.setWithinTheZone(sContext, false, Preferences.PREFERENCE_WITHIN_THE_ZONE_TO_LOGIN);
     }
 
     @SuppressLint("LongLogTag")
@@ -187,20 +189,26 @@ public class ApplicationResourcesProvider extends com.orm.SugarApp {
             @Override
             public void onResponse(JSONObject response)
             {
-                CatalogoArticulos.deleteAll(CatalogoArticulos.class);
                 JSONArray bitacorasArray = new JSONArray();
-                try {
+
+                try
+                {
                     bitacorasArray = response.getJSONArray("catalogo");
 
-                    for (int i = 0; i <= bitacorasArray.length() - 1; i++) {
-                        DatabaseAssistant.insertarCatalogoArticulos(
-                                bitacorasArray.getJSONObject(i).getString("name"),
-                                bitacorasArray.getJSONObject(i).getString("name")
-                        );
+                    if(bitacorasArray.length()>0){
+                        CatalogoArticulos.deleteAll(CatalogoArticulos.class);
+                        for (int i = 0; i <= bitacorasArray.length() - 1; i++)
+                        {
+                            DatabaseAssistant.insertarCatalogoArticulos(
+                                    bitacorasArray.getJSONObject(i).getString("name"),
+                                    bitacorasArray.getJSONObject(i).getString("name")
+                            );
+                        }
                     }
 
                 } catch (Exception e) {
                     e.printStackTrace();
+                    Log.e(TAG, "onResponse: Error en descarga de catalogo de articulos: " + e.getMessage());
                 }
             }
         },
@@ -208,6 +216,7 @@ public class ApplicationResourcesProvider extends com.orm.SugarApp {
                     @Override
                     public void onErrorResponse(VolleyError error) {
                         error.printStackTrace();
+                        Log.e(TAG, "onResponse: Error en descarga de catalogo de articulos: " + error.getMessage());
                     }
                 }) {
 
@@ -265,6 +274,7 @@ public class ApplicationResourcesProvider extends com.orm.SugarApp {
                         jsonEventos.put("tipo_movimiento", listaMovimientos.get(i).getMovimiento());
                         jsonEventos.put("usuario", listaMovimientos.get(i).getUsuario());
                         jsonEventos.put("checkInDriver", listaMovimientos.get(i).getCheckInDriver());
+                        jsonEventos.put("isProveedor", Preferences.getIsProveedor(sContext, Preferences.PREFERENCE_IS_PROVEEDOR) ? "1" : "0");
 
                         try{
                             List<Codigos> listaCodigos = Codigos.findWithQuery(Codigos.class, "SELECT * FROM CODIGOS where bitacora = '"+ listaMovimientos.get(i).getBitacora() +"'");
@@ -309,7 +319,8 @@ public class ApplicationResourcesProvider extends com.orm.SugarApp {
                         jsonUbicaciones.put("lng", listaUbicaciones.get(i).getLongitud());
                         jsonUbicaciones.put("fecha", listaUbicaciones.get(i).getFecha());
                         jsonUbicaciones.put("hora", listaUbicaciones.get(i).getHora());
-                        //jsonUbicaciones.put("bitacora", DatabaseAssistant.getBitacoraActiva("auxiliar"));
+                        jsonUbicaciones.put("isProveedor", Preferences.getIsProveedor(sContext, Preferences.PREFERENCE_IS_PROVEEDOR) ? "1" : "0");
+                        jsonUbicaciones.put("usuario", DatabaseAssistant.getUserNameFromSesiones());
                         cargaDeUbicacionesToServer(jsonUbicaciones);
 
                     } catch (JSONException ex) {
@@ -338,6 +349,7 @@ public class ApplicationResourcesProvider extends com.orm.SugarApp {
                         jsonMovimientoss.put("fecha", listaMovs.get(i).getFecha());
                         jsonMovimientoss.put("movimiento", listaMovs.get(i).getMovimiento());
                         jsonMovimientoss.put("usuario", listaMovs.get(i).getUsuario());
+                        jsonMovimientoss.put("isProveedor", Preferences.getIsProveedor(sContext, Preferences.PREFERENCE_IS_PROVEEDOR) ? "1" : "0");
                         cargaDeMovimientosToServer(jsonMovimientoss);
                     } catch (JSONException ex) {
                         ex.printStackTrace();
@@ -372,6 +384,7 @@ public class ApplicationResourcesProvider extends com.orm.SugarApp {
                         jsonParams.put("isBunker", listaSesiones.get(i).getIsBunker());
                         jsonParams.put("geoFenceActual", listaSesiones.get(i).getGeofence());
                         jsonParams.put("token_device", DatabaseAssistant.getTokenDeUsuario());
+                        jsonParams.put("isProveedor", Preferences.getIsProveedor(sContext, Preferences.PREFERENCE_IS_PROVEEDOR) ? "1" : "0");
                         requestLoginOnline(jsonParams);
                         //Log.i("SESIONES", "createJsonForSync: json de sesiones: " + jsonParams.toString());
                     } catch (Exception e) {
@@ -478,6 +491,8 @@ public class ApplicationResourcesProvider extends com.orm.SugarApp {
                         jsonInformacionAdicionalBitacora.put("embalsamado_o_arreglo", adicionalList.get(i).getProcedimiento());
                         jsonInformacionAdicionalBitacora.put("laboratorio", adicionalList.get(i).getLaboratorio());
                         jsonInformacionAdicionalBitacora.put("idLaboratorio", DatabaseAssistant.getIDFromLaboratorioString(adicionalList.get(i).getLaboratorio()));
+                        jsonInformacionAdicionalBitacora.put("isProveedor", Preferences.getIsProveedor(sContext, Preferences.PREFERENCE_IS_PROVEEDOR) ? "1" : "0");
+                        jsonInformacionAdicionalBitacora.put("usuario", DatabaseAssistant.getUserNameFromSesiones());
 
 
                         try{
@@ -511,6 +526,8 @@ public class ApplicationResourcesProvider extends com.orm.SugarApp {
                                     jsonEquiposDeInstalacion.put("latitud", equipoinstalacionList.get(y).getLatitud());
                                     jsonEquiposDeInstalacion.put("longitud", equipoinstalacionList.get(y).getLongitud());
                                     jsonEquiposDeInstalacion.put("isBunker", equipoinstalacionList.get(y).getIsBunker());
+                                    jsonEquiposDeInstalacion.put("isProveedor", Preferences.getIsProveedor(sContext, Preferences.PREFERENCE_IS_PROVEEDOR) ? "1" : "0");
+                                    jsonEquiposDeInstalacion.put("usuario", equipoinstalacionList.get(y).getUsuario());
                                     jsonEquiposInstalacion.put(jsonEquiposDeInstalacion);
                                 }
                                 jsonInformacionAdicionalBitacora.put("Equipos_instalacion", jsonEquiposInstalacion);
@@ -534,6 +551,8 @@ public class ApplicationResourcesProvider extends com.orm.SugarApp {
                                     jsonEquiposDeCortejo.put("latitud", equipocortejoList.get(y).getLatitud());
                                     jsonEquiposDeCortejo.put("longitud", equipocortejoList.get(y).getLongitud());
                                     jsonEquiposDeCortejo.put("isBunker", equipocortejoList.get(y).getIsBunker());
+                                    jsonEquiposDeCortejo.put("isProveedor", Preferences.getIsProveedor(sContext, Preferences.PREFERENCE_IS_PROVEEDOR) ? "1" : "0");
+                                    jsonEquiposDeCortejo.put("usuario", equipocortejoList.get(y).getUsuario());
                                     jsonEquiposCortejo.put(jsonEquiposDeCortejo);
                                 }
                                 jsonInformacionAdicionalBitacora.put("Equipos_cortejo", jsonEquiposCortejo);
@@ -557,6 +576,8 @@ public class ApplicationResourcesProvider extends com.orm.SugarApp {
                                     jsonEquiposDeRecoleccion.put("latitud", equipoRecoleccions.get(y).getLatitud());
                                     jsonEquiposDeRecoleccion.put("longitud", equipoRecoleccions.get(y).getLongitud());
                                     jsonEquiposDeRecoleccion.put("isBunker", equipoRecoleccions.get(y).getIsBunker());
+                                    jsonEquiposDeRecoleccion.put("isProveedor", Preferences.getIsProveedor(sContext, Preferences.PREFERENCE_IS_PROVEEDOR) ? "1" : "0");
+                                    jsonEquiposDeRecoleccion.put("usuario", equipoRecoleccions.get(y).getUsuario());
                                     jsonEquiposRecoleccion.put(jsonEquiposDeRecoleccion);
                                 }
                                 jsonInformacionAdicionalBitacora.put("Equipos_recoleccion", jsonEquiposRecoleccion);
@@ -582,6 +603,8 @@ public class ApplicationResourcesProvider extends com.orm.SugarApp {
                                     jsonEquiposDeTraslado.put("latitud", equipoTraslados.get(y).getLatitud());
                                     jsonEquiposDeTraslado.put("longitud", equipoTraslados.get(y).getLongitud());
                                     jsonEquiposDeTraslado.put("isBunker", equipoTraslados.get(y).getIsBunker());
+                                    jsonEquiposDeTraslado.put("isProveedor", Preferences.getIsProveedor(sContext, Preferences.PREFERENCE_IS_PROVEEDOR) ? "1" : "0");
+                                    jsonEquiposDeTraslado.put("usuario", equipoTraslados.get(y).getUsuario());
                                     jsonEquiposTraslado.put(jsonEquiposDeTraslado);
                                 }
                                 jsonInformacionAdicionalBitacora.put("Equipos_traslado", jsonEquiposTraslado);
@@ -682,6 +705,8 @@ public class ApplicationResourcesProvider extends com.orm.SugarApp {
                             jsonAtaurnas.put("fecha_captura", inventarioList.get(y).getCapturado());
                             jsonAtaurnas.put("latitud", inventarioList.get(y).getLatitud());
                             jsonAtaurnas.put("longitud", inventarioList.get(y).getLongitud());
+                            jsonAtaurnas.put("isProveedor", Preferences.getIsProveedor(sContext, Preferences.PREFERENCE_IS_PROVEEDOR) ? "1" : "0");
+                            jsonAtaurnas.put("usuario", DatabaseAssistant.getUserNameFromSesiones());
                             jsonAtaudesAndUrnas.put(jsonAtaurnas);
                         }
                         jsonInformacionAdicionalBitacora.put("Ataurnas_registradas", jsonAtaudesAndUrnas);

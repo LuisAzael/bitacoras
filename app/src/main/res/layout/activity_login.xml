@@ -128,7 +128,14 @@
             android:layout_marginTop="10dp"
             android:layout_marginBottom="10dp">
 
-            <androidx.appcompat.widget.AppCompatButton
+            <soup.neumorphism.NeumorphButton
+                app:neumorph_backgroundColor="@color/white"
+                style="@style/Widget.Neumorph.CardView"
+                app:neumorph_shapeType="flat"
+                android:textAlignment="center"
+                app:neumorph_shadowElevation="6dp"
+                app:neumorph_lightSource="leftTop"
+                android:padding="25dp"
                 android:visibility="visible"
                 android:background="@drawable/edit_text_style"
                 android:id="@+id/btInicarSesion"
@@ -138,7 +145,6 @@
                 android:layout_marginTop="10dp"
                 android:layout_marginRight="20dp"
                 android:layout_marginBottom="10dp"
-                android:foreground="?attr/selectableItemBackground"
                 android:text="Iniciar Sesión"
                 android:textColor="@color/textos_principal" />
 
@@ -174,7 +180,7 @@
         android:layout_gravity="bottom"
         android:layout_marginTop="8dp"
         android:paddingRight="20dp"
-        android:text="Programa de Apoyo de Beneficio Social 2020"
+        android:text="Programa de Apoyo de Beneficio Social 2021"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/linearLayout"
         app:layout_constraintVertical_bias="0.956"
@@ -191,7 +197,18 @@
         android:clickable="true"
         android:visibility="gone">
 
+        <TextView
+            android:id="@+id/tvMensajeLoading"
+            android:layout_marginTop="60dp"
+            android:layout_gravity="center"
+            android:textSize="12sp"
+            android:textColor="@color/white"
+            android:text="Cargando zonas..."
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"/>
+
         <ImageView
+            android:src="@drawable/btn_loading"
             android:layout_width="85dp"
             android:layout_height="85dp"
             android:id="@+id/ivLoadingBackground"

@@ -2,13 +2,13 @@ package com.example.bitacoras2020.Database;
 
 import com.orm.SugarRecord;
 
-public class EquipoTraslado extends SugarRecord {
-    String bitacora ="", serie="", fecha="", sync="", nombre="", latitud="", longitud="", tipo="",  isBunker="", usuario="";
+public class PreSaveEquipoCortejo extends SugarRecord {
+    String bitacora ="", serie="", fecha="", sync="", nombre="", latitud="", longitud="", isBunker="", usuario="";
 
-    public EquipoTraslado() {
+    public PreSaveEquipoCortejo() {
     }
 
-    public EquipoTraslado(String bitacora, String serie, String fecha, String sync, String nombre, String latitud, String longitud, String tipo, String isBunker, String usuario) {
+    public PreSaveEquipoCortejo(String bitacora, String serie, String fecha, String sync, String nombre, String latitud, String longitud, String isBunker, String usuario) {
         this.bitacora = bitacora;
         this.serie = serie;
         this.fecha = fecha;
@@ -16,7 +16,6 @@ public class EquipoTraslado extends SugarRecord {
         this.nombre = nombre;
         this.latitud = latitud;
         this.longitud = longitud;
-        this.tipo = tipo;
         this.isBunker = isBunker;
         this.usuario = usuario;
     }
@@ -27,14 +26,6 @@ public class EquipoTraslado extends SugarRecord {
 
     public void setUsuario(String usuario) {
         this.usuario = usuario;
-    }
-
-    public String getTipo() {
-        return tipo;
-    }
-
-    public void setTipo(String tipo) {
-        this.tipo = tipo;
     }
 
     public String getLatitud() {
