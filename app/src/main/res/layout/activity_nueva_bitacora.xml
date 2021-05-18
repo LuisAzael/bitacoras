@@ -601,6 +601,7 @@
 
                                         <!-- Recoleccion -->
                                         <LinearLayout
+                                            android:id="@+id/layoutRecoleccion"
                                             android:visibility="visible"
                                             android:layout_marginTop="70dp"
                                             android:layout_width="match_parent"
@@ -689,6 +690,7 @@
 
                                         <!--Traslado-->
                                         <LinearLayout
+                                            android:id="@+id/layoutTraslado"
                                             android:visibility="visible"
                                             android:layout_marginTop="70dp"
                                             android:layout_width="match_parent"
@@ -814,7 +816,7 @@
                             <soup.neumorphism.NeumorphButton
                                 app:neumorph_backgroundColor="@color/white"
                                 style="@style/Widget.Neumorph.Button"
-                                app:neumorph_shapeType="pressed"
+                                app:neumorph_shapeType="flat"
                                 android:textAlignment="center"
                                 app:neumorph_shadowElevation="6dp"
                                 app:neumorph_lightSource="leftTop"
@@ -834,7 +836,7 @@
                             <soup.neumorphism.NeumorphButton
                                 app:neumorph_backgroundColor="@color/white"
                                 style="@style/Widget.Neumorph.Button"
-                                app:neumorph_shapeType="basin"
+                                app:neumorph_shapeType="flat"
                                 android:textAlignment="center"
                                 app:neumorph_shadowElevation="6dp"
                                 app:neumorph_lightSource="leftTop"

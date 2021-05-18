@@ -164,9 +164,9 @@
                             android:visibility="invisible"
                             android:drawableTint="@color/black"
                             android:drawableStart="@drawable/ic_scan"
-                            android:layout_weight="4"
+                            android:layout_weight="3"
                             android:id="@+id/btScanner"
-                            android:text="Urna"
+                            android:text="Ataud/Urna"
                             android:layout_gravity="center"
                             android:layout_width="match_parent"
                             android:layout_height="55dp"/>
@@ -187,9 +187,9 @@
                             app:neumorph_lightSource="leftTop"
                             android:padding="25dp"
                             android:layout_gravity="center"
-                            android:layout_weight="2"
+                            android:layout_weight="3"
                             android:id="@+id/btBuscarBitacora"
-                            android:text="Buscar bitácora..."
+                            android:text="Buscar"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"/>
 
@@ -223,6 +223,240 @@
 
 
                     </LinearLayout>
+
+
+
+
+
+
+
+
+
+                    <LinearLayout
+                        android:visibility="gone"
+                        android:id="@+id/layoutAtaud"
+                        android:orientation="vertical"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content">
+
+                        <LinearLayout
+                            android:orientation="vertical"
+                            android:layout_marginTop="10dp"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content">
+
+                            <LinearLayout
+                                android:weightSum="10"
+                                android:orientation="horizontal"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content">
+
+                                <ImageView
+                                    android:layout_weight="9"
+                                    app:tint="@color/black"
+                                    android:layout_gravity="clip_horizontal"
+                                    android:src="@drawable/ataud"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="match_parent" />
+
+                                <TextView
+                                    android:id="@+id/tvsdsc"
+                                    android:layout_weight="1"
+                                    android:textColor="@color/textos_principal"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:text="Ataúd"
+                                    android:textStyle="bold"
+                                    android:textSize="16sp" />
+
+                            </LinearLayout>
+
+                            <TextView
+                                android:textColor="@color/textos_general"
+                                android:paddingStart="35dp"
+                                android:id="@+id/tvCodigoAtaud"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="3dp"
+                                android:text="-----"
+                                android:textSize="14sp"
+                                tools:ignore="RtlSymmetry" />
+
+                            <LinearLayout
+                                android:layout_marginTop="5dp"
+                                android:orientation="vertical"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content">
+
+                                <LinearLayout
+                                    android:weightSum="10"
+                                    android:orientation="horizontal"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content">
+
+                                    <ImageView
+                                        android:paddingStart="20dp"
+                                        android:layout_gravity="center"
+                                        android:layout_weight="8"
+                                        android:src="@drawable/ic_arrow_down"
+                                        android:layout_width="match_parent"
+                                        android:layout_height="fill_parent"
+                                        app:tint="@color/textos_general"
+                                        tools:ignore="RtlSymmetry" />
+
+                                    <TextView
+                                        android:id="@+id/tvDescripcionAtaud"
+                                        android:textColor="@color/textos_general"
+                                        android:textSize="14sp"
+                                        android:layout_gravity="center"
+                                        android:textAlignment="viewStart"
+                                        android:layout_weight="2"
+                                        android:gravity="center"
+                                        android:text="-----"
+                                        android:layout_width="match_parent"
+                                        android:layout_height="wrap_content"
+                                        tools:ignore="RtlCompat" />
+
+                                </LinearLayout>
+
+
+
+
+
+
+                                <LinearLayout
+                                    android:weightSum="10"
+                                    android:orientation="horizontal"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content">
+
+                                    <View
+                                        android:visibility="invisible"
+                                        android:paddingStart="20dp"
+                                        android:layout_gravity="center"
+                                        android:layout_weight="8"
+                                        android:layout_width="match_parent"
+                                        android:layout_height="fill_parent"
+                                        app:tint="@color/textos_general"
+                                        tools:ignore="RtlSymmetry" />
+
+                                    <TextView
+                                        android:id="@+id/tvSerieAtaud"
+                                        android:textColor="@color/textos_general"
+                                        android:textSize="14sp"
+                                        android:layout_gravity="center"
+                                        android:textAlignment="viewStart"
+                                        android:layout_weight="2"
+                                        android:gravity="center"
+                                        android:text="-----"
+                                        android:layout_width="match_parent"
+                                        android:layout_height="wrap_content"
+                                        tools:ignore="RtlCompat" />
+
+                                </LinearLayout>
+
+
+
+                                <LinearLayout
+                                    android:weightSum="10"
+                                    android:orientation="horizontal"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content">
+
+                                    <View
+                                        android:visibility="invisible"
+                                        android:paddingStart="20dp"
+                                        android:layout_gravity="center"
+                                        android:layout_weight="8"
+                                        android:layout_width="match_parent"
+                                        android:layout_height="fill_parent"
+                                        app:tint="@color/textos_general"
+                                        tools:ignore="RtlSymmetry" />
+
+                                    <TextView
+                                        android:id="@+id/tvFechaAtaud"
+                                        android:textColor="@color/textos_general"
+                                        android:textSize="14sp"
+                                        android:layout_gravity="center"
+                                        android:textAlignment="viewStart"
+                                        android:layout_weight="2"
+                                        android:gravity="center"
+                                        android:text="-----"
+                                        android:layout_width="match_parent"
+                                        android:layout_height="wrap_content"
+                                        tools:ignore="RtlCompat" />
+
+                                </LinearLayout>
+
+                                <LinearLayout
+                                    android:weightSum="10"
+                                    android:orientation="horizontal"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content">
+
+                                    <View
+                                        android:visibility="invisible"
+                                        android:paddingStart="20dp"
+                                        android:layout_gravity="center"
+                                        android:layout_weight="8"
+                                        android:layout_width="match_parent"
+                                        android:layout_height="fill_parent"
+                                        app:tint="@color/textos_general"
+                                        tools:ignore="RtlSymmetry" />
+
+                                    <TextView
+                                        android:id="@+id/tvProveedorAtaud"
+                                        android:textColor="@color/textos_general"
+                                        android:textSize="14sp"
+                                        android:layout_gravity="center"
+                                        android:textAlignment="viewStart"
+                                        android:layout_weight="2"
+                                        android:gravity="center"
+                                        android:text="-----"
+                                        android:layout_width="match_parent"
+                                        android:layout_height="wrap_content"
+                                        tools:ignore="RtlCompat" />
+
+                                </LinearLayout>
+
+                            </LinearLayout>
+
+                            <TextView
+                                android:layout_marginTop="10dp"
+                                android:id="@+id/tvEliminarAtaud"
+                                android:textColor="@color/white"
+                                android:paddingLeft="20dp"
+                                android:paddingRight="20dp"
+                                android:paddingTop="6dp"
+                                android:paddingBottom="6dp"
+                                android:background="@drawable/btn_warning"
+                                android:layout_gravity="right"
+                                android:gravity="right"
+                                android:textAlignment="textEnd"
+                                android:text="Eliminar ataúd"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"/>
+
+                        </LinearLayout>
+
+
+                    </LinearLayout>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

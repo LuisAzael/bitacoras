@@ -114,6 +114,7 @@ import com.google.android.gms.tasks.Task;
 import com.google.android.material.bottomsheet.BottomSheetBehavior;
 import com.google.android.material.bottomsheet.BottomSheetDialog;
 import com.google.android.material.textfield.TextInputEditText;
+import com.google.android.material.textfield.TextInputLayout;
 import com.google.firebase.messaging.FirebaseMessaging;
 import com.google.zxing.integration.android.IntentIntegrator;
 import com.google.zxing.integration.android.IntentResult;
@@ -411,7 +412,8 @@ public class BitacoraDetalle extends BaseActivity implements CancelarArticuloEsc
                                     "" + inventarioList.get(0).getSerie(),
                                     "" + inventarioList.get(0).getFecha(),
                                     "" + inventarioList.get(0).getProveedor(),
-                                    "" + inventarioList.get(0).getBitacora()
+                                    "" + inventarioList.get(0).getBitacora(),
+                                    "" + inventarioList.get(0).getCapturado()
                             );
 
                             //Inventario.executeQuery("DELETE FROM INVENTARIO WHERE codigo ='" + codigo + "'");
@@ -456,7 +458,8 @@ public class BitacoraDetalle extends BaseActivity implements CancelarArticuloEsc
                                     "" + inventarioList.get(0).getSerie(),
                                     "" + inventarioList.get(0).getFecha(),
                                     "" + inventarioList.get(0).getProveedor(),
-                                    "" + inventarioList.get(0).getBitacora()
+                                    "" + inventarioList.get(0).getBitacora(),
+                                    "" + inventarioList.get(0).getCapturado()
                             );
 
                             //Inventario.executeQuery("DELETE FROM INVENTARIO WHERE codigo ='" + codigo + "'");
@@ -810,14 +813,18 @@ public class BitacoraDetalle extends BaseActivity implements CancelarArticuloEsc
         btScanner.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                scannerAtaurna = true;
-                equipoDeCortejo = false;
-                equipoDeInstalacion = false;
-                isArticuloDeVelacion = false;
-                equipoRecoleccion = false;
-                equipoDeTraslado = false;
-                new IntentIntegrator(BitacoraDetalle.this).initiateScan();
 
+                if(ApplicationResourcesProvider.checkInternetConnection()){
+                    scannerAtaurna = true;
+                    equipoDeCortejo = false;
+                    equipoDeInstalacion = false;
+                    isArticuloDeVelacion = false;
+                    equipoRecoleccion = false;
+                    equipoDeTraslado = false;
+                    new IntentIntegrator(BitacoraDetalle.this).initiateScan();
+                }else{
+                    showErrorDialog("Necesitas conexión a internet para realizar el escaneo del Ataúd o Urna.", "");
+                }
             }
         });
 
@@ -837,8 +844,10 @@ public class BitacoraDetalle extends BaseActivity implements CancelarArticuloEsc
         btFinalizarBitacora.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                showErrorDialog("Estas a punto de terminar la bitácora\n¿Estás de acuerdo?", bitacora);
+
                 //verificar aqui si la bitacora esta completa de equipos de velacion.
-                if(DatabaseAssistant.articulosDeVelacionYCortejoEstanCompletos(bitacora)
+                /*if(DatabaseAssistant.articulosDeVelacionYCortejoEstanCompletos(bitacora)
                         && DatabaseAssistant.articulosDeRecoleccionEstanCompletos(bitacora)
                         && DatabaseAssistant.articulosDeTrasladoEstanCompletos(bitacora)) {
                     //Realizar el cerrado de la bitacora por medio de request
@@ -847,7 +856,7 @@ public class BitacoraDetalle extends BaseActivity implements CancelarArticuloEsc
                 else {
                     //showErrorDialog("No puedes terminar la bitácora, porque los articulos de velación no estan completos, verifica nuevamente.", bitacora);
                     showErrorDialog("Parece que los articulos de velación no estan completos, necesitas autorización para terminar la bitácora.", bitacora);
-                }
+                }*/
 
             }
         });
@@ -1318,22 +1327,26 @@ public class BitacoraDetalle extends BaseActivity implements CancelarArticuloEsc
         final NeumorphButton btNo, btSi;
         TextView tvCodeError, tvBitacora;
         EditText etDescripcionPeticion;
+        TextInputLayout etDescripcionPeticion2;
         Dialog dialogoError = new Dialog(BitacoraDetalle.this);
         dialogoError.setContentView(R.layout.layout_error);
         dialogoError.setCancelable(true);
         btNo = (NeumorphButton) dialogoError.findViewById(R.id.btNo);
         btSi = (NeumorphButton) dialogoError.findViewById(R.id.btSi);
         etDescripcionPeticion = (EditText) dialogoError.findViewById(R.id.etDescripcionPeticion);
+        etDescripcionPeticion2 = (TextInputLayout) dialogoError.findViewById(R.id.etDescripcionPeticion2);
         tvCodeError = (TextView) dialogoError.findViewById(R.id.tvCodeError);
         tvBitacora = (TextView) dialogoError.findViewById(R.id.tvBitacora);
         tvCodeError.setText(codeError);
+        etDescripcionPeticion2.setVisibility(View.GONE);
 
         if(codeError.equals("Estas a punto de terminar la bitácora\n¿Estás de acuerdo?")){
             tvBitacora.setText(bitacora);
             tvBitacora.setVisibility(View.VISIBLE);
         }
         else if( codeError.equals("Parece que los articulos de velación no estan completos, necesitas autorización para terminar la bitácora.") ){
-            etDescripcionPeticion.setVisibility(View.VISIBLE);
+            //etDescripcionPeticion.setVisibility(View.VISIBLE);
+            etDescripcionPeticion2.setVisibility(View.VISIBLE);
             btSi.setText("Solicitar autorización");
             btNo.setText("Cancelar");
         }
@@ -1353,6 +1366,8 @@ public class BitacoraDetalle extends BaseActivity implements CancelarArticuloEsc
                 || codeError.equals("Código repetido o desconocido para articulos de Cortejo, verifica nuevamente")
                 || codeError.equals("Código repetido o desconocido para articulos de Traslado, verifica nuevamente")
                 || codeError.equals("El código ya tiene un registro de salida y entrada de inventario.")
+                || codeError.equals("Necesitas conexión a internet para realizar el escaneo del Ataúd o Urna.")
+                || codeError.equals("Parece que el ataúd o urna no esta disponible, ya que se encuentra asignado(a) a otra bitácora")
                 || codeError.equals("Antes de guardar debes eliminar el Ataúd o la Urna que tienes registrada")
                 || codeError.equals("Salida invalida, tienes que seleccionar el destino diferente a tu llegada."))
             btSi.setVisibility(View.GONE);
@@ -1374,12 +1389,23 @@ public class BitacoraDetalle extends BaseActivity implements CancelarArticuloEsc
                 else if (codeError.equals("Parece que los articulos de velación no estan completos, necesitas autorización para terminar la bitácora.")) {
 
 
-                    dialogoError.dismiss();
+                    /*dialogoError.dismiss();
                     descripcionPeticion = etDescripcionPeticion.getText().toString();
                     doRequestForEndBinnacle();
                     requesterCanceled = false;
-                    status = 0;
+                    status = 0;*/
 
+                    if(!etDescripcionPeticion.getText().toString().equals("")) {
+                        dialogoError.dismiss();
+                        descripcionPeticion = etDescripcionPeticion.getText().toString();
+                        doRequestForEndBinnacle();
+                        requesterCanceled = false;
+                        status = 0;
+                    }else
+                    {
+                        Toast.makeText(getApplicationContext(), "Ingresa el motivo de petición.", Toast.LENGTH_SHORT).show();
+                        etDescripcionPeticion.setError("Debes inigresa el motivo de petición");
+                    }
 
 
                 }
@@ -2279,51 +2305,145 @@ public class BitacoraDetalle extends BaseActivity implements CancelarArticuloEsc
 
                 }else if(scannerAtaurna)
                 {
-                    boolean guardarCapturaDeAtaurnas = false;
+                    if(ApplicationResourcesProvider.checkInternetConnection()) {
 
-                    if(DatabaseAssistant.hayDatosDeAtaurnasEnLaBitacora(bitacora)) {
-                        //Validar si tiene borrado 0 o 1 para insertar uno nuevo
-                        if(DatabaseAssistant.getDatosDeAtaurnasEnLaBitacora(bitacora).equals("1")){
-                            guardarCapturaDeAtaurnas = true;
-                        }else if(DatabaseAssistant.getDatosDeAtaurnasEnLaBitacora(bitacora).equals("0")){
-                            guardarCapturaDeAtaurnas = false;
-                            showErrorDialog("Antes de guardar debes eliminar el Ataúd o la Urna que tienes registrada", "");
-                        }
-                    }else {
-                        guardarCapturaDeAtaurnas = true;
-                    }
-
-
-                    
-                    if(guardarCapturaDeAtaurnas) {
+                        /**Hay que verificar por medio del WS si en la bitacora seleccioada, tiene el ataud o urna disponible para su uso**/
                         try {
-                            if (result.getContents().contains("|")) {
-                                String[] codeResult = result.getContents().replace("|", "X").split("X");
 
-                                DatabaseAssistant.insertarInventario(
-                                        "" + codeResult[0],
-                                        "" + codeResult[1],
-                                        "" + codeResult[2],
-                                        "" + codeResult[3],
-                                        "" + codeResult[4],
-                                        "" + bitacora,
-                                        "0"
-                                );
+                            if (result.getContents().contains("|"))
+                            {
 
-                                llenarCamposDeAtaurna(bitacora);
-                                Toast.makeText(this, "Equipo guardado correctamente", Toast.LENGTH_SHORT).show();
-                                showAnimationFromSuccessRecord();
+                                showLoadingDialog();
+                                runOnUiThread(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        ApplicationResourcesProvider.createJsonForSync();
+                                    }
+                                });
+                                TextView tvMensajeLoad =(TextView) findViewById(R.id.tvMensajeLoad);
+                                tvMensajeLoad.setText("Cargando");
+                                Button btCancelarPeticion =(Button) findViewById(R.id.btCancelarPeticion);
+                                btCancelarPeticion.setVisibility(View.GONE);
+                                JSONObject parametrosParaSaberSiElCodigoDeAtaurnaFunciona = new JSONObject();
+                                parametrosParaSaberSiElCodigoDeAtaurnaFunciona.put("serie_ataurna", result.getContents());
 
-                            } else {
+                                JsonObjectRequest postRequest = new JsonObjectRequest(Request.Method.POST, ConstantsBitacoras.WS_CHECK_STATUS_ATAURNA, parametrosParaSaberSiElCodigoDeAtaurnaFunciona, new Response.Listener<JSONObject>() {
+                                    @Override
+                                    public void onResponse(JSONObject response) {
+
+                                        try {
+                                            if (response.has("error")) {
+                                                Log.d(TAG, "onResponse: Ocurrio un error en la respuesta del WS de ATAURNAS CHECK: " + response.getString("error_message"));
+                                                Toast.makeText(BitacoraDetalle.this, "Parece que el código es incorrecto", Toast.LENGTH_SHORT).show();
+                                                hideLoadingDialog();
+                                            } else {
+                                                if (response.has("result")) {
+
+                                                    /*
+                                                        result
+                                                        1 = No disponible para escanear, esta guardada en Web con otra bitacora
+                                                        0 = Disponible para escanear.
+                                                     */
+
+                                                    if (response.getString("result").equals("1")) {
+                                                        showErrorDialog("Parece que el ataúd o urna no esta disponible, ya que se encuentra asignado(a) a otra bitácora", "");
+                                                        hideLoadingDialog();
+                                                    } else if (response.getString("result").equals("0")) {
+                                                        /**Declaramos la variable booleana para indiicar si se guarda el escaneo**/
+                                                        boolean guardarCapturaDeAtaurnas = false;
+
+                                                        /**Verificamos si ya tiene guardado el mismo codigo de ataud, en la bitacora indicada**/
+                                                        if (DatabaseAssistant.hayDatosDeAtaurnasEnLaBitacora(bitacora)) {
+
+                                                            /**Validar si tiene borrado 0 o 1 para insertar uno nuevo**/
+                                                            if (DatabaseAssistant.getDatosDeAtaurnasEnLaBitacora(bitacora).equals("1")) {
+                                                                guardarCapturaDeAtaurnas = true;
+                                                            } else if (DatabaseAssistant.getDatosDeAtaurnasEnLaBitacora(bitacora).equals("0")) {
+                                                                guardarCapturaDeAtaurnas = false;
+                                                                showErrorDialog("Antes de guardar debes eliminar el Ataúd o la Urna que tienes registrada", "");
+                                                            }
+
+                                                        } else {
+                                                            guardarCapturaDeAtaurnas = true;
+                                                        }
+
+                                                        /**Verificamos si fue verdadero para guardar, si es así, procedemos a procesar y desocomponer la cadena de texto**/
+                                                        if (guardarCapturaDeAtaurnas) {
+                                                            try {
+                                                                if (result.getContents().contains("|")) {
+                                                                    String[] codeResult = result.getContents().replace("|", "X").split("X");
+
+                                                                    DatabaseAssistant.insertarInventario(
+                                                                            "" + codeResult[0],
+                                                                            "" + codeResult[1],
+                                                                            "" + codeResult[2],
+                                                                            "" + codeResult[3],
+                                                                            "" + codeResult[4],
+                                                                            "" + bitacora,
+                                                                            "0"
+                                                                    );
+
+                                                                    llenarCamposDeAtaurna(bitacora);
+                                                                    hideLoadingDialog();
+                                                                    Toast.makeText(getApplicationContext(), "Equipo guardado correctamente", Toast.LENGTH_SHORT).show();
+                                                                    showAnimationFromSuccessRecord();
+
+                                                                } else {
+                                                                    showErrorDialog("El código no corresponde a un Ataúd o Urna, verifica nuevamente", "");
+                                                                    hideLoadingDialog();
+                                                                }
+                                                            } catch (Throwable e) {
+                                                                Log.e(TAG, "onActivityResult: La cadena del escaneo de ataurna no tiene el formato correcto" + e.getMessage());
+                                                                showErrorDialog("Código incorrecto, asegurate que sea un código de Ataúd o de Urna. Verifica nuevamente", "");
+                                                                hideLoadingDialog();
+                                                            }
+                                                        } else {
+                                                            Log.d(TAG, "onActivityResult: No se guardaran datos de ataurnas");
+                                                            hideLoadingDialog();
+                                                        }
+                                                    }
+                                                }
+                                                else{
+                                                    //No tiene result
+                                                    Toast.makeText(BitacoraDetalle.this, "Parece que el código es incorrecto", Toast.LENGTH_SHORT).show();
+                                                    hideLoadingDialog();
+                                                }
+                                            }
+                                        } catch (JSONException e) {
+                                            Log.e("TIMER", "onErrorResponse: Error: " + e.getMessage());
+                                            e.printStackTrace();
+                                            Toast.makeText(getApplicationContext(), "Ocurrio un error en Ataurnas: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                                            hideLoadingDialog();
+                                        }
+                                    }
+                                },
+                                        new Response.ErrorListener() {
+                                            @Override
+                                            public void onErrorResponse(VolleyError error) {
+                                                error.printStackTrace();
+                                                status = -1;
+                                                Log.e("TIMER", "onErrorResponse: Error: " + error.getMessage());
+                                                hideLoadingDialog();
+                                                Toast.makeText(getApplicationContext(), "Ocurrio un error: " + error.getMessage(), Toast.LENGTH_SHORT).show();
+                                            }
+                                        }) {
+
+                                };
+                                postRequest.setRetryPolicy(new DefaultRetryPolicy(90000, 2, DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
+                                VolleySingleton.getIntanciaVolley(getApplicationContext()).addToRequestQueue(postRequest);
+
+                            }else {
                                 showErrorDialog("El código no corresponde a un Ataúd o Urna, verifica nuevamente", "");
                             }
-                        } catch (Throwable e) {
-                            Log.e(TAG, "onActivityResult: La cadena del escaneo de ataurna no tiene el formato correcto" + e.getMessage());
-                            showErrorDialog("Código incorrecto, asegurate que sea un código de Ataúd o de Urna. Verifica nuevamente", "");
-                        }
-                    }else
-                        Log.d(TAG, "onActivityResult: No se guardaran datos de ataurnas");
 
+                        } catch (Exception e) {
+                            Log.d("TIMER", "getStatusBinaccle: error en creacion de json para status de bitacora");
+                            Toast.makeText(this, "Ocurrio un error: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                        }
+
+
+                    }else
+                        showErrorDialog("Necesitas conexión a internet para realizar el escaneo del Ataúd o Urna.", "");
                 }
                 else {
                     Log.d(TAG, "onActivityResult: No se guarda en ningun lugar");
@@ -2499,62 +2619,81 @@ public class BitacoraDetalle extends BaseActivity implements CancelarArticuloEsc
     }
 
     private void llenarCamposDeAtaurna(String bitacora) {
-        List<Inventario> inventarioList = Inventario.findWithQuery(Inventario.class, "SELECT * FROM INVENTARIO WHERE bitacora = '" + bitacora + "' and borrado = '0' ORDER BY id DESC LIMIT 1");
-        if (inventarioList.size() > 0) {
-            String codigo = inventarioList.get(0).getCodigo();
 
-            String descripcion = "Descripción: " + inventarioList.get(0).getDescripcion();
-            String serie = "No. Serie: " + inventarioList.get(0).getSerie();
-            String fecha = "Fecha admisión: " + inventarioList.get(0).getFecha();
-            String proveedor = "Proveedor: " + inventarioList.get(0).getProveedor();
+        try {
+            List<Inventario> inventarioList = Inventario.findWithQuery(Inventario.class, "SELECT * FROM INVENTARIO WHERE bitacora = '" + bitacora + "' and borrado = '0' ORDER BY id DESC LIMIT 1");
+            if (inventarioList.size() > 0) {
+                String codigo = inventarioList.get(0).getCodigo();
 
-            if(codigo.contains("UR")){
-                LinearLayout layoutAtaud = ( LinearLayout ) findViewById(R.id.layoutAtaud);
+                String descripcion = "Descripción: " + inventarioList.get(0).getDescripcion();
+                String serie = "No. Serie: " + inventarioList.get(0).getSerie();
+                String fecha = "Fecha admisión: " + inventarioList.get(0).getFecha();
+                String proveedor = "Proveedor: " + inventarioList.get(0).getProveedor();
+
+                if (codigo.contains("UR")) {
+                    LinearLayout layoutAtaud = (LinearLayout) findViewById(R.id.layoutAtaud);
+                    layoutAtaud.setVisibility(View.GONE);
+
+                    LinearLayout layoutUrna = (LinearLayout) findViewById(R.id.layoutUrna);
+                    TextView tvCodigoUrna = (TextView) findViewById(R.id.tvCodigoUrna);
+                    TextView tvDescripcionUrna = (TextView) findViewById(R.id.tvDescripcionUrna);
+                    TextView tvSerieUrna = (TextView) findViewById(R.id.tvSerieUrna);
+                    TextView tvFechaUrna = (TextView) findViewById(R.id.tvFechaUrna);
+                    TextView tvProveedorUrna = (TextView) findViewById(R.id.tvProveedorUrna);
+
+                    tvCodigoUrna.setText(inventarioList.get(0).getCodigo());
+                    tvDescripcionUrna.setText(descripcion);
+                    tvSerieUrna.setText(serie);
+                    tvFechaUrna.setText(fecha);
+                    tvProveedorUrna.setText(proveedor);
+
+                    layoutUrna.setVisibility(View.VISIBLE);
+                } else if (codigo.contains("AT")) {
+                    LinearLayout layoutUrna = (LinearLayout) findViewById(R.id.layoutUrna);
+                    layoutUrna.setVisibility(View.GONE);
+
+                    LinearLayout layoutAtaud = (LinearLayout) findViewById(R.id.layoutAtaud);
+                    TextView tvCodigoAtaud = (TextView) findViewById(R.id.tvCodigoAtaud);
+                    TextView tvDescripcionAtaud = (TextView) findViewById(R.id.tvDescripcionAtaud);
+                    TextView tvSerieAtaud = (TextView) findViewById(R.id.tvSerieAtaud);
+                    TextView tvFechaAtaud = (TextView) findViewById(R.id.tvFechaAtaud);
+                    TextView tvProveedorAtaud = (TextView) findViewById(R.id.tvProveedorAtaud);
+
+                    tvCodigoAtaud.setText(inventarioList.get(0).getCodigo());
+                    tvDescripcionAtaud.setText(descripcion);
+                    tvSerieAtaud.setText(serie);
+                    tvFechaAtaud.setText(fecha);
+                    tvProveedorAtaud.setText(proveedor);
+
+                    layoutAtaud.setVisibility(View.VISIBLE);
+                } else {
+                    Log.d(TAG, "llenarCamposDeAtaurna: No hay datos de ataudes o urnas");
+                    LinearLayout layoutAtaud = (LinearLayout) findViewById(R.id.layoutAtaud);
+                    layoutAtaud.setVisibility(View.GONE);
+                    LinearLayout layoutUrna = (LinearLayout) findViewById(R.id.layoutUrna);
+                    layoutUrna.setVisibility(View.GONE);
+                    //String vacio ="";
+                    //Inventario.executeQuery("DELETE INVENTARIO WHERE codigo ='" + vacio + "'");
+                }
+
+            } else {
+                Log.d(TAG, "llenarCamposDeAtaurna: No hay datos de ataudes o urnas");
+                LinearLayout layoutAtaud = (LinearLayout) findViewById(R.id.layoutAtaud);
                 layoutAtaud.setVisibility(View.GONE);
-
-                LinearLayout layoutUrna = ( LinearLayout ) findViewById(R.id.layoutUrna);
-                TextView tvCodigoUrna = ( TextView ) findViewById(R.id.tvCodigoUrna);
-                TextView tvDescripcionUrna = ( TextView ) findViewById(R.id.tvDescripcionUrna);
-                TextView tvSerieUrna = ( TextView ) findViewById(R.id.tvSerieUrna);
-                TextView tvFechaUrna = ( TextView ) findViewById(R.id.tvFechaUrna);
-                TextView tvProveedorUrna = ( TextView ) findViewById(R.id.tvProveedorUrna);
-
-                tvCodigoUrna.setText(inventarioList.get(0).getCodigo());
-                tvDescripcionUrna.setText(descripcion);
-                tvSerieUrna.setText(serie);
-                tvFechaUrna.setText(fecha);
-                tvProveedorUrna.setText(proveedor);
-
-                layoutUrna.setVisibility(View.VISIBLE);
-            }
-            else if(codigo.contains("AT")){
-                LinearLayout layoutUrna = ( LinearLayout ) findViewById(R.id.layoutUrna);
+                LinearLayout layoutUrna = (LinearLayout) findViewById(R.id.layoutUrna);
                 layoutUrna.setVisibility(View.GONE);
-
-                LinearLayout layoutAtaud = ( LinearLayout ) findViewById(R.id.layoutAtaud);
-                TextView tvCodigoAtaud = ( TextView ) findViewById(R.id.tvCodigoAtaud);
-                TextView tvDescripcionAtaud = ( TextView ) findViewById(R.id.tvDescripcionAtaud);
-                TextView tvSerieAtaud = ( TextView ) findViewById(R.id.tvSerieAtaud);
-                TextView tvFechaAtaud = ( TextView ) findViewById(R.id.tvFechaAtaud);
-                TextView tvProveedorAtaud = ( TextView ) findViewById(R.id.tvProveedorAtaud);
-
-                tvCodigoAtaud.setText(inventarioList.get(0).getCodigo());
-                tvDescripcionAtaud.setText(descripcion);
-                tvSerieAtaud.setText(serie);
-                tvFechaAtaud.setText(fecha);
-                tvProveedorAtaud.setText(proveedor);
-
-                layoutAtaud.setVisibility(View.VISIBLE);
             }
 
-        } else {
+        }catch (Throwable e){
+            Log.e(TAG, "llenarCamposDeAtaurna: Erorr en cacheo de datos de ataruna" + e.getMessage());
             Log.d(TAG, "llenarCamposDeAtaurna: No hay datos de ataudes o urnas");
-            LinearLayout layoutAtaud = ( LinearLayout ) findViewById(R.id.layoutAtaud);
+            LinearLayout layoutAtaud = (LinearLayout) findViewById(R.id.layoutAtaud);
             layoutAtaud.setVisibility(View.GONE);
-            LinearLayout layoutUrna = ( LinearLayout ) findViewById(R.id.layoutUrna);
+            LinearLayout layoutUrna = (LinearLayout) findViewById(R.id.layoutUrna);
             layoutUrna.setVisibility(View.GONE);
+            //String vacio ="";
+            //Inventario.executeQuery("DELETE INVENTARIO WHERE codigo ='" + vacio + "'");
         }
-
 
     }
 
@@ -2611,7 +2750,7 @@ public class BitacoraDetalle extends BaseActivity implements CancelarArticuloEsc
                             "" + listaArticulos.get(0).getNombre(),
                             "" + listaArticulos.get(0).getSerie(),
                             "" + listaArticulos.get(0).getFecha(),
-                            "" + listaArticulos.get(0).getBitacora(),"", ""
+                            "" + listaArticulos.get(0).getBitacora(),"", "",""
                     );
                     Articuloscan.executeQuery("DELETE FROM ARTICULOSCAN WHERE id ='" + idArticulo + "'");
                     consultarArticulosEscaneados(bitacora);
@@ -2649,7 +2788,7 @@ public class BitacoraDetalle extends BaseActivity implements CancelarArticuloEsc
                             "" + listaArticulos.get(0).getSerie(),
                             "" + listaArticulos.get(0).getFecha(),
                             "",
-                            "" + listaArticulos.get(0).getBitacora()
+                            "" + listaArticulos.get(0).getBitacora(), ""
                     );
 
                     Equipoinstalacion.executeQuery("DELETE FROM EQUIPOINSTALACION WHERE serie = '" + serie + "' and fecha ='" + fecha + "' and bitacora='" + bitacora + "'");
@@ -2913,7 +3052,7 @@ public class BitacoraDetalle extends BaseActivity implements CancelarArticuloEsc
                             "" + listaArticulos.get(0).getSerie(),
                             "" + listaArticulos.get(0).getFecha(),
                             "",
-                            "" + listaArticulos.get(0).getBitacora()
+                            "" + listaArticulos.get(0).getBitacora(), ""
                     );
 
                     Equipocortejo.executeQuery("DELETE FROM EQUIPOCORTEJO WHERE serie = '" + serie + "' and fecha ='" + fecha + "' and bitacora='" + bitacora + "'");
@@ -2952,7 +3091,7 @@ public class BitacoraDetalle extends BaseActivity implements CancelarArticuloEsc
                             "" + listaArticulos.get(0).getSerie(),
                             "" + listaArticulos.get(0).getFecha(),
                             "",
-                            "" + listaArticulos.get(0).getBitacora()
+                            "" + listaArticulos.get(0).getBitacora(), ""
                     );
 
                     EquipoRecoleccion.executeQuery("DELETE FROM EQUIPO_RECOLECCION WHERE serie = '" + serie + "' and fecha ='" + fecha + "' and bitacora='" + bitacora + "'");
@@ -2991,7 +3130,7 @@ public class BitacoraDetalle extends BaseActivity implements CancelarArticuloEsc
                             "" + listaArticulos.get(0).getSerie(),
                             "" + listaArticulos.get(0).getFecha(),
                             "",
-                            "" + listaArticulos.get(0).getBitacora()
+                            "" + listaArticulos.get(0).getBitacora(), ""
                     );
 
                     EquipoTraslado.executeQuery("DELETE FROM EQUIPO_TRASLADO WHERE serie = '" + serie + "' and fecha ='" + fecha + "' and bitacora='" + bitacora + "'");

@@ -34,6 +34,7 @@
 
 
     <ImageView
+        android:visibility="gone"
         android:id="@+id/btDescargarTodo"
         android:layout_width="40dp"
         android:layout_height="40dp"
@@ -85,19 +86,41 @@
         tools:layout_editor_absoluteX="0dp">
 
 
-        <Spinner
-            android:layout_marginTop="20dp"
-            android:alpha="0.7"
-            android:background="@drawable/rounded_style"
-            android:layout_gravity="center"
+        <TextView
+            android:textStyle="bold"
             android:layout_marginLeft="20dp"
             android:layout_marginRight="20dp"
-            android:id="@+id/etUsuario"
+            android:text="Usuario"
             android:layout_width="match_parent"
-            android:layout_height="55dp"
-            android:hint="Usuario"
-            android:selectAllOnFocus="false" />
+            android:layout_height="wrap_content"/>
 
+        <com.google.android.material.textfield.TextInputLayout
+            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="20dp"
+            android:layout_marginTop="7dp"
+            android:layout_marginRight="20dp">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/etUsuario"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:hint="Usuario"
+                android:inputType="textPersonName"
+                android:selectAllOnFocus="false" />
+
+        </com.google.android.material.textfield.TextInputLayout>
+
+
+        <TextView
+            android:textStyle="bold"
+            android:layout_marginTop="20dp"
+            android:layout_marginLeft="20dp"
+            android:layout_marginRight="20dp"
+            android:text="Contraseña"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"/>
 
         <com.google.android.material.textfield.TextInputLayout
             android:id="@+id/T2"
@@ -105,18 +128,14 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginLeft="20dp"
-            android:layout_marginTop="10dp"
+            android:layout_marginTop="7dp"
             android:layout_marginRight="20dp">
-
-
-            <!--android:text="MPDP0002"-->
-
 
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/etContrasena"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:hint="Contraseña (código de empleado)"
+                android:hint="Contraseña"
                 android:inputType="textPassword"
                 android:selectAllOnFocus="false" />
 
@@ -145,7 +164,7 @@
                 android:layout_marginTop="10dp"
                 android:layout_marginRight="20dp"
                 android:layout_marginBottom="10dp"
-                android:text="Iniciar Sesión"
+                android:text="INICIAR SESIÓN"
                 android:textColor="@color/textos_principal" />
 
 

@@ -733,7 +733,9 @@ public class ApplicationResourcesProvider extends com.orm.SugarApp {
                             jsonAtaurnasCanceladas.put("proveedor_ataurna", canceladosList.get(y).getProveedor());
                             jsonAtaurnasCanceladas.put("fecha_ataurna", canceladosList.get(y).getFecha().replace("/", "-"));
                             jsonAtaurnasCanceladas.put("bitacora", canceladosList.get(y).getBitacora());
-                            jsonAtaurnasCanceladas.put("fecha_captura", canceladosList.get(y).getCapturado());
+                            jsonAtaurnasCanceladas.put("fecha_cancelacion", canceladosList.get(y).getCapturado());
+                            jsonAtaurnasCanceladas.put("usuario", DatabaseAssistant.getUserNameFromSesiones());
+                            jsonAtaurnasCanceladas.put("fecha_captura", canceladosList.get(y).getFechaEscaneo());
                             jsonAtaudesAndUrnasEliminadas.put(jsonAtaurnasCanceladas);
                         }
                         jsonInformacionAdicionalBitacora.put("Ataurnas_eliminadas", jsonAtaudesAndUrnasEliminadas);
@@ -1192,7 +1194,7 @@ public class ApplicationResourcesProvider extends com.orm.SugarApp {
                 timerForSyncData();
                 if(checkInternetConnection()) {
                     createJsonForSync();
-                    downloadCatalogoArticulos();
+                    //downloadCatalogoArticulos();
                 }
             }
         }, 120000);

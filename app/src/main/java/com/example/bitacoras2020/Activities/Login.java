@@ -102,9 +102,8 @@ public class Login extends AppCompatActivity {
 
     private static final String TAG = "LOGIN";
     TextInputEditText etContrasena;
-    Spinner etUsuario;
+    TextInputEditText etUsuario;
     Dialog dialogoError;
-    String choferSeleccionado = null;
 
     //*****
     GeofencingClient geofencingClient;
@@ -131,7 +130,7 @@ public class Login extends AppCompatActivity {
         setContentView(R.layout.activity_login);
 
         dialogoError = new Dialog(Login.this);
-        etUsuario =(Spinner) findViewById(R.id.etUsuario);
+        etUsuario =(TextInputEditText) findViewById(R.id.etUsuario);
         etContrasena =(TextInputEditText) findViewById(R.id.etContrasena);
         btIniciar = (NeumorphButton) findViewById(R.id.btInicarSesion);
         btActualizar = (Button) findViewById(R.id.btActualizar);
@@ -140,6 +139,62 @@ public class Login extends AppCompatActivity {
         etVersion.setText(BuildConfig.VERSION_NAME);
         btDescargarTodo =(ImageView) findViewById(R.id.btDescargarTodo);
         tvMensajeLoading =(TextView) findViewById(R.id.tvMensajeLoading);
+
+        /**Se consulta de preferencias el usuario del chofer que se quedo guardado**/
+        etUsuario.setText(Preferences.getNombreChoferInLogin(Login.this, Preferences.PREFERENCE_NOMBRE_CHOFER));
+
+
+        if(!DatabaseAssistant.isThereDataChoferes()) {
+            if (ApplicationResourcesProvider.checkInternetConnection())
+                loadInformationAndRequest();
+            else
+                showErrorDialog("No hay conexión a internet");
+        }
+
+
+
+
+
+
+
+
+
+
+
+
+
+        /*if(DatabaseAssistant.isThereDataChoferes()){
+            String nombreChofer = Preferences.getNombreChoferInLogin(Login.this, Preferences.PREFERENCE_NOMBRE_CHOFER);
+            if(!nombreChofer.equals("")){
+                ArrayAdapter<String> adapter = new ArrayAdapter<String>(getApplicationContext(), R.layout.style_spinner, DatabaseAssistant.getAllChoferes());
+                etUsuario.setAdapter(adapter);
+                etUsuario.setSelection(adapter.getPosition(nombreChofer));
+
+            }else {
+                ArrayAdapter<String> adapterColonias = new ArrayAdapter<String>(Login.this, R.layout.style_spinner, DatabaseAssistant.getAllChoferes());
+                etUsuario.setAdapter(adapterColonias);
+            }
+        }
+        else{
+            if(ApplicationResourcesProvider.checkInternetConnection())
+                loadInformationAndRequest();
+            else {
+                String nombreChofer = Preferences.getNombreChoferInLogin(Login.this, Preferences.PREFERENCE_NOMBRE_CHOFER);
+                if(!nombreChofer.equals("")){
+                    ArrayAdapter<String> adapter = new ArrayAdapter<String>(getApplicationContext(), R.layout.style_spinner, DatabaseAssistant.getAllChoferes());
+                    etUsuario.setAdapter(adapter);
+                    etUsuario.setSelection(adapter.getPosition(nombreChofer));
+
+
+                }else {
+                    showErrorDialog("No hay conexión a internet");
+                    //mostrar aqui en aviso de cargar de nuevo el load
+                }
+
+            }
+        }*/
+
+
 
 
         btDescargarTodo.setOnLongClickListener(new View.OnLongClickListener() {
@@ -154,43 +209,6 @@ public class Login extends AppCompatActivity {
             }
         });
 
-        //requestPlaceAndGeofenceZoneToLogin();
-
-        //Verificar si la lista de choferes se cargo correctamente
-        if(DatabaseAssistant.isThereDataChoferes()){
-            String nombreChofer = Preferences.getNombreChoferInLogin(Login.this, Preferences.PREFERENCE_NOMBRE_CHOFER);
-            if(!nombreChofer.equals("")){
-                ArrayAdapter<String> adapter = new ArrayAdapter<String>(getApplicationContext(), R.layout.style_spinner, DatabaseAssistant.getAllChoferes());
-                etUsuario.setAdapter(adapter);
-
-                etUsuario.setSelection(adapter.getPosition(nombreChofer));
-            }else {
-                ArrayAdapter<String> adapterColonias = new ArrayAdapter<String>(Login.this, R.layout.style_spinner, DatabaseAssistant.getAllChoferes());
-                etUsuario.setAdapter(adapterColonias);
-            }
-        }
-        else{
-            if(ApplicationResourcesProvider.checkInternetConnection())
-                loadInformationAndRequest();
-            else {
-                String nombreChofer = Preferences.getNombreChoferInLogin(Login.this, Preferences.PREFERENCE_NOMBRE_CHOFER);
-                if(!nombreChofer.equals("")){
-                    //String [] nombreChoferArray = {nombreChofer};
-                    //ArrayAdapter<String> adapterColonias = new ArrayAdapter<String>(Login.this, android.R.layout.simple_dropdown_item_1line, nombreChoferArray);
-                    //etUsuario.setAdapter(adapterColonias);
-
-                    ArrayAdapter<String> adapter = new ArrayAdapter<String>(getApplicationContext(), R.layout.style_spinner, DatabaseAssistant.getAllChoferes());
-                    etUsuario.setAdapter(adapter);
-                    etUsuario.setSelection(adapter.getPosition(nombreChofer));
-
-
-                }else {
-                    showErrorDialog("No hay conexión a internet");
-                    //mostrar aqui en aviso de cargar de nuevo el load
-                }
-
-            }
-        }
 
         btActualizar.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -200,7 +218,7 @@ public class Login extends AppCompatActivity {
         });
 
 
-        etUsuario.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+        /*etUsuario.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
                 choferSeleccionado = etUsuario.getItemAtPosition(position).toString();
@@ -210,7 +228,7 @@ public class Login extends AppCompatActivity {
             public void onNothingSelected(AdapterView<?> parent) {
                 choferSeleccionado = null;
             }
-        });
+        });*/
 
 
 
@@ -224,7 +242,7 @@ public class Login extends AppCompatActivity {
                     Toast.makeText(getApplicationContext(), "La base de datos fue reseteada con éxito", Toast.LENGTH_SHORT).show();
                 }
                 else {
-                    if (checkFullFields() && etUsuario.getSelectedItem() != "Selecciona tu nombre...")
+                    if (checkFullFields())
                     {
                         Preferences.setWithinTheZone(getApplicationContext(), false, Preferences.PREFERENCE_WITHIN_THE_ZONE_TO_LOGIN);
 
@@ -467,7 +485,7 @@ public class Login extends AppCompatActivity {
 
     private void validarLoginOffline(String isBunker)
     {
-        if(DatabaseAssistant.isThereLastedDataFromSessions(choferSeleccionado, etContrasena.getText().toString()))
+        if(DatabaseAssistant.isThereLastedDataFromSessions(etUsuario.getText().toString(), etContrasena.getText().toString()))
         {
             @SuppressLint("SimpleDateFormat") SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
             @SuppressLint("SimpleDateFormat") SimpleDateFormat timeFormat = new SimpleDateFormat("HH:mm:ss");
@@ -480,7 +498,7 @@ public class Login extends AppCompatActivity {
             if (coordenadasFromApplication.length > 0 && coordenadasFromApplication != null) {
 
                 DatabaseAssistant.insertarSesiones(
-                        ""+ choferSeleccionado,
+                        ""+ etUsuario.getText().toString(),
                         "" + etContrasena.getText().toString(),
                         ""+ dateFormat.format(new Date()),
                         ""+ coordenadasFromApplication[0],
@@ -491,8 +509,11 @@ public class Login extends AppCompatActivity {
                         isBunker,
                         "0",
                         Preferences.getGeofenceActual(getApplicationContext(), Preferences.PREFERENCE_GEOFENCE_ACTUAL),
-                        "" + DatabaseAssistant.getLastIsFuneraria()
+                        "" + DatabaseAssistant.getLastIsFuneraria(),
+                        "" + DatabaseAssistant.getUserNameFromSesiones()
                 );
+
+                ApplicationResourcesProvider.insertarMovimiento("", "", "INICIO DE SESIÓN OFFLINE: ");
 
                 if(DatabaseAssistant.getLastIsFuneraria().equals("1"))
                     intent = new Intent(getApplicationContext(), PersonalFuneraria.class);
@@ -518,7 +539,7 @@ public class Login extends AppCompatActivity {
     private void loginOnline(boolean isBunker) {
         if (checkGPSConnection()) {
             if (checkFullFields()) {
-                createJsonParametersForLoginOnline(choferSeleccionado, etContrasena.getText().toString(), isBunker);
+                createJsonParametersForLoginOnline(etUsuario.getText().toString(), etContrasena.getText().toString(), isBunker);
             }else
                 Toast.makeText(this, "Verifica que esten llenos los campos", Toast.LENGTH_SHORT).show();
         }else
@@ -538,7 +559,7 @@ public class Login extends AppCompatActivity {
     }
 
     private boolean checkFullFields() {
-        return (choferSeleccionado != null || !choferSeleccionado.equals("")) && !etContrasena.getText().toString().equals("");
+        return (!etContrasena.getText().toString().equals("") && !etUsuario.getText().toString().equals(""));
     }
 
 
@@ -601,10 +622,13 @@ public class Login extends AppCompatActivity {
                                                         "" + response.getJSONObject("login").getString("isBunker"),
                                                         "0",
                                                         "" + response.getJSONObject("login").getString("geoFenceActual"),
-                                                        "0" //+ response.getJSONObject("login").getString("isFuneraria")
+                                                        "" + response.getJSONObject("login").getString("isFuneraria"),
+                                                        "" + response.getJSONObject("login").getString("nombre")
                                                 );
 
                                                 success = true;
+
+                                                ApplicationResourcesProvider.insertarMovimiento("", "", "INICIO DE SESIÓN ONLINE: ");
 
                                                 //******************* LABORATORIOS **************************
                                                 if (response.has("laboratorios")) {
@@ -1220,9 +1244,10 @@ public class Login extends AppCompatActivity {
                             runOnUiThread(new Runnable() {
                                 @Override
                                 public void run() {
+
                                     if(DatabaseAssistant.isThereDataChoferes()) {
-                                        ArrayAdapter<String> adapterColonias = new ArrayAdapter<String>(Login.this, R.layout.style_spinner, DatabaseAssistant.getAllChoferes());
-                                        etUsuario.setAdapter(adapterColonias);
+                                        /**Se consulta de preferencias el usuario del chofer que se quedo guardado**/
+                                        etUsuario.setText(Preferences.getNombreChoferInLogin(Login.this, Preferences.PREFERENCE_NOMBRE_CHOFER));
 
                                         btActualizar.setVisibility(View.GONE);
                                         etUsuario.setVisibility(View.VISIBLE);
@@ -1234,6 +1259,7 @@ public class Login extends AppCompatActivity {
                                         T2.setVisibility(View.GONE);
                                         btIniciar.setVisibility(View.GONE);
                                     }
+
                                     dismissMyCustomDialog();
                                 }
                             });
@@ -1265,8 +1291,8 @@ public class Login extends AppCompatActivity {
                                 @Override
                                 public void run() {
                                    try {
-                                       ArrayAdapter<String> adapterColonias = new ArrayAdapter<String>(Login.this, R.layout.style_spinner, DatabaseAssistant.getAllChoferes());
-                                       etUsuario.setAdapter(adapterColonias);
+                                       /**Se consulta de preferencias el usuario del chofer que se quedo guardado**/
+                                       etUsuario.setText(Preferences.getNombreChoferInLogin(Login.this, Preferences.PREFERENCE_NOMBRE_CHOFER));
                                        btActualizar.setVisibility(View.GONE);
                                        etUsuario.setVisibility(View.VISIBLE);
                                        T2.setVisibility(View.VISIBLE);
@@ -1312,20 +1338,9 @@ public class Login extends AppCompatActivity {
 
                                     //Verificar si la lista de choferes se cargo correctamente
                                     if(DatabaseAssistant.isThereDataChoferes()){
-                                        String nombreChofer = Preferences.getNombreChoferInLogin(Login.this, Preferences.PREFERENCE_NOMBRE_CHOFER);
-                                        if(!nombreChofer.equals("")){
-                                            //String [] nombreChoferArray = {nombreChofer};
-                                            //ArrayAdapter<String> adapterColonias = new ArrayAdapter<String>(Login.this, android.R.layout.simple_dropdown_item_1line, nombreChoferArray);
-                                            //etUsuario.setAdapter(adapterColonias);
+                                        /**Se consulta de preferencias el usuario del chofer que se quedo guardado**/
+                                        etUsuario.setText(Preferences.getNombreChoferInLogin(Login.this, Preferences.PREFERENCE_NOMBRE_CHOFER));
 
-                                            ArrayAdapter<String> adapter = new ArrayAdapter<String>(getApplicationContext(), R.layout.style_spinner, DatabaseAssistant.getAllChoferes());
-                                            etUsuario.setAdapter(adapter);
-                                            etUsuario.setSelection(adapter.getPosition(nombreChofer));
-
-                                        }else {
-                                            ArrayAdapter<String> adapterColonias = new ArrayAdapter<String>(Login.this, R.layout.style_spinner, DatabaseAssistant.getAllChoferes());
-                                            etUsuario.setAdapter(adapterColonias);
-                                        }
                                         btActualizar.setVisibility(View.GONE);
                                         etUsuario.setVisibility(View.VISIBLE);
                                         T2.setVisibility(View.VISIBLE);

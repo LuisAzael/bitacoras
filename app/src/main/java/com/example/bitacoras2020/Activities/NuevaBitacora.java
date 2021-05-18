@@ -85,6 +85,7 @@ import com.example.bitacoras2020.Database.EquipoRecoleccion;
 import com.example.bitacoras2020.Database.EquipoTraslado;
 import com.example.bitacoras2020.Database.Equipocortejo;
 import com.example.bitacoras2020.Database.Equipoinstalacion;
+import com.example.bitacoras2020.Database.Inventario;
 import com.example.bitacoras2020.MainActivity;
 import com.example.bitacoras2020.R;
 import com.example.bitacoras2020.Utils.ApplicationResourcesProvider;
@@ -128,7 +129,7 @@ public class NuevaBitacora extends Activity implements LinearLayoutThatDetectsSo
     NeumorphButton btBuscarBitacora;
     boolean errorStackTraceBitacoras = false;
     boolean errorStackTraceBitacorasDetalles = false;
-    boolean errorStackTraceBitacorasComentarios = false;
+    boolean errorStackTraceBitacorasComentarios = false, errorStackTraceAtaurna=false;
     boolean bitacoraFromNotification = false;
     String codigoErrorStackTraceBitacoras = "", bitacoraGlobal="";
 
@@ -157,6 +158,10 @@ public class NuevaBitacora extends Activity implements LinearLayoutThatDetectsSo
         setContentView(R.layout.activity_nueva_bitacora);
         NeumorphButton btCancelar = findViewById(R.id.btCancelar);
         NeumorphButton btGuardar = findViewById(R.id.btGuardar);
+
+        LinearLayout layoutInstalacion =(LinearLayout) findViewById(R.id.layoutInstalacion);
+        LinearLayout layoutRecoleccion =(LinearLayout) findViewById(R.id.layoutRecoleccion);
+        LinearLayout layoutTraslado =(LinearLayout) findViewById(R.id.layoutTraslado);
 
         btBack = (ImageView) findViewById(R.id.btBack);
         etBitacora = (AutoCompleteTextView) findViewById(R.id.etBitacora);
@@ -267,6 +272,45 @@ public class NuevaBitacora extends Activity implements LinearLayoutThatDetectsSo
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
                 movimientoSeleccionado = spMovimiento.getItemAtPosition(position).toString();
                 closeTeclado();
+
+                /** Validar las posiciones del spinner para activar o desactivar los menus de escaneo **/
+
+                if(spMovimiento.getSelectedItemPosition() == 1){/**Articulo de Recoleccion**/
+                    LinearLayout expand_view = (LinearLayout) findViewById(R.id.expand_view);
+                    expand_view.setVisibility(View.VISIBLE);
+                    layoutInstalacion.setVisibility(View.GONE);
+                    layoutRecoleccion.setVisibility(View.VISIBLE);
+                    layoutTraslado.setVisibility(View.GONE);
+
+                }else if(spMovimiento.getSelectedItemPosition() == 2){/**Articulo de Traslado**/
+                    layoutInstalacion.setVisibility(View.GONE);
+                    layoutRecoleccion.setVisibility(View.GONE);
+                    layoutTraslado.setVisibility(View.VISIBLE);
+                    LinearLayout expand_view = (LinearLayout) findViewById(R.id.expand_view);
+                    expand_view.setVisibility(View.VISIBLE);
+                }
+                else if(spMovimiento.getSelectedItemPosition() == 3){/**Articulo de Instalacion**/
+                    layoutInstalacion.setVisibility(View.VISIBLE);
+                    layoutRecoleccion.setVisibility(View.GONE);
+                    layoutTraslado.setVisibility(View.GONE);
+                    LinearLayout expand_view = (LinearLayout) findViewById(R.id.expand_view);
+                    expand_view.setVisibility(View.VISIBLE);
+
+                } else if(spMovimiento.getSelectedItemPosition() == 4){/**Articulo de Cortejo**/
+                    layoutInstalacion.setVisibility(View.GONE);
+                    layoutRecoleccion.setVisibility(View.GONE);
+                    layoutTraslado.setVisibility(View.GONE);
+                    LinearLayout expand_view = (LinearLayout) findViewById(R.id.expand_view);
+                    expand_view.setVisibility(View.GONE);
+                }
+                else{
+                    LinearLayout expand_view = (LinearLayout) findViewById(R.id.expand_view);
+                    expand_view.setVisibility(View.GONE);
+                    layoutInstalacion.setVisibility(View.GONE);
+                    layoutRecoleccion.setVisibility(View.GONE);
+                    layoutTraslado.setVisibility(View.GONE);
+                }
+
             }
 
             @Override
@@ -1533,6 +1577,7 @@ public class NuevaBitacora extends Activity implements LinearLayoutThatDetectsSo
                                         JSONArray bitacorasArray = new JSONArray();
                                         JSONArray bitacoraDetallesArray = new JSONArray();
                                         JSONArray bitacorasComentariosArray = new JSONArray();
+                                        JSONArray bitacorasAtaurnas = new JSONArray();
 
                                         try {
                                             if (response.has("bitacoraDrivers")) {
@@ -1681,15 +1726,52 @@ public class NuevaBitacora extends Activity implements LinearLayoutThatDetectsSo
                                                                 } catch (JSONException e) {
                                                                     errorStackTraceBitacorasComentarios = true;
                                                                     e.printStackTrace();
+                                                                    Toast.makeText(NuevaBitacora.this, "Ocurrio un error en consulta de comentarios: " + e.getMessage(), Toast.LENGTH_SHORT).show();
                                                                 }
                                                             }
                                                             //*************************************************************************
+
+
+                                                            //*************************** CONSULTA DE ATAURNAS DESDE WS **********************
+                                                            if (response.has("ataurna")) {
+                                                                try {
+                                                                    errorStackTraceAtaurna = false;
+                                                                    bitacorasAtaurnas = response.getJSONArray("ataurna");
+                                                                    Inventario.executeQuery("DELETE FROM INVENTARIO WHERE bitacora = '" + "" + bitacorasAtaurnas.getJSONObject(0).getString("bitacora") + "' and sync ='1'");
+
+                                                                    for (int i = 0; i <= bitacorasAtaurnas.length() - 1; i++) {
+
+                                                                        DatabaseAssistant.insertarInventario(
+                                                                                "" + bitacorasAtaurnas.getJSONObject(i).getString("codigo_ataurna"),
+                                                                                "" + bitacorasAtaurnas.getJSONObject(i).getString("item_ataurna"),
+                                                                                "" + bitacorasAtaurnas.getJSONObject(i).getString("serie_ataurna"),
+                                                                                "" + bitacorasAtaurnas.getJSONObject(i).getString("fecha_ataurna"),
+                                                                                "",
+                                                                                "" + bitacorasAtaurnas.getJSONObject(i).getString("bitacora"),
+                                                                                "0"
+                                                                        );
+
+                                                                    }
+                                                                    Log.d(TAG, "onResponse: Ataurnas actualizadas");
+
+                                                                } catch (JSONException e) {
+                                                                    errorStackTraceAtaurna = true;
+                                                                    e.printStackTrace();
+                                                                    Log.e(TAG, "onResponse: Ocurrio un error en Consulta de Ataurnas: " + e.getMessage());
+                                                                    Toast.makeText(NuevaBitacora.this, "Ocurrio un error en consulta de ataúdes y urnas: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                                                                }
+                                                            }
+                                                            //*************************************************************************
+
+
+
 
 
                                                         } catch (Exception e) {
                                                             e.printStackTrace();
                                                             errorStackTraceBitacorasDetalles = true;
                                                             Log.e(TAG, "onResponse: Error en bitacora details al descargar: " + e.getMessage());
+                                                            Toast.makeText(NuevaBitacora.this, "Ocurrio un error en la búsqueda de la bitácora.", Toast.LENGTH_SHORT).show();
                                                         }
                                                     }
                                                     //*******************************************************************************************************************

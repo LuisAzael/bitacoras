@@ -135,7 +135,7 @@ public class DatabaseAssistant
         articuloscan.save();
     }
 
-    public static void insertarArticuloCancelado(String codigo, String descripcion, String serie, String fecha, String proveedor, String bitacora) {
+    public static void insertarArticuloCancelado(String codigo, String descripcion, String serie, String fecha, String proveedor, String bitacora, String fechaEscaneo) {
         @SuppressLint("SimpleDateFormat") SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         Cancelados cancelados = new Cancelados(
                 "" + codigo,
@@ -145,7 +145,8 @@ public class DatabaseAssistant
                 "" + proveedor,
                 "" + bitacora,
                 "0",
-                "" + dateFormat.format(new Date())
+                "" + dateFormat.format(new Date()),
+                "" + fechaEscaneo
         );
         cancelados.save();
     }
@@ -325,7 +326,10 @@ public class DatabaseAssistant
                 "" + descripcion,
                 "" + serie,
                 "" + fecha,
-                "" + proveedor, "0", bitacora, borrado,
+                "" + proveedor,
+                "0",
+                "" + bitacora,
+                "" + borrado,
                 "" + dateFormat.format(new Date()),
                 "" + arregloCoordenadas[0],
                 "" + arregloCoordenadas[1]
@@ -350,9 +354,9 @@ public class DatabaseAssistant
     }
 
     public static void insertarSesiones(String codigo, String contrasena, String fecha, String latitud, String longitud, String estatus,
-                                        String hora, String sync, String isBunker, String isProveedor, String geofence, String isFuneraria){
+                                        String hora, String sync, String isBunker, String isProveedor, String geofence, String isFuneraria, String nombre){
         Sesiones sesiones = new Sesiones(codigo, contrasena, fecha, latitud, longitud, estatus,
-                hora, sync, isBunker, isProveedor, geofence, isFuneraria);
+                hora, sync, isBunker, isProveedor, geofence, isFuneraria, nombre);
         sesiones.save();
     }
 
@@ -609,7 +613,7 @@ public class DatabaseAssistant
 
     public static String getUserNameFromSesiones() {
         List<Sesiones> lista = Sesiones.findWithQuery(Sesiones.class, "SELECT * FROM SESIONES ORDER BY id DESC LIMIT 1");
-        return lista.size() > 0 ? lista.get(0).getUsuario() : "x";
+        return lista.size() > 0 ? lista.get(0).getNombre() : "x"; //Antes tenia usuario
     }
 
     public  static String[] getLastedDataFromSessions() {

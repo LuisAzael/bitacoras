@@ -21,11 +21,12 @@ public class ConstantsBitacoras extends BaseActivity{
     public static final String WS_BINNACLE_URL= getBaseURL() +"/getCatalogoBitacoras";
     public static final String WS_DOWNLOAD_BITACORAS_COMPLETAS= getBaseURL() +"/getCatalogoBitacorasPreconfiguradas";
     public static final String WS_DOWNLOAD_BITACORA_INDIVIDUAL= getBaseURL() +"/getSingleBitacora";
-    public static final String WS_DOWNLOAD_ARTICULOS_CATALOGO= getBaseURL() +"/getCatalogoArticulos";
+    public static final String WS_DOWNLOAD_ARTICULOS_CATALOGO= getBaseURL() +"/getInventoryType";
 
 
     public static final String WS_CONFIGURATION= getBaseURL() +"/getConfig";
     public static final String WS_CHECK_STATUS_BINNACLE= getBaseURL() +"/getAuthorizationToEndBitacora";
+    public static final String WS_CHECK_STATUS_ATAURNA= getBaseURL() +"/checkIfAtaurnaIsRegistered";
     public static final String WS_LOGIN= getBaseURL() +"/loginApp";
     public static final String WS_CHECKINCHECKOUT_NEW= getBaseURL() +"/doCheckinAndCheckout";
 

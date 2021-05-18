@@ -26,6 +26,7 @@ public class Preferences
     public static final String PREFERENCE_AUTOMATICA="asistencia.salida.automatica";
 
 
+
     public static void setPreferencesAsistenciaEntrada(Context c, boolean bandera, String key)
     {
         SharedPreferences preferences= c.getSharedPreferences(STRING_PREFERENCES, c.MODE_PRIVATE);

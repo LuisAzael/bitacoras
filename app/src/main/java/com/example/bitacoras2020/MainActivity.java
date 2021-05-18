@@ -107,6 +107,8 @@ import com.google.android.gms.tasks.Task;
 import com.google.android.material.bottomsheet.BottomSheetDialog;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.snackbar.Snackbar;
+import com.google.android.material.textfield.TextInputEditText;
+import com.google.android.material.textfield.TextInputLayout;
 import com.google.firebase.FirebaseApp;
 import com.google.firebase.iid.FirebaseInstanceId;
 import com.google.firebase.messaging.FirebaseMessaging;
@@ -269,6 +271,8 @@ public class MainActivity extends BaseActivity implements OnMapReadyCallback, Te
     boolean requesterCanceled = false;
     String descripcionPeticion ="";
     NeumorphCardView cardBtacoras;
+
+
 
     @SuppressLint("SimpleDateFormat")
     @Override
@@ -1634,15 +1638,18 @@ public class MainActivity extends BaseActivity implements OnMapReadyCallback, Te
         final NeumorphButton btNo, btSi;
         TextView tvCodeError, tvBitacora;
         EditText etDescripcionPeticion;
+        TextInputLayout etDescripcionPeticion2;
         Dialog dialogoError = new Dialog(MainActivity.this);
         dialogoError.setContentView(R.layout.layout_error);
         dialogoError.setCancelable(true);
         etDescripcionPeticion = (EditText) dialogoError.findViewById(R.id.etDescripcionPeticion);
+        etDescripcionPeticion2 = (TextInputLayout) dialogoError.findViewById(R.id.etDescripcionPeticion2);
         btNo = (NeumorphButton) dialogoError.findViewById(R.id.btNo);
         btSi = (NeumorphButton) dialogoError.findViewById(R.id.btSi);
         tvCodeError = (TextView) dialogoError.findViewById(R.id.tvCodeError);
         tvBitacora = (TextView) dialogoError.findViewById(R.id.tvBitacora);
         tvCodeError.setText(codeError);
+        etDescripcionPeticion2.setVisibility(View.GONE);
 
 
 
@@ -1650,7 +1657,8 @@ public class MainActivity extends BaseActivity implements OnMapReadyCallback, Te
             tvBitacora.setText(bitacora);
             tvBitacora.setVisibility(View.VISIBLE);
         } else if( codeError.equals("Parece que los articulos de velación no estan completos, necesitas autorización para terminar la bitácora.") ){
-            etDescripcionPeticion.setVisibility(View.VISIBLE);
+            //etDescripcionPeticion.setVisibility(View.VISIBLE);
+            etDescripcionPeticion2.setVisibility(View.VISIBLE);
 
             btSi.setText("Solicitar autorización");
             btNo.setText("Cancelar");
@@ -1688,11 +1696,19 @@ public class MainActivity extends BaseActivity implements OnMapReadyCallback, Te
                     registrarBitacoraTerminada(bitacora);
                     dialogoError.dismiss();
                 } else if (codeError.equals("Parece que los articulos de velación no estan completos, necesitas autorización para terminar la bitácora.")){
-                    dialogoError.dismiss();
-                    descripcionPeticion = etDescripcionPeticion.getText().toString();
-                    doRequestForEndBinnacle();
-                    requesterCanceled = false;
-                    status = 0;
+
+                    if(!etDescripcionPeticion.getText().toString().equals("")) {
+                        dialogoError.dismiss();
+                        descripcionPeticion = etDescripcionPeticion.getText().toString();
+                        doRequestForEndBinnacle();
+                        requesterCanceled = false;
+                        status = 0;
+                    }else
+                    {
+                        Toast.makeText(getApplicationContext(), "Ingresa el motivo de petición.", Toast.LENGTH_SHORT).show();
+                        etDescripcionPeticion.setError("Debes inigresa el motivo de petición");
+                    }
+
                 }
                 else {
                     if (codeError.equals("¿Cerrar sesión?")) {
@@ -1724,7 +1740,8 @@ public class MainActivity extends BaseActivity implements OnMapReadyCallback, Te
                                             "0",
                                             isProveedor,
                                             Preferences.getGeofenceActual(getApplicationContext(), Preferences.PREFERENCE_GEOFENCE_ACTUAL),
-                                            "" + DatabaseAssistant.getLastIsFuneraria()
+                                            "" + DatabaseAssistant.getLastIsFuneraria(),
+                                            ""+ DatabaseAssistant.getUserNameFromSesiones()
                                     );
 
                                     dialogoError.dismiss();
@@ -1755,7 +1772,8 @@ public class MainActivity extends BaseActivity implements OnMapReadyCallback, Te
                                         "0",
                                         isProveedor,
                                         Preferences.getGeofenceActual(getApplicationContext(), Preferences.PREFERENCE_GEOFENCE_ACTUAL),
-                                        "" + DatabaseAssistant.getLastIsFuneraria()
+                                        "" + DatabaseAssistant.getLastIsFuneraria(),
+                                        ""+ DatabaseAssistant.getUserNameFromSesiones()
                                 );
                                 dialogoError.dismiss();
                                 Toast.makeText(getApplicationContext(), "Hasta luego", Toast.LENGTH_SHORT).show();
@@ -2640,8 +2658,8 @@ public class MainActivity extends BaseActivity implements OnMapReadyCallback, Te
 
     @Override
     public void onClickTerminarBitacora(int position, String bitacora) {
-        //showErrorDialog("Estas a punto de terminar la bitácora\n¿Estás de acuerdo?", bitacora);
-        this.bitacora = bitacora;
+        showErrorDialog("Estas a punto de terminar la bitácora\n¿Estás de acuerdo?", bitacora);
+        /*this.bitacora = bitacora;
 
         if(DatabaseAssistant.articulosDeVelacionYCortejoEstanCompletos(bitacora)
                 && DatabaseAssistant.articulosDeRecoleccionEstanCompletos(bitacora)
@@ -2649,7 +2667,7 @@ public class MainActivity extends BaseActivity implements OnMapReadyCallback, Te
             showErrorDialog("Estas a punto de terminar la bitácora\n¿Estás de acuerdo?", bitacora);
         }
         else
-            showErrorDialog("Parece que los articulos de velación no estan completos, necesitas autorización para terminar la bitácora.", bitacora);
+            showErrorDialog("Parece que los articulos de velación no estan completos, necesitas autorización para terminar la bitácora.", bitacora);*/
 
     }
 
@@ -2940,7 +2958,7 @@ public class MainActivity extends BaseActivity implements OnMapReadyCallback, Te
     protected void onStart() {
         super.onStart();
 
-        CatalogoArticulos.deleteAll(CatalogoArticulos.class);
+        /*CatalogoArticulos.deleteAll(CatalogoArticulos.class);
         DatabaseAssistant.insertarCatalogoArticulos("Cafetera", "CF");
         DatabaseAssistant.insertarCatalogoArticulos("Candelabro", "CL");
         DatabaseAssistant.insertarCatalogoArticulos("Cristo y base", "CB");
@@ -2954,7 +2972,7 @@ public class MainActivity extends BaseActivity implements OnMapReadyCallback, Te
         DatabaseAssistant.insertarCatalogoArticulos("Kit de Cafetería", "KC");
         DatabaseAssistant.insertarCatalogoArticulos("Camilla rueda", "CU");
         DatabaseAssistant.insertarCatalogoArticulos("Camilla de rescate", "CR");
-        DatabaseAssistant.insertarCatalogoArticulos("Ataúd de recolección", "AA");
+        DatabaseAssistant.insertarCatalogoArticulos("Ataúd de recolección", "AA");*/
 
 
         /*try {
@@ -3013,9 +3031,14 @@ public class MainActivity extends BaseActivity implements OnMapReadyCallback, Te
             String tipoDEntrada="";
             RadioButton bt7am, bt8am, bt9am, bt19, bt20, bt7amm, bt199, bt19a9;
             NeumorphButton btGuardarAsistencia;
-            TextView tvMensaje, tvOrigen, tvDestino;
+            TextView btCerrarAsistencia;
+            TextView tvMensaje, tvOrigen, tvDestino, etTituloAsistencia;
             mBottomSheetDialog = new BottomSheetDialog(MainActivity.this);
             mBottomSheetDialog.setContentView(R.layout.bottom_layout_horarios);
+            mBottomSheetDialog.setCancelable(false);
+            mBottomSheetDialog.setCanceledOnTouchOutside(false);
+
+
             bt7am = (RadioButton) mBottomSheetDialog.findViewById(R.id.bt7am);
             bt8am = (RadioButton) mBottomSheetDialog.findViewById(R.id.bt8am);
             bt9am = (RadioButton) mBottomSheetDialog.findViewById(R.id.bt9am);
@@ -3028,6 +3051,16 @@ public class MainActivity extends BaseActivity implements OnMapReadyCallback, Te
             tvMensaje =(TextView) mBottomSheetDialog.findViewById(R.id.tvMensaje);
             tvOrigen =(TextView) mBottomSheetDialog.findViewById(R.id.tvOrigen);
             tvDestino =(TextView) mBottomSheetDialog.findViewById(R.id.tvDestino);
+            etTituloAsistencia =(TextView) mBottomSheetDialog.findViewById(R.id.etTituloAsistencia);
+            btCerrarAsistencia =(TextView) mBottomSheetDialog.findViewById(R.id.btCerrarAsistencia);
+
+
+            btCerrarAsistencia.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    mBottomSheetDialog.dismiss();
+                }
+            });
 
             tvOrigen.setText("Entrada: " + DatabaseAssistant.getLastHoraEntrada());
             tvDestino.setText("Próxima salida: " + DatabaseAssistant.getLastHoraSalida());
@@ -3048,6 +3081,7 @@ public class MainActivity extends BaseActivity implements OnMapReadyCallback, Te
                 //LinearLayout layoutHorasDeSalida =(LinearLayout) mBottomSheetDialog.findViewById(R.id.layoutHoraDeSalida);
                 //layoutHorasDeSalida.setVisibility(View.VISIBLE);
                 btGuardarAsistencia.setText("Guardar salida");
+                etTituloAsistencia.setText("Registro de salida");
 
             }else {
                 //mostrar las horas de entrada
@@ -3057,6 +3091,7 @@ public class MainActivity extends BaseActivity implements OnMapReadyCallback, Te
                 //LinearLayout layoutHoraDeEntrada =(LinearLayout) mBottomSheetDialog.findViewById(R.id.layoutHoraDeEntrada);
                 //layoutHoraDeEntrada.setVisibility(View.VISIBLE);
                 btGuardarAsistencia.setText("Guardar entrada");
+                etTituloAsistencia.setText("Registro de entrada");
             }
 
 
@@ -3280,8 +3315,63 @@ public class MainActivity extends BaseActivity implements OnMapReadyCallback, Te
                                                 );
                                             }
                                             errorStackTracePlaces = false;
-                                            dismissMyCustomDialog();
-                                            Toast.makeText(MainActivity.this, "Actualizado correctamente", Toast.LENGTH_SHORT).show();
+
+                                            /**Realizar aqui el nuevo WS de catalogos de articulos de velacion**/
+                                            JsonObjectRequest postRequest = new JsonObjectRequest(Request.Method.POST, ConstantsBitacoras.WS_DOWNLOAD_ARTICULOS_CATALOGO, params, new Response.Listener<JSONObject>() {
+                                                @Override
+                                                public void onResponse(JSONObject response)
+                                                {
+                                                    JSONArray bitacorasArray = new JSONArray();
+
+                                                    try {
+                                                        if (!response.getBoolean("error"))
+                                                            try {
+                                                                bitacorasArray = response.getJSONArray("inventoryTypes");
+
+                                                                /** Verificamos si la respuesta nos retorna datos para eliminar los datos anteriores y almacenar los nuevos**/
+                                                                if (bitacorasArray.length() > 0) {
+                                                                    CatalogoArticulos.deleteAll(CatalogoArticulos.class);
+
+                                                                    for (int i = 0; i <= bitacorasArray.length() - 1; i++) {
+                                                                        DatabaseAssistant.insertarCatalogoArticulos(
+                                                                                bitacorasArray.getJSONObject(i).getString("name"),
+                                                                                bitacorasArray.getJSONObject(i).getString("serie")
+                                                                        );
+                                                                    }
+                                                                }
+
+                                                                dismissMyCustomDialog();
+                                                                Toast.makeText(MainActivity.this, "Actualizado correctamente", Toast.LENGTH_SHORT).show();
+
+                                                            } catch (Exception e) {
+                                                                e.printStackTrace();
+                                                                Log.e(TAG, "onResponse: Error en descarga de catalogo de articulos: " + e.getMessage());
+                                                                dismissMyCustomDialog();
+                                                                Toast.makeText(MainActivity.this, "Ocurrio un error en la descarga de articulos: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                                                            }
+                                                    }catch (Throwable e){
+                                                        Log.e(TAG, "onResponse: Ocurrio un error en la descarga de articulos de velacion. " + e.getMessage());
+                                                        dismissMyCustomDialog();
+                                                        Toast.makeText(MainActivity.this, "Ocurrio un error en la descarga de articulos: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                                                    }
+                                                }
+                                            },
+                                                    new Response.ErrorListener() {
+                                                        @Override
+                                                        public void onErrorResponse(VolleyError error) {
+                                                            error.printStackTrace();
+                                                            Log.e(TAG, "onResponse: Error en descarga de catalogo de articulos: " + error.getMessage());
+                                                            dismissMyCustomDialog();
+                                                            Toast.makeText(MainActivity.this, "Ocurrio un error en la descarga de articulos: " + error.getMessage(), Toast.LENGTH_SHORT).show();
+                                                        }
+                                                    }) {
+
+                                            };
+                                            VolleySingleton.getIntanciaVolley(getApplicationContext()).addToRequestQueue(postRequest);
+
+
+
+
                                         } catch (Exception e) {
                                             e.printStackTrace();
                                             errorStackTracePlaces = true;

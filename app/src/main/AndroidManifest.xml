@@ -197,7 +197,7 @@
             android:value="bitacoras.db" />
         <meta-data
             android:name="VERSION"
-            android:value="95" />
+            android:value="97" />
         <meta-data
             android:name="QUERY_LOG"
             android:value="true" />

@@ -34,6 +34,7 @@ import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.RadioButton;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -103,6 +104,7 @@ public class PersonalFuneraria extends AppCompatActivity {
 
     private static final String TAG = "PERSONAL_FUNERARIA";
     Button btScanner, btBuscarBitacora, btScannerDirecta, btEliminarUrnaVentaDirecta;
+    TextView tvEliminarAtaud;
     ImageView btDescargarTodo;
     IconSwitch btCerrarAsistencia;
     TextView tvCodigoUrna, tvSerieUrna, tvFechaUrna, tvProveedorUrna, tvEliminarUrna, tvBitacora;
@@ -154,6 +156,7 @@ public class PersonalFuneraria extends AppCompatActivity {
         tvUrnaVendidaGeneral = (TextView) findViewById(R.id.tvUrnaVendida);
         layoutUrnaEscaneada = (LinearLayout) findViewById(R.id.layoutUrnaEscaneada);
         btEliminarUrnaVentaDirecta = (Button) findViewById(R.id.btEliminarUrna);
+        tvEliminarAtaud = (TextView) findViewById(R.id.tvEliminarAtaud);
 
         layoutBitacora =(LinearLayout) findViewById(R.id.layoutBitacora);
         startService();
@@ -183,6 +186,126 @@ public class PersonalFuneraria extends AppCompatActivity {
             Log.e(TAG, "onCreate: " + e.getMessage());
         }
 
+        tvEliminarAtaud.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                AlertDialog.Builder dialogo1 = new AlertDialog.Builder(PersonalFuneraria.this);
+                dialogo1.setCancelable(false);
+                dialogo1.setTitle("Información");
+                dialogo1.setMessage("¿Seguro que deséas eliminar la Urna?");
+                dialogo1.setCancelable(false);
+                dialogo1.setPositiveButton("Eliminar", new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialogo1, int id) {
+
+                        TextView tvUrna = ( TextView ) findViewById(R.id.tvCodigoAtaud);
+                        String codigo = tvUrna.getText().toString();
+
+                        List<Inventario> inventarioList = Inventario.findWithQuery(Inventario.class, "SELECT * FROM INVENTARIO WHERE codigo = '" + codigo + "' order by id desc limit 1");
+                        if (inventarioList.size() > 0)
+                        {
+
+                            DatabaseAssistant.insertarArticuloCancelado(
+                                    "" + inventarioList.get(0).getCodigo(),
+                                    "" + inventarioList.get(0).getDescripcion(),
+                                    "" + inventarioList.get(0).getSerie(),
+                                    "" + inventarioList.get(0).getFecha(),
+                                    "" + inventarioList.get(0).getProveedor(),
+                                    "" + inventarioList.get(0).getBitacora(),
+                                    "" + inventarioList.get(0).getCapturado()
+                            );
+
+
+                            Inventario.executeQuery("UPDATE INVENTARIO SET borrado = '1' WHERE codigo ='" + codigo + "'");
+                            llenarCamposDeAtaurna(bitacoraSeleccionada);
+                        }else{
+                            Log.d(TAG, "onClick: NO hay ataudes con el codigo descrito");
+                        }
+
+                    }
+                });
+                dialogo1.setNegativeButton("Cancelar", new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialogo1, int id) {
+                        dialogo1.dismiss();
+                    }
+                });
+                dialogo1.show();
+
+            }
+        });
+
+
+
+        tvEliminarUrna.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                AlertDialog.Builder dialogo1 = new AlertDialog.Builder(PersonalFuneraria.this);
+                dialogo1.setCancelable(false);
+                dialogo1.setTitle("Información");
+                dialogo1.setMessage("¿Seguro que deséas eliminar la Urna?");
+                dialogo1.setCancelable(false);
+                dialogo1.setPositiveButton("Eliminar", new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialogo1, int id) {
+
+                        TextView tvUrna = ( TextView ) findViewById(R.id.tvCodigoUrna);
+                        String codigo = tvUrna.getText().toString();
+
+                        List<Inventario> inventarioList = Inventario.findWithQuery(Inventario.class, "SELECT * FROM INVENTARIO WHERE codigo = '" + codigo + "' order by id desc limit 1");
+                        if (inventarioList.size() > 0)
+                        {
+
+                            DatabaseAssistant.insertarArticuloCancelado(
+                                    "" + inventarioList.get(0).getCodigo(),
+                                    "" + inventarioList.get(0).getDescripcion(),
+                                    "" + inventarioList.get(0).getSerie(),
+                                    "" + inventarioList.get(0).getFecha(),
+                                    "" + inventarioList.get(0).getProveedor(),
+                                    "" + inventarioList.get(0).getBitacora(),
+                                    "" + inventarioList.get(0).getCapturado()
+                            );
+
+
+                            Inventario.executeQuery("UPDATE INVENTARIO SET borrado = '1' WHERE codigo ='" + codigo + "'");
+                            llenarCamposDeAtaurna(bitacoraSeleccionada);
+                        }else{
+                            Log.d(TAG, "onClick: NO hay ataudes con el codigo descrito");
+                        }
+
+                    }
+                });
+                dialogo1.setNegativeButton("Cancelar", new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialogo1, int id) {
+                        dialogo1.dismiss();
+                    }
+                });
+                dialogo1.show();
+            }
+        });
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
         btEliminarUrnaVentaDirecta.setOnClickListener(new View.OnClickListener() {
@@ -205,7 +328,8 @@ public class PersonalFuneraria extends AppCompatActivity {
                                     "" + inventarioList.get(0).getSerie(),
                                     "" + inventarioList.get(0).getFecha(),
                                     "" + inventarioList.get(0).getProveedor(),
-                                    "" + inventarioList.get(0).getBitacora()
+                                    "" + inventarioList.get(0).getBitacora(),
+                                    "" + inventarioList.get(0).getCapturado()
                             );
 
                             Inventario.executeQuery("UPDATE INVENTARIO SET borrado = '1' WHERE codigo = '" + codigoDeUrnaParaEliminar + "' and capturado = '" + fechaCapturaDeUrnaParaEliminar + "'");
@@ -283,6 +407,8 @@ public class PersonalFuneraria extends AppCompatActivity {
                 bitacoraSeleccionada = null;
                 LinearLayout layoutUrna = (LinearLayout) findViewById(R.id.layoutUrna);
                 layoutUrna.setVisibility(View.GONE);
+                LinearLayout layoutAtaud = (LinearLayout) findViewById(R.id.layoutAtaud);
+                layoutAtaud.setVisibility(View.GONE);
                 btScanner.setVisibility(View.INVISIBLE);
                 tvBitacora.setText("");
                 layoutBitacora.setVisibility(View.GONE);
@@ -334,50 +460,7 @@ public class PersonalFuneraria extends AppCompatActivity {
         });
 
 
-        tvEliminarUrna.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                AlertDialog.Builder dialogo1 = new AlertDialog.Builder(PersonalFuneraria.this);
-                dialogo1.setCancelable(false);
-                dialogo1.setTitle("Información");
-                dialogo1.setMessage("¿Seguro que deséas eliminar la Urna?");
-                dialogo1.setCancelable(false);
-                dialogo1.setPositiveButton("Eliminar", new DialogInterface.OnClickListener() {
-                    public void onClick(DialogInterface dialogo1, int id) {
 
-                        TextView tvUrna = ( TextView ) findViewById(R.id.tvCodigoUrna);
-                        String codigo = tvUrna.getText().toString();
-
-                        List<Inventario> inventarioList = Inventario.findWithQuery(Inventario.class, "SELECT * FROM INVENTARIO WHERE codigo = '" + codigo + "' order by id desc limit 1");
-                        if (inventarioList.size() > 0)
-                        {
-
-                            DatabaseAssistant.insertarArticuloCancelado(
-                                    "" + inventarioList.get(0).getCodigo(),
-                                    "" + inventarioList.get(0).getDescripcion(),
-                                    "" + inventarioList.get(0).getSerie(),
-                                    "" + inventarioList.get(0).getFecha(),
-                                    "" + inventarioList.get(0).getProveedor(),
-                                    "" + inventarioList.get(0).getBitacora()
-                            );
-
-
-                            Inventario.executeQuery("UPDATE INVENTARIO SET borrado = '1' WHERE codigo ='" + codigo + "'");
-                            llenarCamposDeAtaurna(bitacoraSeleccionada);
-                        }else{
-                            Log.d(TAG, "onClick: NO hay ataudes con el codigo descrito");
-                        }
-
-                    }
-                });
-                dialogo1.setNegativeButton("Cancelar", new DialogInterface.OnClickListener() {
-                    public void onClick(DialogInterface dialogo1, int id) {
-                        dialogo1.dismiss();
-                    }
-                });
-                dialogo1.show();
-            }
-        });
 
         if (DatabaseAssistant.cerrarSesionEnUnLugarEspecifico()) {
             String[] coordinates = DatabaseAssistant.getCoordinatesToDoGeofenceAndCloseSesion();
@@ -436,7 +519,157 @@ public class PersonalFuneraria extends AppCompatActivity {
             {
                 if(scannerAtaurna)
                 {
-                    boolean guardarCapturaDeAtaurnas = false;
+
+
+
+                    /**********************************************************/
+
+
+                    if(ApplicationResourcesProvider.checkInternetConnection()) {
+
+                        /**Hay que verificar por medio del WS si en la bitacora seleccioada, tiene el ataud o urna disponible para su uso**/
+                        try {
+
+                            if (result.getContents().contains("|"))
+                            {
+
+                                try {
+                                    runOnUiThread(new Runnable() {
+                                        @Override
+                                        public void run() {
+                                            ApplicationResourcesProvider.createJsonForSync();
+                                        }
+                                    });
+                                }catch (Throwable e){
+                                    Log.e(TAG, "onActivityResult: Error en sincronizar: " + e.getMessage() );
+                                }
+
+                                showMyCustomDialog();
+
+                                JSONObject parametrosParaSaberSiElCodigoDeAtaurnaFunciona = new JSONObject();
+                                parametrosParaSaberSiElCodigoDeAtaurnaFunciona.put("serie_ataurna", result.getContents());
+
+                                JsonObjectRequest postRequest = new JsonObjectRequest(Request.Method.POST, ConstantsBitacoras.WS_CHECK_STATUS_ATAURNA, parametrosParaSaberSiElCodigoDeAtaurnaFunciona, new Response.Listener<JSONObject>() {
+                                    @Override
+                                    public void onResponse(JSONObject response) {
+
+                                        try {
+                                            if (response.has("error")) {
+                                                Log.d(TAG, "onResponse: Ocurrio un error en la respuesta del WS de ATAURNAS CHECK: " + response.getString("error_message"));
+                                                Toast.makeText(getApplicationContext(), "Parece que el código es incorrecto", Toast.LENGTH_SHORT).show();
+                                                dismissMyCustomDialog();
+                                            } else {
+                                                if (response.has("result")) {
+
+                                                    /*
+                                                        result
+                                                        1 = No disponible para escanear, esta guardada en Web con otra bitacora
+                                                        0 = Disponible para escanear.
+                                                     */
+
+                                                    if (response.getString("result").equals("1")) {
+                                                        showErrorDialog("Parece que el ataúd o urna no esta disponible, ya que se encuentra asignado(a) a otra bitácora", "");
+                                                        dismissMyCustomDialog();
+                                                    } else if (response.getString("result").equals("0")) {
+                                                        /**Declaramos la variable booleana para indiicar si se guarda el escaneo**/
+                                                        boolean guardarCapturaDeAtaurnas = false;
+
+                                                        /**Verificamos si ya tiene guardado el mismo codigo de ataud, en la bitacora indicada**/
+                                                        if (DatabaseAssistant.hayDatosDeAtaurnasEnLaBitacora(bitacoraSeleccionada)) {
+
+                                                            /**Validar si tiene borrado 0 o 1 para insertar uno nuevo**/
+                                                            if (DatabaseAssistant.getDatosDeAtaurnasEnLaBitacora(bitacoraSeleccionada).equals("1")) {
+                                                                guardarCapturaDeAtaurnas = true;
+                                                            } else if (DatabaseAssistant.getDatosDeAtaurnasEnLaBitacora(bitacoraSeleccionada).equals("0")) {
+                                                                guardarCapturaDeAtaurnas = false;
+                                                                showErrorDialog("Antes de guardar debes eliminar el Ataúd o la Urna que tienes registrada", "");
+                                                            }
+
+                                                        } else {
+                                                            guardarCapturaDeAtaurnas = true;
+                                                        }
+
+                                                        /**Verificamos si fue verdadero para guardar, si es así, procedemos a procesar y desocomponer la cadena de texto**/
+                                                        if (guardarCapturaDeAtaurnas) {
+                                                            try {
+                                                                if (result.getContents().contains("|")) {
+                                                                    String[] codeResult = result.getContents().replace("|", "X").split("X");
+
+                                                                    DatabaseAssistant.insertarInventario(
+                                                                            "" + codeResult[0],
+                                                                            "" + codeResult[1],
+                                                                            "" + codeResult[2],
+                                                                            "" + codeResult[3],
+                                                                            "" + codeResult[4],
+                                                                            "" + bitacoraSeleccionada,
+                                                                            "0"
+                                                                    );
+                                                                    llenarCamposDeAtaurna(bitacoraSeleccionada);
+                                                                    dismissMyCustomDialog();
+                                                                    Toast.makeText(getApplicationContext(), "Equipo guardado correctamente", Toast.LENGTH_SHORT).show();
+
+                                                                } else {
+                                                                    showErrorDialog("El código no corresponde a un Ataúd o Urna, verifica nuevamente", "");
+                                                                    dismissMyCustomDialog();
+                                                                }
+                                                            } catch (Throwable e) {
+                                                                Log.e(TAG, "onActivityResult: La cadena del escaneo de ataurna no tiene el formato correcto" + e.getMessage());
+                                                                showErrorDialog("Código incorrecto, asegurate que sea un código de Ataúd o de Urna. Verifica nuevamente", "");
+                                                                dismissMyCustomDialog();
+                                                            }
+                                                        } else {
+                                                            Log.d(TAG, "onActivityResult: No se guardaran datos de ataurnas");
+                                                            dismissMyCustomDialog();
+                                                        }
+                                                    }
+                                                }
+                                                else{
+                                                    //No tiene result
+                                                    Toast.makeText(getApplicationContext(), "Parece que el código es incorrecto", Toast.LENGTH_SHORT).show();
+                                                    dismissMyCustomDialog();
+                                                }
+                                            }
+                                        } catch (JSONException e) {
+                                            Log.e("TIMER", "onErrorResponse: Error: " + e.getMessage());
+                                            e.printStackTrace();
+                                            Toast.makeText(getApplicationContext(), "Ocurrio un error en Ataurnas: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                                            dismissMyCustomDialog();
+                                        }
+                                    }
+                                },
+                                        new Response.ErrorListener() {
+                                            @Override
+                                            public void onErrorResponse(VolleyError error) {
+                                                error.printStackTrace();
+                                                Log.e("TIMER", "onErrorResponse: Error: " + error.getMessage());
+                                                dismissMyCustomDialog();
+                                                Toast.makeText(getApplicationContext(), "Ocurrio un error: " + error.getMessage(), Toast.LENGTH_SHORT).show();
+                                            }
+                                        }) {
+
+                                };
+                                postRequest.setRetryPolicy(new DefaultRetryPolicy(90000, 2, DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
+                                VolleySingleton.getIntanciaVolley(getApplicationContext()).addToRequestQueue(postRequest);
+
+                            }else {
+                                showErrorDialog("El código no corresponde a un Ataúd o Urna, verifica nuevamente", "");
+                            }
+
+                        } catch (Exception e) {
+                            Log.d("TIMER", "getStatusBinaccle: error en creacion de json para status de bitacora");
+                            Toast.makeText(this, "Ocurrio un error: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                            dismissMyCustomDialog();
+                        }
+
+
+                    }else
+                        showErrorDialog("Necesitas conexión a internet para realizar el escaneo del Ataúd o Urna.", "");
+
+
+
+                    /**********************************************************/
+
+                    /*boolean guardarCapturaDeAtaurnas = false;
                     if (DatabaseAssistant.hayDatosDeAtaurnasEnLaBitacora(bitacoraSeleccionada)) {
                         //Validar si tiene borrado 0 o 1 para insertar uno nuevo
                         if (DatabaseAssistant.getDatosDeAtaurnasEnLaBitacora(bitacoraSeleccionada).equals("1")) {
@@ -473,24 +706,125 @@ public class PersonalFuneraria extends AppCompatActivity {
                             showErrorDialog("Código incorrecto, asegurate que sea un código de Urna. Verifica nuevamente", "");
                         }
                     } else
-                        Log.d("TAG", "onActivityResult: No se guardaran datos de ataurnas");
+                        Log.d("TAG", "onActivityResult: No se guardaran datos de ataurnas");*/
 
                 }
                 else if (scannerAtaurnaVentaDirecta)
                 {
-                    try {
 
-                        if (result.getContents().contains("|"))
-                        {
-                            String[] codeResult = result.getContents().replace("|", "X").split("X");
-                            showBottomGuardarUrnaParaVenta(codeResult[0], codeResult[1], codeResult[2], codeResult[3], codeResult[4]);
-                        } else {
-                            showErrorDialog("El código no corresponde a una Urna, verifica nuevamente", "");
+
+
+
+
+                    /**********************************************************/
+
+
+                    if(ApplicationResourcesProvider.checkInternetConnection()) {
+
+                        /**Hay que verificar por medio del WS si en la bitacora seleccioada, tiene el ataud o urna disponible para su uso**/
+                        try {
+
+                            if (result.getContents().contains("|"))
+                            {
+
+                                showMyCustomDialog();
+                                runOnUiThread(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        ApplicationResourcesProvider.createJsonForSync();
+                                    }
+                                });
+                                TextView tvMensajeLoad =(TextView) findViewById(R.id.tvMensajeLoad);
+                                tvMensajeLoad.setText("Cargando");
+                                Button btCancelarPeticion =(Button) findViewById(R.id.btCancelarPeticion);
+                                btCancelarPeticion.setVisibility(View.GONE);
+                                JSONObject parametrosParaSaberSiElCodigoDeAtaurnaFunciona = new JSONObject();
+                                parametrosParaSaberSiElCodigoDeAtaurnaFunciona.put("serie_ataurna", result.getContents());
+
+                                JsonObjectRequest postRequest = new JsonObjectRequest(Request.Method.POST, ConstantsBitacoras.WS_CHECK_STATUS_ATAURNA, parametrosParaSaberSiElCodigoDeAtaurnaFunciona, new Response.Listener<JSONObject>() {
+                                    @Override
+                                    public void onResponse(JSONObject response) {
+
+                                        try {
+                                            if (response.has("error")) {
+                                                Log.d(TAG, "onResponse: Ocurrio un error en la respuesta del WS de ATAURNAS CHECK: " + response.getString("error_message"));
+                                                Toast.makeText(getApplicationContext(), "Parece que el código es incorrecto", Toast.LENGTH_SHORT).show();
+                                                dismissMyCustomDialog();
+                                            } else {
+                                                if (response.has("result")) {
+
+                                                    /*
+                                                        result
+                                                        1 = No disponible para escanear, esta guardada en Web con otra bitacora
+                                                        0 = Disponible para escanear.
+                                                     */
+
+                                                    if (response.getString("result").equals("1")) {
+                                                        showErrorDialog("Parece que el ataúd o urna no esta disponible, ya que se encuentra asignado(a) a otra bitácora", "");
+                                                        dismissMyCustomDialog();
+                                                    } else if (response.getString("result").equals("0"))
+                                                    {
+                                                        try {
+                                                            if (result.getContents().contains("|"))
+                                                            {
+                                                                String[] codeResult = result.getContents().replace("|", "X").split("X");
+                                                                showBottomGuardarUrnaParaVenta(codeResult[0], codeResult[1], codeResult[2], codeResult[3], codeResult[4]);
+                                                            } else {
+                                                                showErrorDialog("El código no corresponde a una Urna, verifica nuevamente", "");
+                                                            }
+                                                            dismissMyCustomDialog();
+                                                        } catch (Throwable e) {
+                                                            Log.e("TAG", "onActivityResult: La cadena del escaneo de ataurna no tiene el formato correcto" + e.getMessage());
+                                                            dismissMyCustomDialog();
+                                                            showErrorDialog("Código incorrecto, asegurate que sea un código de Urna. Verifica nuevamente", "");
+                                                        }
+                                                    }
+                                                }
+                                                else{
+                                                    //No tiene result
+                                                    Toast.makeText(getApplicationContext(), "Parece que el código es incorrecto", Toast.LENGTH_SHORT).show();
+                                                    dismissMyCustomDialog();
+                                                }
+                                            }
+                                        } catch (JSONException e) {
+                                            Log.e("TIMER", "onErrorResponse: Error: " + e.getMessage());
+                                            e.printStackTrace();
+                                            Toast.makeText(getApplicationContext(), "Ocurrio un error en Ataurnas: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                                            dismissMyCustomDialog();
+                                        }
+                                    }
+                                },
+                                        new Response.ErrorListener() {
+                                            @Override
+                                            public void onErrorResponse(VolleyError error) {
+                                                error.printStackTrace();
+                                                Log.e("TIMER", "onErrorResponse: Error: " + error.getMessage());
+                                                dismissMyCustomDialog();
+                                                Toast.makeText(getApplicationContext(), "Ocurrio un error: " + error.getMessage(), Toast.LENGTH_SHORT).show();
+                                            }
+                                        }) {
+
+                                };
+                                postRequest.setRetryPolicy(new DefaultRetryPolicy(90000, 2, DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
+                                VolleySingleton.getIntanciaVolley(getApplicationContext()).addToRequestQueue(postRequest);
+
+                            }else {
+                                showErrorDialog("El código no corresponde a un Ataúd o Urna, verifica nuevamente", "");
+                            }
+
+                        } catch (Exception e) {
+                            Log.d("TIMER", "getStatusBinaccle: error en creacion de json para status de bitacora");
+                            Toast.makeText(this, "Ocurrio un error: " + e.getMessage(), Toast.LENGTH_SHORT).show();
                         }
-                    } catch (Throwable e) {
-                        Log.e("TAG", "onActivityResult: La cadena del escaneo de ataurna no tiene el formato correcto" + e.getMessage());
-                        showErrorDialog("Código incorrecto, asegurate que sea un código de Urna. Verifica nuevamente", "");
-                    }
+
+
+                    }else
+                        showErrorDialog("Necesitas conexión a internet para realizar el escaneo del Ataúd o Urna.", "");
+
+
+
+                    /**********************************************************/
+
                 }
             }
         }
@@ -540,9 +874,7 @@ public class PersonalFuneraria extends AppCompatActivity {
             }
         });
 
-
-
-        llenarCamposDeAtaurna(bitacoraSeleccionada);
+        //llenarCamposDeAtaurna(bitacoraSeleccionada);
     }
 
     private void loadRequests() {
@@ -697,6 +1029,8 @@ public class PersonalFuneraria extends AppCompatActivity {
         tvBitacora = (TextView) dialogoError.findViewById(R.id.tvBitacora);
         tvCodeError.setText(codeError);
 
+        if(!codeError.equals("¿Cerrar sesión?"))
+            btSi.setVisibility(View.INVISIBLE);
 
 
         if (codeError.equals("Estas a punto de terminar la bitácora\n¿Estás de acuerdo?")) {
@@ -718,6 +1052,7 @@ public class PersonalFuneraria extends AppCompatActivity {
                 || codeError.equals("No puedes hacer tu CHECK_OUT en esta zona, necesitas estar en la zona indicada por tu coordinador")
                 || codeError.equals("Salida invalida, tienes que seleccionar el destino diferente a tu llegada.")
                 || codeError.equals("Debes seleccionar una hora para guardar tu asistencia.")
+                || codeError.equals("Parece que el ataúd o urna no esta disponible, ya que se encuentra asignado(a) a otra bitácora")
                 || codeError.equals("Ya tienes una llegada actualmente, debes registrar una salida."))
             btSi.setVisibility(View.GONE);
 
@@ -765,7 +1100,8 @@ public class PersonalFuneraria extends AppCompatActivity {
                                             "0",
                                             Preferences.getIsProveedor(getApplicationContext(), Preferences.PREFERENCE_IS_PROVEEDOR) ? "1" : "0",
                                             Preferences.getGeofenceActual(getApplicationContext(), Preferences.PREFERENCE_GEOFENCE_ACTUAL),
-                                            "" + DatabaseAssistant.getLastIsFuneraria()
+                                            "" + DatabaseAssistant.getLastIsFuneraria(),
+                                            ""+ DatabaseAssistant.getUserNameFromSesiones()
                                     );
                                     dialogoError.dismiss();
                                     Toast.makeText(getApplicationContext(), "Hasta luego", Toast.LENGTH_SHORT).show();
@@ -796,7 +1132,8 @@ public class PersonalFuneraria extends AppCompatActivity {
                                         "0",
                                         Preferences.getIsProveedor(getApplicationContext(), Preferences.PREFERENCE_IS_PROVEEDOR) ? "1" : "0",
                                         Preferences.getGeofenceActual(getApplicationContext(), Preferences.PREFERENCE_GEOFENCE_ACTUAL),
-                                        "" + DatabaseAssistant.getLastIsFuneraria()
+                                        "" + DatabaseAssistant.getLastIsFuneraria(),
+                                        ""+ DatabaseAssistant.getUserNameFromSesiones()
                                 );
                                 dialogoError.dismiss();
                                 Toast.makeText(getApplicationContext(), "Hasta luego", Toast.LENGTH_SHORT).show();
@@ -867,9 +1204,10 @@ public class PersonalFuneraria extends AppCompatActivity {
                 layoutUrna.setVisibility(View.VISIBLE);
             }
             else if(codigo.contains("AT")){
-                LinearLayout layoutUrna = ( LinearLayout ) findViewById(R.id.layoutUrna);
-                layoutUrna.setVisibility(View.GONE);
 
+
+                LinearLayout layoutAtaud = ( LinearLayout ) findViewById(R.id.layoutAtaud);
+                layoutAtaud.setVisibility(View.VISIBLE);
 
                 TextView tvCodigoAtaud = ( TextView ) findViewById(R.id.tvCodigoAtaud);
                 TextView tvDescripcionAtaud = ( TextView ) findViewById(R.id.tvDescripcionAtaud);
@@ -885,12 +1223,22 @@ public class PersonalFuneraria extends AppCompatActivity {
 
 
             }
+            else {
+                Log.d(TAG, "llenarCamposDeAtaurna: No hay datos de ataudes o urnas");
+                LinearLayout layoutAtaud = ( LinearLayout ) findViewById(R.id.layoutAtaud);
+                layoutAtaud.setVisibility(View.GONE);
+                LinearLayout layoutUrna = ( LinearLayout ) findViewById(R.id.layoutUrna);
+                layoutUrna.setVisibility(View.GONE);
+                Inventario.executeQuery("DELETE INVENTARIO WHERE codigo =''");
+            }
 
         } else {
             Log.d(TAG, "llenarCamposDeAtaurna: No hay datos de ataudes o urnas");
 
             LinearLayout layoutUrna = ( LinearLayout ) findViewById(R.id.layoutUrna);
             layoutUrna.setVisibility(View.GONE);
+            LinearLayout layoutAtaud = (LinearLayout) findViewById(R.id.layoutAtaud);
+            layoutAtaud.setVisibility(View.GONE);
         }
     }
 

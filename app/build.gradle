@@ -6,12 +6,12 @@ android {
     compileSdkVersion 30
     buildToolsVersion "30.0.1"
 
-    defaultConfig { 
+    defaultConfig {
         applicationId "com.example.bitacoras2020"
         minSdkVersion 21
         targetSdkVersion 30
         versionCode 5
-        versionName "2.3-eBita"
+        versionName "2.4-eBitacoras"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }

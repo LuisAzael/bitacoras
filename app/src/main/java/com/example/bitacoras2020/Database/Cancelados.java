@@ -3,14 +3,14 @@ package com.example.bitacoras2020.Database;
 import com.orm.SugarRecord;
 
 public class Cancelados extends SugarRecord {
-    String codigo ="", descripcion = "" , serie="",  fecha="", proveedor = "", bitacora="", sync ="", capturado="";
+    String codigo ="", descripcion = "" , serie="",  fecha="", proveedor = "", bitacora="", sync ="", capturado="", fechaEscaneo="";
 
 
 
     public Cancelados() {
     }
 
-    public Cancelados(String codigo, String descripcion, String serie, String fecha, String proveedor, String bitacora, String sync, String capturado) {
+    public Cancelados(String codigo, String descripcion, String serie, String fecha, String proveedor, String bitacora, String sync, String capturado, String fechaEscaneo) {
         this.codigo = codigo;
         this.descripcion = descripcion;
         this.serie = serie;
@@ -19,6 +19,7 @@ public class Cancelados extends SugarRecord {
         this.bitacora = bitacora;
         this.sync = sync;
         this.capturado = capturado;
+        this.fechaEscaneo = fechaEscaneo;
     }
 
     public String getCodigo() {
@@ -83,5 +84,13 @@ public class Cancelados extends SugarRecord {
 
     public void setCapturado(String capturado) {
         this.capturado = capturado;
+    }
+
+    public String getFechaEscaneo() {
+        return fechaEscaneo;
+    }
+
+    public void setFechaEscaneo(String fechaEscaneo) {
+        this.fechaEscaneo = fechaEscaneo;
     }
 }

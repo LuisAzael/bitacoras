@@ -200,7 +200,8 @@ public class Login_Proveedor extends AppCompatActivity {
                         "0",
                         "1",
                         Preferences.getGeofenceActual(getApplicationContext(), Preferences.PREFERENCE_GEOFENCE_ACTUAL),
-                        "" + DatabaseAssistant.getLastIsFuneraria()
+                        "" + DatabaseAssistant.getLastIsFuneraria(),
+                        "" + DatabaseAssistant.getUserNameFromSesiones()
                 );
             }
             Preferences.setIsProveedor(getApplicationContext(), true, Preferences.PREFERENCE_IS_PROVEEDOR);
@@ -338,7 +339,8 @@ public class Login_Proveedor extends AppCompatActivity {
                                                         jsonParams.getString("isBunker"),
                                                         "1",
                                                         Preferences.getGeofenceActual(getApplicationContext(), Preferences.PREFERENCE_GEOFENCE_ACTUAL),
-                                                        "0"
+                                                        "0",
+                                                        "" + jsonParams.getString("usuario")
                                                 );
                                                 success = true;
                                             } catch (Throwable e) {
